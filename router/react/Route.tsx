@@ -1,7 +1,7 @@
 import React from 'react'
-import * as Animation from 'utils/Animation'
-import { Observable, ObservableBoolean, ObservableNumber } from 'utils/observables'
-import { useComplexEffects, useForceUpdate } from 'utils/react'
+import * as Animation from '../../Animation'
+import { Observable, ObservableBoolean, ObservableNumber } from '../../observables'
+import { useComplexEffects, useForceUpdate } from '../../react'
 import { location } from '../location'
 
 export type PathMask = 

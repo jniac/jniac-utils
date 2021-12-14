@@ -1,4 +1,4 @@
-import { Observable } from 'utils/observables'
+import { Observable } from '../observables'
 
 const safeParseUrl = (str: string) => {
 

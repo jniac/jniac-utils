@@ -1,5 +1,5 @@
 import React from 'react'
-import { useComplexEffects, safeClassName } from 'utils/react'
+import { useComplexEffects, safeClassName } from '../../react'
 import { Route, RouteProps, RouteStateContext } from '../react/Route'
 import { getScrollingParentElement, getScrollingParentElementHeight, onFrameOrResize } from './utils'
 import { manageOverlayScroll } from './manageOverlayScroll'
