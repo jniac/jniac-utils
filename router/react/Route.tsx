@@ -4,30 +4,30 @@ import { Observable, ObservableBoolean, ObservableNumber } from '../../observabl
 import { useComplexEffects, useForceUpdate } from '../../react'
 import { location } from '../location'
 
-export type PathMask = 
+export type StringMask = 
   | string
   | RegExp
   | ((path: string) => boolean)
-  | PathMask[]
+  | StringMask[]
 
-export const comparePath: (path: string, mask: PathMask, exact: boolean) => boolean = (
-  path, mask, exact,
+export const compareString: (str: string, mask: StringMask, exact?: boolean) => boolean = (
+  str, mask, exact = true,
 ) => {
   if (Array.isArray(mask)) {
-    return mask.some(submask => comparePath(path, submask, exact))
+    return mask.some(submask => compareString(str, submask, exact))
   }
   if (typeof mask === 'function') {
-    return mask(path)
+    return mask(str)
   }
   if (mask instanceof RegExp) {
-    return mask.test(path)
+    return mask.test(str)
   }
-  if (mask === '*') {
+  if (mask === '*' && str.length > 0) {
     return true
   }
   return (exact 
-    ? path === mask
-    : path.startsWith(mask)
+    ? str === mask
+    : str.startsWith(mask)
   )
 }
 
@@ -46,8 +46,10 @@ interface RouteState {
 export const RouteStateContext = React.createContext<RouteState>(null!)
 
 export interface RouteProps {
-  path: PathMask
-  excludePath?: PathMask
+  path: StringMask
+  excludePath?: StringMask
+  search?: StringMask
+  hash?: StringMask
   exact?: boolean
   transitionDuration?: number
 }
@@ -55,6 +57,8 @@ export interface RouteProps {
 export const Route: React.FC<RouteProps> = ({
   path,
   excludePath,
+  hash,
+  search,
   exact = false,
   transitionDuration = 0,
   children,
@@ -78,12 +82,6 @@ export const Route: React.FC<RouteProps> = ({
 
   useComplexEffects(function* () {
     
-    const isVisible = (pathname: string) => {
-      const exclude = excludePath && comparePath(pathname, excludePath, exact)
-      const visible = !exclude && comparePath(pathname, path, exact)
-      return visible
-    }
-
     // link the "status" and the inner "mounted" values 
     yield state.status.onChange(value => innerState.mounted.setValue(value !== 'invisible'))
     yield state.status.onChange(value => state.active.setValue(value === 'visible' || value === 'entering'))
@@ -117,8 +115,17 @@ export const Route: React.FC<RouteProps> = ({
       }
     })
 
-    yield location.pathname.onChange(value => {
-      innerState.visible.setValue(isVisible(value))
+    const isVisible = () => {
+      const exclude = excludePath && compareString(location.pathname.value, excludePath, exact)
+      return (!exclude 
+        && compareString(location.pathname.value, path, exact)
+        && (search === undefined || compareString(location.search.value, search))
+        && (hash === undefined || compareString(location.hash.value, hash))
+      )
+    }
+
+    yield location.href.onChange(() => {
+      innerState.visible.setValue(isVisible())
     }, { execute: true })
 
   }, [path, excludePath])

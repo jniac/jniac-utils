@@ -79,12 +79,14 @@ export const DivRoute: React.FC<RouteProps & DivProps & React.HTMLAttributes<HTM
   path, 
   excludePath,
   exact,
+  search,
+  hash,
   transitionDuration,
   
   // DivProps + HTMLDivElement
   ...props
 }) => (
-  <Route {...{ path, excludePath, exact, transitionDuration }}>
+  <Route {...{ path, excludePath, exact, search, hash, transitionDuration }}>
     <Div {...props} />
   </Route>
 )

@@ -20,7 +20,9 @@ export class Observable<T> {
     this.#value = initialValue
   }
 
-  setValue(value: T | ((value: T) => T)): boolean {
+  setValue(value: T | ((value: T) => T), {
+    ignoreCallbacks = false
+  } = {}): boolean {
     window.clearTimeout(this.#setValueWithDelayTimeoutID)
 
     if (typeof value === 'function') {
@@ -32,12 +34,21 @@ export class Observable<T> {
     if (this.#hasChanged) {
       this.#valueOld = this.#value
       this.#value = value
-      for (const callback of this.#callbacks) {
-        callback(value, this)
+      if (ignoreCallbacks === false) {
+        for (const callback of this.#callbacks) {
+          callback(value, this)
+        }
       }
     }
 
     return this.#hasChanged
+  }
+
+  triggerCallbacks() {
+    const value = this.#value
+    for (const callback of this.#callbacks) {
+      callback(value, this)
+    }
   }
 
   #setValueWithDelayTimeoutID = -1

@@ -10,7 +10,9 @@ const safeParseUrl = (str: string) => {
   search = search.substring(1)
   hash = hash.substring(1)
 
-  const href = `${origin}${pathname}?${search}#${hash}`.replace(/[?#=]+$/, '')
+  const href = `${origin}${pathname}?${search}#${hash}`
+    .replace(/\?#/, '#')
+    .replace(/[?#=]+$/, '')
 
   return {
     pathname,
@@ -44,17 +46,24 @@ export const internalUpdate = (url: string) => {
     href, pathname, search, hash,
   } = safeParseUrl(url)
 
-  const hasChanged = location.href.setValue(href)
-  location.pathname.setValue(pathname)
-  location.search.setValue(search)
-  location.hash.setValue(hash)
+  const hrefHasChanged = location.href.setValue(href)
+  const pathnameHasChanged = location.pathname.setValue(pathname)
+  const searchHasChanged = location.search.setValue(search)
+  const hashHasChanged = location.hash.setValue(hash)
+
+  // NOTE: important here to change EVERY parts BEFORE calling the callbacks
+  // (since any callbacks should retrieve any parts with new value)
+  if (hashHasChanged) location.hash.triggerCallbacks()
+  if (searchHasChanged) location.search.triggerCallbacks()
+  if (pathnameHasChanged) location.pathname.triggerCallbacks()
+  if (hrefHasChanged) location.href.triggerCallbacks()
 
   return {
     href,
     pathname,
     search,
     hash,
-    hasChanged,
+    hasChanged: hrefHasChanged,
   }
 }
 
@@ -90,4 +99,8 @@ export const setHash = (hash: string, { replace = false } = {}) => setLocation({
 window.addEventListener('popstate', () => {
   internalUpdate(window.location.href)
 })
+
+window.addEventListener('hashchange', () => {
+  internalUpdate(window.location.href)
+}, false)
 
