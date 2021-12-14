@@ -35,7 +35,11 @@ const Div: React.FC<DivProps> = ({
     yield state.alpha.onChange(value => {
       const div = divRef.current
       if (div) {
-        div.style.opacity = value.toFixed(2)
+        if (value < 1) {
+          div.style.setProperty('opacity', value.toFixed(2))
+        } else {
+          div.style.removeProperty('opacity')
+        }
       }
     })
 
