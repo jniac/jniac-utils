@@ -9,10 +9,13 @@ interface DivProps {
   overlay?: boolean
   overlayBackgroundColor?: string
 }
-const Div: React.FC<DivProps> = ({
+const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
   overlay,
   overlayBackgroundColor,
-  children
+  children,
+
+  className,
+  ...props
 }) => {
   
   const state = React.useContext(RouteStateContext)
@@ -63,22 +66,25 @@ const Div: React.FC<DivProps> = ({
 
   return (
     <div ref={divRef} className={safeClassName('DivRoute', { overlay })}>
-      <div ref={wrapperRef} className="Wrapper">
+      <div ref={wrapperRef} className={safeClassName('Wrapper', className)} {...props}>
         {children}
       </div>
     </div>
   )
 }
 
-export const DivRoute: React.FC<RouteProps & DivProps> = ({ 
-  children,
-  overlay,
-  overlayBackgroundColor,
+export const DivRoute: React.FC<RouteProps & DivProps & React.HTMLAttributes<HTMLDivElement>> = ({ 
+  
+  // RouteProps
+  path, 
+  excludePath,
+  exact,
+  transitionDuration,
+  
+  // DivProps + HTMLDivElement
   ...props
 }) => (
-  <Route {...props}>
-    <Div {...{ overlay, overlayBackgroundColor }}>
-      {children}
-    </Div>
+  <Route {...{ path, excludePath, exact, transitionDuration }}>
+    <Div {...props} />
   </Route>
 )
