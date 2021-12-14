@@ -8,10 +8,12 @@ import './DivRoute.css'
 interface DivProps {
   overlay?: boolean
   overlayBackgroundColor?: string
+  onBackgroundClick?: () => void
 }
 const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
   overlay,
   overlayBackgroundColor,
+  onBackgroundClick,
   children,
 
   ...props
@@ -19,9 +21,15 @@ const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
   
   const state = React.useContext(RouteStateContext)
   const divRef = React.useRef<HTMLDivElement>(null)
-  const wrapperRef = React.useRef<HTMLDivElement>(null)
+  const childRef = React.useRef<HTMLDivElement>(null)
 
   useComplexEffects(function* () {
+
+    childRef.current!.onclick = event => {
+      if (event.target === childRef.current) {
+        onBackgroundClick?.()
+      }
+    } 
 
     // Adding status to the Route classlist.
     // This is important for things such as remove pointer events on "leaving" phase.
@@ -35,12 +43,12 @@ const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
 
     // Setting the opacity
     yield state.alpha.onChange(value => {
-      const div = divRef.current
-      if (div) {
+      const child = childRef.current
+      if (child) {
         if (value < 1) {
-          div.style.setProperty('opacity', value.toFixed(2))
+          child.style.setProperty('opacity', value.toFixed(2))
         } else {
-          div.style.removeProperty('opacity')
+          child.style.removeProperty('opacity')
         }
       }
     })
@@ -50,22 +58,22 @@ const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
         divRef.current!.style.backgroundColor = overlayBackgroundColor
       }
 
-      const wrapper = wrapperRef.current!
-      const scrollingElement = getScrollingParentElement(wrapper)
-      // Resize and place the wrapper according to the current scroll and window states.
+      const child = childRef.current!
+      const scrollingElement = getScrollingParentElement(child)
+      // Resize and place the child according to the current scroll and window states.
       yield onFrameOrResize(() => {
         const y = scrollingElement.scrollTop
-        wrapper.style.top = `${y}px`
-        wrapper.style.height = `${getScrollingParentElementHeight(wrapper)}px`
+        child.style.top = `${y}px`
+        child.style.height = `${getScrollingParentElementHeight(child)}px`
       }, { frameCount: 600 })
-      yield manageOverlayScroll(wrapper)
+      yield manageOverlayScroll(child)
     }
 
   }, [overlay])
 
   return (
     <div ref={divRef} className={safeClassName('DivRoute', { overlay })}>
-      <div ref={wrapperRef} {...props}>
+      <div ref={childRef} {...props}>
         {children}
       </div>
     </div>
