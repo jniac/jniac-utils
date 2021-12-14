@@ -62,8 +62,10 @@ export const mapWithSeparator = <T, U, V>(data: T[], map: (item: T, index: numbe
   return result
 }
 
-export const useFetchJson = <T extends unknown = any>(url: string, initialValue: T = null as T) => {
-  const [data, setData] = React.useState<T>(initialValue)
+export function useFetchJson<T = any>(url: string): T | null
+export function useFetchJson<T = any>(url: string, initialValue: T): T
+export function useFetchJson<T = any>(url: string, initialValue: T | null = null) {
+  const [data, setData] = React.useState<T | null>(initialValue)
   React.useEffect(() => {
     window.fetch(url).then(async response => {
       try {
