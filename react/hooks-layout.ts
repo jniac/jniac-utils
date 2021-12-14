@@ -69,7 +69,7 @@ const untrack = (element: HTMLElement, callback: BoundsCallback) => {
   }
 }
 
-export const useBounds = (target: React.RefObject<HTMLElement>, callback: BoundsCallback) => {
+export function useBounds(target: React.RefObject<HTMLElement>, callback: BoundsCallback) {
   React.useEffect(() => {
     const element = target.current
 
@@ -115,10 +115,10 @@ const parentQuerySelector = (element: HTMLElement | null | undefined, parentSele
   }
 }
 
-export const useParentBounds = (target: React.RefObject<HTMLElement>, callback: BoundsCallback, {
+export function useParentBounds(target: React.RefObject<HTMLElement>, callback: BoundsCallback, {
   parentSelector = '*' as string | string[],
   includeSelf = false,
-} = {}) => {
+} = {}) {
 
   React.useEffect(() => {
     const element = Array.isArray(parentSelector) 
@@ -138,7 +138,7 @@ export const useParentBounds = (target: React.RefObject<HTMLElement>, callback: 
   }, [target])
 }
 
-export const useAnyBounds = (target: React.RefObject<HTMLElement> | HTMLElement | string | string[], callback: BoundsCallback) => {
+export function useAnyBounds(target: React.RefObject<HTMLElement> | HTMLElement | string | string[], callback: BoundsCallback) {
 
   React.useEffect(() => {
     const element = (

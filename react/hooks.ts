@@ -19,7 +19,7 @@ export type Destroyable = { destroy: () => void}  | (() => void)
  *       yield () => window.removeEventListener('scroll', onScroll)
  *     }, [username])
  */
-export const useComplexEffects = (complexEffects: () => Generator<Destroyable>, deps?: React.DependencyList) => {
+export function useComplexEffects(complexEffects: () => Generator<Destroyable>, deps?: React.DependencyList) {
   React.useEffect(() => {
     const onDestroyArray: (() => void)[] = []
     for (const destroy of complexEffects()) {
@@ -34,21 +34,30 @@ export const useComplexEffects = (complexEffects: () => Generator<Destroyable>, 
   }, deps)
 }
 
-export const useForceUpdate = () => {
+export function useForceUpdate({
+  useSetImmediate = true,
+} = {}) {
   const [, forceUpdate] = React.useReducer(x => x + 1, 0)
   // NOTE: setImmediate here avoid some dependency call bug with React.
   // The kind that happens when a distant component is modifying an observable used here.
   // "setImmediate" solve the probleme because the update is delayed to the next frame.
-  return () => setImmediate(forceUpdate)
+  return (useSetImmediate
+    ? () => setImmediate(forceUpdate)
+    : forceUpdate
+  )
 }
 
-export const useObservable = <T>(observable: Observable<T>): T => {
+export function useObservable<T>(observable: Observable<T>): T {
   const forceUpdate = useForceUpdate()
   React.useEffect(() => observable.onChange(forceUpdate).destroy, [forceUpdate, observable]);
   return observable.value
 }
 
-export const mapWithSeparator = <T, U, V>(data: T[], map: (item: T, index: number) => U, separator: (index: number) => V) => {
+export function mapWithSeparator<T, U, V>(
+  data: T[],
+  map: (item: T, index: number) => U,
+  separator: (index: number) => V,
+) {
 
   if (data.length === 0) {
     return []
