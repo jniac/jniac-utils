@@ -14,7 +14,6 @@ const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
   overlayBackgroundColor,
   children,
 
-  className,
   ...props
 }) => {
   
@@ -66,7 +65,7 @@ const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
 
   return (
     <div ref={divRef} className={safeClassName('DivRoute', { overlay })}>
-      <div ref={wrapperRef} className={safeClassName('Wrapper', className)} {...props}>
+      <div ref={wrapperRef} {...props}>
         {children}
       </div>
     </div>
