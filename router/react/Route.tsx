@@ -3,6 +3,7 @@ import * as Animation from '../../Animation'
 import { Observable, ObservableBoolean, ObservableNumber } from '../../observables'
 import { useComplexEffects, useForceUpdate } from '../../react'
 import { location } from '../location'
+import { RouterContext } from './Router'
 
 export type StringMask = 
   | string
@@ -64,6 +65,8 @@ export const Route: React.FC<RouteProps> = ({
   children,
 }) => {
 
+  const { baseUrl } = React.useContext(RouterContext)
+
   const innerState = React.useMemo(() => ({
     visible: new Observable<boolean>(false),
     mounted: new Observable<boolean>(false),
@@ -115,10 +118,12 @@ export const Route: React.FC<RouteProps> = ({
       }
     })
 
+    const baseUrlRe = new RegExp(baseUrl ? `^/${baseUrl}` : '') // remove baseUrl from the current pathname
     const isVisible = () => {
-      const exclude = excludePath && compareString(location.pathname.value, excludePath, exact)
+      const pathname = location.pathname.value.replace(baseUrlRe, '') || '/' // pathname must at least contain '/'
+      const exclude = excludePath && compareString(pathname, excludePath, exact)
       return (!exclude 
-        && compareString(location.pathname.value, path, exact)
+        && compareString(pathname, path, exact)
         && (search === undefined || compareString(location.search.value, search))
         && (hash === undefined || compareString(location.hash.value, hash))
       )

@@ -1,5 +1,6 @@
 import React from 'react'
 import { setUrl } from '../location'
+import { RouterContext } from '../react/Router'
 
 export const Link: React.FC<{
   to: string
@@ -8,9 +9,15 @@ export const Link: React.FC<{
   children, 
   ...props
 }) => {
+  const { baseUrl } = React.useContext(RouterContext)
   const onClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     e.preventDefault()
-    setUrl(to)
+    if (baseUrl && to.startsWith('/')) {
+      // baseUrl injection
+      setUrl(`/${baseUrl}${to}`)
+    } else {
+      setUrl(to)
+    }
   }
   return (
     <a {...props} href={to} onClick={onClick}>
