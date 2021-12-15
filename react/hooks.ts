@@ -47,9 +47,15 @@ export function useForceUpdate({
   )
 }
 
-export function useObservable<T>(observable: Observable<T>): T {
+export function useObservable<T>(observable: Observable<T>): T
+export function useObservable<T>(observable: Observable<T>, option: { useValueOld: true }): { value: T, valueOld: T }
+export function useObservable<T>(observable: Observable<T>, { useValueOld = false } = {}) {
   const forceUpdate = useForceUpdate()
   React.useEffect(() => observable.onChange(forceUpdate).destroy, [forceUpdate, observable]);
+  if (useValueOld) {
+    const { value, valueOld } = observable
+    return { value, valueOld }
+  }
   return observable.value
 }
 
