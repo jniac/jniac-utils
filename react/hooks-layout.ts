@@ -69,7 +69,9 @@ const untrack = (element: HTMLElement, callback: BoundsCallback) => {
   }
 }
 
-export function useBounds(target: React.RefObject<HTMLElement>, callback: BoundsCallback) {
+export function useBounds(target: React.RefObject<HTMLElement>, callback: BoundsCallback, {
+  alwaysRecalculate = false, // should recalculate on any render?
+} = {}) {
   React.useEffect(() => {
     const element = target.current
 
@@ -83,7 +85,7 @@ export function useBounds(target: React.RefObject<HTMLElement>, callback: Bounds
     console.warn(`useBounds() is useless here, since the given ref is always null.`)
     // "callback" is not a reasonable dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target])
+  }, alwaysRecalculate ? undefined : [target])
 }
 
 const parentQuerySelector = (element: HTMLElement | null | undefined, parentSelector: string, {
@@ -118,6 +120,7 @@ const parentQuerySelector = (element: HTMLElement | null | undefined, parentSele
 export function useParentBounds(target: React.RefObject<HTMLElement>, callback: BoundsCallback, {
   parentSelector = '*' as string | string[],
   includeSelf = false,
+  alwaysRecalculate = false, // should recalculate on any render?
 } = {}) {
 
   React.useEffect(() => {
@@ -135,10 +138,12 @@ export function useParentBounds(target: React.RefObject<HTMLElement>, callback: 
     console.warn(`useParentBounds() is useless here, since the given ref is always null.`)
     // "callback" is not a reasonable dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target])
+  }, alwaysRecalculate ? undefined : [target])
 }
 
-export function useAnyBounds(target: React.RefObject<HTMLElement> | HTMLElement | string | string[], callback: BoundsCallback) {
+export function useAnyBounds(target: React.RefObject<HTMLElement> | HTMLElement | string | string[], callback: BoundsCallback, {
+  alwaysRecalculate = false, // should recalculate on any render?
+} = {}) {
 
   React.useEffect(() => {
     const element = (
@@ -158,5 +163,5 @@ export function useAnyBounds(target: React.RefObject<HTMLElement> | HTMLElement 
     console.warn(`useAnyBounds() is useless here, since the given ref is always null.`)
     // "callback" is not a reasonable dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [target])
+  }, alwaysRecalculate ? undefined : [target])
 }
