@@ -88,6 +88,25 @@ export function useBounds(target: React.RefObject<HTMLElement>, callback: Bounds
   }, alwaysRecalculate ? undefined : [target])
 }
 
+export function useWindowBounds(callback: BoundsCallback, {
+  alwaysRecalculate = false, // should recalculate on any render?
+} = {}) {
+  React.useEffect(() => {
+    const bounds = new Rectangle()
+    const onResize = () => {
+      bounds.set(window.innerWidth, window.innerHeight)
+      callback(bounds, document.body)
+    }
+    window.addEventListener('resize', onResize)
+    return () => {
+      window.removeEventListener('resize', onResize)
+    }
+
+    // "callback" is not a reasonable dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, alwaysRecalculate ? undefined : [])
+}
+
 const parentQuerySelector = (element: HTMLElement | null | undefined, parentSelector: string, {
   includeSelf = false,
 } = {}) => {
@@ -141,26 +160,47 @@ export function useParentBounds(target: React.RefObject<HTMLElement>, callback: 
   }, alwaysRecalculate ? undefined : [target])
 }
 
-export function useAnyBounds(target: React.RefObject<HTMLElement> | HTMLElement | string | string[], callback: BoundsCallback, {
-  alwaysRecalculate = false, // should recalculate on any render?
-} = {}) {
+const getHtmlElementOrWindow = (target: React.RefObject<HTMLElement> | HTMLElement | Window | string) => (
+  target instanceof Window ? target :
+  typeof target === 'string' ? document.querySelector(target) as HTMLElement : 
+  target instanceof HTMLElement ? target : 
+  target.current
+)
+export function useAnyBounds(
+  target: React.RefObject<HTMLElement> | HTMLElement | Window | string | (React.RefObject<HTMLElement> | HTMLElement | Window | string)[], 
+  callback: BoundsCallback, 
+  {
+    alwaysRecalculate = false, // should recalculate on any render?
+  } = {},
+) {
 
   React.useEffect(() => {
-    const element = (
-      typeof target === 'string' ? document.querySelector(target) as HTMLElement : 
-      Array.isArray(target) ? mapFirst(target, str => document.querySelector(str) as HTMLElement) :
-      target instanceof HTMLElement ? target : 
-      target.current
-    )
 
-    if (element) {
+    const element = Array.isArray(target) 
+      ? mapFirst(target, item => getHtmlElementOrWindow(item)) : 
+      getHtmlElementOrWindow(target)
+
+    if (element instanceof Window) {
+      const bounds = new Rectangle()
+      const onResize = () => {
+        bounds.set(window.innerWidth, window.innerHeight)
+        callback(bounds, document.body)
+      }
+      window.addEventListener('resize', onResize)
+      onResize()
+      return () => {
+        window.removeEventListener('resize', onResize)
+      }
+    }
+
+    else if (element instanceof HTMLElement) {
       track(element, callback)
       return () => {
         untrack(element, callback)
       }
     }
   
-    console.warn(`useAnyBounds() is useless here, since the given ref is always null.`)
+    console.warn(`useAnyBounds() is useless here, since the given ref is always resolved to null.`)
     // "callback" is not a reasonable dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, alwaysRecalculate ? undefined : [target])
