@@ -1,4 +1,14 @@
 
+type RectangleSetParams = {
+  xMin?: number
+  yMin?: number
+  xMax?: number
+  yMax?: number
+  x?: number
+  y?: number
+  width?: number
+  height?: number
+}
 export class Rectangle {
   static intersection(a: Rectangle, b: Rectangle, receiver: Rectangle = new Rectangle()) {
     const xMin = Math.max(a.xMin, b.xMin)
@@ -59,22 +69,39 @@ export class Rectangle {
   clone() {
     return new Rectangle().copy(this)
   }
-  set({
-    xMin = 0, yMin = 0, xMax = 0, yMax = 0, x = xMin, y = xMax, width = xMax - xMin, height = yMax - yMin,
-  }: {
-    xMin?: number
-    yMin?: number
-    xMax?: number
-    yMax?: number
-    x?: number
-    y?: number
-    width?: number
-    height?: number
-  }) {
-    this.x = x
-    this.y = y
-    this.width = width
-    this.height = height
+  set(width: number, height: number): Rectangle
+  set(x: number, y: number, width: number, height: number): Rectangle
+  set(arg: RectangleSetParams): Rectangle
+  set(...args: any[]) {
+    if (args.length === 2) {
+      this.width = parseFloat(args[0])
+      this.height = parseFloat(args[1])
+    }
+    else if (args.length === 4) {
+      this.x = parseFloat(args[0])
+      this.y = parseFloat(args[1])
+      this.width = parseFloat(args[2])
+      this.height = parseFloat(args[3])
+    }
+    else if (args.length === 1 && (args[0] && typeof args[0] === 'object')) {
+      const {
+        xMin = 0,
+        yMin = 0,
+        xMax = 0,
+        yMax = 0,
+        x = xMin,
+        y = xMax,
+        width = xMax - xMin,
+        height = yMax - yMin,    
+      } = args[0]
+      this.x = x
+      this.y = y
+      this.width = width
+      this.height = height
+    }
+    else {
+      throw new Error(`invalid args: ${args}`)
+    }
     return this
   }
   intersection(other: Rectangle, { useSelf = false } = {}) {
