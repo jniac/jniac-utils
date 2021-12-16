@@ -93,13 +93,14 @@ export function useWindowBounds(callback: BoundsCallback, {
 } = {}) {
   React.useEffect(() => {
     const bounds = new Rectangle()
-    const onResize = () => {
+    const update = () => {
       bounds.set(window.innerWidth, window.innerHeight)
       callback(bounds, document.body)
     }
-    window.addEventListener('resize', onResize)
+    update()
+    window.addEventListener('resize', update)
     return () => {
-      window.removeEventListener('resize', onResize)
+      window.removeEventListener('resize', update)
     }
 
     // "callback" is not a reasonable dependency
@@ -162,8 +163,8 @@ export function useParentBounds(target: React.RefObject<HTMLElement>, callback: 
 
 const getHtmlElementOrWindow = (target: React.RefObject<HTMLElement> | HTMLElement | Window | string) => (
   target instanceof Window ? target :
-  typeof target === 'string' ? document.querySelector(target) as HTMLElement : 
-  target instanceof HTMLElement ? target : 
+  target instanceof HTMLElement ? target :
+  typeof target === 'string' ? document.querySelector(target) as HTMLElement :
   target.current
 )
 export function useAnyBounds(
@@ -180,27 +181,31 @@ export function useAnyBounds(
       ? mapFirst(target, item => getHtmlElementOrWindow(item)) : 
       getHtmlElementOrWindow(target)
 
+    // "window" case
     if (element instanceof Window) {
       const bounds = new Rectangle()
-      const onResize = () => {
+      const update = () => {
         bounds.set(window.innerWidth, window.innerHeight)
         callback(bounds, document.body)
       }
-      window.addEventListener('resize', onResize)
-      onResize()
+      window.addEventListener('resize', update)
+      update()
       return () => {
-        window.removeEventListener('resize', onResize)
+        window.removeEventListener('resize', update)
       }
     }
 
+    // "regular" case
     else if (element instanceof HTMLElement) {
       track(element, callback)
       return () => {
         untrack(element, callback)
       }
     }
-  
+    
+    // "fail" case
     console.warn(`useAnyBounds() is useless here, since the given ref is always resolved to null.`)
+
     // "callback" is not a reasonable dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, alwaysRecalculate ? undefined : [target])
