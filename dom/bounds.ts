@@ -1,47 +1,27 @@
+import { Register } from '../collections'
 import { Rectangle } from '../geom'
 import { computeBounds } from './utils'
 
 export type BoundsCallback = (bounds: Rectangle, element: HTMLElement) => void
 
-/**
- * Associates one html element with one or several callbacks (set).
- */
-class CallbackMap extends Map<HTMLElement, Set<BoundsCallback>> {
-
-  add(element: HTMLElement, callback: BoundsCallback) {
-    const create = (element: HTMLElement) => {
-      const set = new Set<BoundsCallback>()
-      this.set(element, set)
-      return set
-    }
-    const set = this.get(element) ?? create(element)
-    set.add(callback)
-  }
-
-  remove(element: HTMLElement, callback: BoundsCallback) {
-    const set = this.get(element)
-    if (set) {
-      set.delete(callback)
-      if (set.size === 0) {
-        this.delete(element)
-      }
-      return set.size
-    }
-    return -1
-  }
+interface BoundsOptions {
+  usingBoundingClientRect: boolean
 }
 
-const allBounds = new Map<HTMLElement, Rectangle>()
-const allCallbacks = new CallbackMap()
+const allCallbacks = new Register<HTMLElement, BoundsCallback>()
+const allOptions = new Map<BoundsCallback, BoundsOptions>()
+const allBounds = new Map<HTMLElement, { offset: Rectangle, client: Rectangle }>()
 const resizeObserver = new ResizeObserver(entries => {
   for (const entry of entries) {
     const element = entry.target as HTMLElement
-    const bounds = allBounds.get(element)!
-    // NOTE: `entry.contentRect` is ignored, since we are using global left / top (window space)
-    computeBounds(element, bounds)
-    const callbacks = allCallbacks.get(element)!
+    const { offset, client } = allBounds.get(element)!
+    // NOTE: `entry.contentRect` is ignored, since we are dealing with global left / top (window space)
+    computeBounds(element, offset)
+    client.copy(element.getBoundingClientRect())
+    const callbacks = allCallbacks.getValues(element)!
     for (const callback of callbacks) {
-      callback(bounds, element)
+      const { usingBoundingClientRect } = allOptions.get(callback)!
+      callback(usingBoundingClientRect ? client : offset, element)
     }
   }
 })
@@ -69,22 +49,29 @@ export const untrackWindow = (callback: BoundsCallback) => {
   }
 }
 
-export const track = (element: HTMLElement | Window, callback: BoundsCallback) => {
+export const track = (
+  element: HTMLElement | Window, 
+  callback: BoundsCallback, 
+  options: BoundsOptions = { usingBoundingClientRect: false },
+) => {
 
   if (element instanceof Window) {
     return trackWindow(callback)
   }
 
   allCallbacks.add(element, callback)
-  const currentBounds = allBounds.get(element)
-  if (currentBounds === undefined) {
+  allOptions.set(callback, options)
+  const current = allBounds.get(element)
+  if (current === undefined) {
     resizeObserver.observe(element)
-    allBounds.set(element, new Rectangle())
+    allBounds.set(element, { offset: new Rectangle(), client: new Rectangle() })
   } else {
     // NOTE: (very important) callback should be called once here because the 
     // element is already tracked/observed and the resizeObserver wont be triggered.
-    callback(currentBounds, element)
-  }
+    const { usingBoundingClientRect } = options
+    const { client, offset } = current
+    callback(usingBoundingClientRect ? client : offset, element)
+}
 }
 
 export const untrack = (element: HTMLElement | Window, callback: BoundsCallback) => {
@@ -100,4 +87,5 @@ export const untrack = (element: HTMLElement | Window, callback: BoundsCallback)
     resizeObserver.unobserve(element)
     allBounds.delete(element)
   }
+  allOptions.delete(callback)
 }

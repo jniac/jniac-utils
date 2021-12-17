@@ -5,12 +5,13 @@ import { computeBounds } from "../dom/utils"
 
 export function useBounds(target: React.RefObject<HTMLElement>, callback: BoundsCallback, {
   alwaysRecalculate = false, // should recalculate on any render?
+  usingBoundingClientRect = false,
 } = {}) {
   React.useEffect(() => {
     const element = target.current
 
     if (element) {
-      track(element, callback)
+      track(element, callback, { usingBoundingClientRect })
       return () => {
         untrack(element, callback)
       }
@@ -75,6 +76,7 @@ export function useParentBounds(target: React.RefObject<HTMLElement>, callback: 
   parentSelector = '*' as string | string[],
   includeSelf = false,
   alwaysRecalculate = false, // should recalculate on any render?
+  usingBoundingClientRect = false,
 } = {}) {
 
   React.useEffect(() => {
@@ -83,7 +85,7 @@ export function useParentBounds(target: React.RefObject<HTMLElement>, callback: 
       : parentQuerySelector(target.current, parentSelector, { includeSelf })
 
     if (element) {
-      track(element, callback)
+      track(element, callback, { usingBoundingClientRect })
       return () => {
         untrack(element, callback)
       }
@@ -118,6 +120,7 @@ const resolveManyTarget = (target: ManyTarget) => (
 
 export function useAnyBounds(target: ManyTarget, callback: BoundsCallback, {
   alwaysRecalculate = false, // should recalculate on any render?
+  usingBoundingClientRect = false,
 } = {}) {
 
   React.useEffect(() => {
@@ -125,7 +128,7 @@ export function useAnyBounds(target: ManyTarget, callback: BoundsCallback, {
     const element = resolveManyTarget(target)
 
     if (element) {
-      track(element, callback)
+      track(element, callback, { usingBoundingClientRect })
       return () => {
         untrack(element, callback)
       }
@@ -139,12 +142,14 @@ export function useAnyBounds(target: ManyTarget, callback: BoundsCallback, {
   }, alwaysRecalculate ? undefined : [target])
 }
 
-const resolveBounds = (element: HTMLElement | Window, receiver: Rectangle = new Rectangle()) => {
+const resolveBounds = (element: HTMLElement | Window, receiver: Rectangle = new Rectangle(), usingBoundingClientRect = false) => {
   if (element instanceof Window) {
     return receiver.set(0, 0, window.innerWidth, window.innerHeight)
   }
 
-  return computeBounds(element, receiver)
+  return (usingBoundingClientRect
+    ? receiver.copy(element.getBoundingClientRect())
+    : computeBounds(element, receiver))
 }
 
 export function useIntersectionBounds(
@@ -160,6 +165,7 @@ export function useIntersectionBounds(
   }) => void,
   {
     alwaysRecalculate = false, // should recalculate on any render?
+    usingBoundingClientRect = true,
   } = {},
 ) {
 
@@ -177,8 +183,8 @@ export function useIntersectionBounds(
       let id = -1
       const loop = () => {
         id = window.requestAnimationFrame(loop)
-        resolveBounds(element1, bounds1)
-        resolveBounds(element2, bounds2)
+        resolveBounds(element1, bounds1, usingBoundingClientRect)
+        resolveBounds(element2, bounds2, usingBoundingClientRect)
         Rectangle.intersection(bounds1, bounds2, intersection, { degenerate: false })
         if (intersection.equals(intersectionOld) === false) {
           const area = intersection.area()
