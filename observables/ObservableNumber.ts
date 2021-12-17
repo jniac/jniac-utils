@@ -14,6 +14,22 @@ export class ObservableNumber extends Observable<number> {
   passedThrough(threshold: number) {
     return this.passedBelow(threshold) || this.passedAbove(threshold)
   }
+  
+  onPassAbove(threshold: number, callback: (target: ObservableNumber) => void) {
+    return this.onChange(() => {
+      if (this.passedAbove(threshold)) {
+        callback(this)
+      }
+    })
+  }
+  
+  onPassBelow(threshold: number, callback: (target: ObservableNumber) => void) {
+    return this.onChange(() => {
+      if (this.passedBelow(threshold)) {
+        callback(this)
+      }
+    })
+  }
 
   onPassThrough(threshold: number, callback: (target: ObservableNumber) => void) {
     return this.onChange(() => {

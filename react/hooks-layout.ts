@@ -1,73 +1,7 @@
 import React from 'react'
 import { Rectangle } from '../geom'
-
-type BoundsCallback = (bounds: Rectangle, element: HTMLElement) => void
-
-/**
- * Associates one html element with one or several callbacks (set).
- */
-class CallbackMap extends Map<HTMLElement, Set<BoundsCallback>> {
-
-  add(element: HTMLElement, callback: BoundsCallback) {
-    const create = (element: HTMLElement) => {
-      const set = new Set<BoundsCallback>()
-      this.set(element, set)
-      return set
-    }
-    const set = this.get(element) ?? create(element)
-    set.add(callback)
-  }
-
-  remove(element: HTMLElement, callback: BoundsCallback) {
-    const set = this.get(element)
-    if (set) {
-      set.delete(callback)
-      if (set.size === 0) {
-        this.delete(element)
-      }
-      return set.size
-    }
-    return -1
-  }
-}
-
-const allBounds = new Map<HTMLElement, Rectangle>()
-const allCallbacks = new CallbackMap()
-const resizeObserver = new ResizeObserver(entries => {
-  for (const entry of entries) {
-    const element = entry.target as HTMLElement
-    const bounds = allBounds.get(element)!
-    const callbacks = allCallbacks.get(element)!
-    const { width, height } = entry.contentRect
-    const x = element.offsetLeft
-    const y = element.offsetTop
-    bounds.set({ x, y, width, height })
-    for (const callback of callbacks) {
-      callback(bounds, element)
-    }
-  }
-})
-const track = (element: HTMLElement, callback: BoundsCallback) => {
-  allCallbacks.add(element, callback)
-  const currentBounds = allBounds.get(element)
-  if (currentBounds === undefined) {
-    resizeObserver.observe(element)
-    allBounds.set(element, new Rectangle())
-  } else {
-    // NOTE: (very important) callback should be called once here because the 
-    // element is already tracked/observed and the resizeObserver wont be triggered.
-    callback(currentBounds, element)
-  }
-}
-const untrack = (element: HTMLElement, callback: BoundsCallback) => {
-  const remainingCallbacksCount = allCallbacks.remove(element, callback)
-  if (remainingCallbacksCount === 0) {
-    // NOTE: (very important) unobserve only if there are no more callbacks, since
-    // a single element could be observed multiple times, we should not blind them all.
-    resizeObserver.unobserve(element)
-    allBounds.delete(element)
-  }
-}
+import { BoundsCallback, track, untrack } from '../dom/bounds'
+import { computeBounds } from "../dom/utils"
 
 export function useBounds(target: React.RefObject<HTMLElement>, callback: BoundsCallback, {
   alwaysRecalculate = false, // should recalculate on any render?
@@ -161,42 +95,36 @@ export function useParentBounds(target: React.RefObject<HTMLElement>, callback: 
   }, alwaysRecalculate ? undefined : [target])
 }
 
-const getHtmlElementOrWindow = (target: React.RefObject<HTMLElement> | HTMLElement | Window | string) => (
+type AnyTarget = 
+  | React.RefObject<HTMLElement> 
+  | HTMLElement 
+  | Window 
+  | string 
+
+type ManyTarget = AnyTarget | AnyTarget[]
+
+const resolveAnyTarget = (target: AnyTarget) => (
   target instanceof Window ? target :
   target instanceof HTMLElement ? target :
   typeof target === 'string' ? document.querySelector(target) as HTMLElement :
   target.current
 )
-export function useAnyBounds(
-  target: React.RefObject<HTMLElement> | HTMLElement | Window | string | (React.RefObject<HTMLElement> | HTMLElement | Window | string)[], 
-  callback: BoundsCallback, 
-  {
-    alwaysRecalculate = false, // should recalculate on any render?
-  } = {},
-) {
+
+const resolveManyTarget = (target: ManyTarget) => (
+  Array.isArray(target) 
+    ? mapFirst(target, item => resolveAnyTarget(item)) ?? null
+    : resolveAnyTarget(target)
+)
+
+export function useAnyBounds(target: ManyTarget, callback: BoundsCallback, {
+  alwaysRecalculate = false, // should recalculate on any render?
+} = {}) {
 
   React.useEffect(() => {
 
-    const element = Array.isArray(target) 
-      ? mapFirst(target, item => getHtmlElementOrWindow(item)) : 
-      getHtmlElementOrWindow(target)
+    const element = resolveManyTarget(target)
 
-    // "window" case
-    if (element instanceof Window) {
-      const bounds = new Rectangle()
-      const update = () => {
-        bounds.set(window.innerWidth, window.innerHeight)
-        callback(bounds, document.body)
-      }
-      window.addEventListener('resize', update)
-      update()
-      return () => {
-        window.removeEventListener('resize', update)
-      }
-    }
-
-    // "regular" case
-    else if (element instanceof HTMLElement) {
+    if (element) {
       track(element, callback)
       return () => {
         untrack(element, callback)
@@ -209,4 +137,63 @@ export function useAnyBounds(
     // "callback" is not a reasonable dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, alwaysRecalculate ? undefined : [target])
+}
+
+const resolveBounds = (element: HTMLElement | Window, receiver: Rectangle = new Rectangle()) => {
+  if (element instanceof Window) {
+    return receiver.set(0, 0, window.innerWidth, window.innerHeight)
+  }
+
+  return computeBounds(element, receiver)
+}
+
+export function useIntersectionBounds(
+  target1: ManyTarget,
+  target2: ManyTarget,
+  callback: (intersection: Rectangle, info: { 
+    element1: HTMLElement | Window,
+    element2: HTMLElement | Window,
+    bounds1: Rectangle,
+    bounds2: Rectangle,
+  }) => void,
+  {
+    alwaysRecalculate = false, // should recalculate on any render?
+  } = {},
+) {
+
+  React.useEffect(() => {
+
+    const element1 = resolveManyTarget(target1)
+    const element2 = resolveManyTarget(target2)
+
+    if (element1 && element2) {
+      const bounds1 = new Rectangle()
+      const bounds2 = new Rectangle()
+      const intersection = new Rectangle()
+      const intersectionOld = new Rectangle().setDegenerate()
+
+      let id = -1
+      const loop = () => {
+        id = window.requestAnimationFrame(loop)
+        resolveBounds(element1, bounds1)
+        resolveBounds(element2, bounds2)
+        Rectangle.intersection(bounds1, bounds2, intersection, { degenerate: false })
+        if (intersection.equals(intersectionOld) === false) {
+          callback(intersection, { element1, element2, bounds1, bounds2 })
+          intersectionOld.copy(intersection)
+        }
+      }
+      loop()
+
+      return () => {
+        window.cancelAnimationFrame(id)
+      }
+    }
+
+    // "fail" case
+    console.warn(`useAnyBounds() is useless here, since at least one of the two targets resolves to null`)
+
+    // "callback" is not a reasonable dependency
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, alwaysRecalculate ? undefined : [target1, target2])
 }

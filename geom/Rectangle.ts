@@ -9,8 +9,11 @@ type RectangleSetParams = {
   width?: number
   height?: number
 }
+
 export class Rectangle {
-  static intersection(a: Rectangle, b: Rectangle, receiver: Rectangle = new Rectangle()) {
+  static intersection(a: Rectangle, b: Rectangle, receiver: Rectangle = new Rectangle(), {
+    degenerate = true,
+  } = {}) {
     const xMin = Math.max(a.xMin, b.xMin)
     const yMin = Math.max(a.yMin, b.yMin)
     const xMax = Math.min(a.xMax, b.xMax)
@@ -19,14 +22,14 @@ export class Rectangle {
     const height = yMax - yMin
     if (width < 0) {
       receiver.x = (xMin + xMax) / 2
-      receiver.width = 0
+      receiver.width = degenerate ? NaN : 0
     } else {
       receiver.x = xMin
-      receiver.width = NaN
+      receiver.width = width
     }
     if (height < 0) {
       receiver.y = (yMin + yMax) / 2
-      receiver.height = NaN
+      receiver.height = degenerate ? NaN : 0
     } else {
       receiver.y = yMin
       receiver.height = height
@@ -53,7 +56,7 @@ export class Rectangle {
   get xMax() { return this.x + this.width }
   get yMax() { return this.y + this.height }
   equals(other: Rectangle) {
-    return (
+    return this.isDegenerate() ? other.isDegenerate() : (
       this.x === other.x &&
       this.y === other.y &&
       this.width === other.width &&
@@ -69,21 +72,29 @@ export class Rectangle {
   clone() {
     return new Rectangle().copy(this)
   }
-  set(width: number, height: number): Rectangle
+  setDimensions(x: number, y: number, width: number, height: number) {
+    this.x = x
+    this.y = y
+    this.width = width
+    this.height = height
+    return this
+  }
   set(x: number, y: number, width: number, height: number): Rectangle
+  set(width: number, height: number): Rectangle
   set(arg: RectangleSetParams): Rectangle
   set(...args: any[]) {
     if (args.length === 2) {
-      this.width = parseFloat(args[0])
-      this.height = parseFloat(args[1])
+      return this.setDimensions(0, 0, parseFloat(args[0]), parseFloat(args[1]))
     }
-    else if (args.length === 4) {
-      this.x = parseFloat(args[0])
-      this.y = parseFloat(args[1])
-      this.width = parseFloat(args[2])
-      this.height = parseFloat(args[3])
+    if (args.length === 4) {
+      return this.setDimensions(
+        parseFloat(args[0]), 
+        parseFloat(args[1]), 
+        parseFloat(args[2]), 
+        parseFloat(args[3]),
+      )
     }
-    else if (args.length === 1 && (args[0] && typeof args[0] === 'object')) {
+    if (args.length === 1 && (args[0] && typeof args[0] === 'object')) {
       const {
         xMin = 0,
         yMin = 0,
@@ -94,29 +105,37 @@ export class Rectangle {
         width = xMax - xMin,
         height = yMax - yMin,    
       } = args[0]
-      this.x = x
-      this.y = y
-      this.width = width
-      this.height = height
+      return this.setDimensions(x, y, width, height)
     }
-    else {
-      throw new Error(`invalid args: ${args}`)
-    }
-    return this
+
+    throw new Error(`invalid args: ${args}`)
   }
-  intersection(other: Rectangle, { useSelf = false } = {}) {
-    return Rectangle.intersection(this, other, useSelf ? this : new Rectangle())
+  isDegenerate() {
+    return Number.isNaN(this.width) || Number.isNaN(this.height)
   }
-  union(other: Rectangle, { useSelf = false } = {}) {
-    return Rectangle.union(this, other, useSelf ? this : new Rectangle())
+  setDegenerate() {
+    return this.setDimensions(0, 0, NaN, NaN)
+  }
+  intersection(other: Rectangle, { clone = false } = {}) {
+    return Rectangle.intersection(this, other, clone ? new Rectangle() : this)
+  }
+  union(other: Rectangle, { clone = false } = {}) {
+    return Rectangle.union(this, other, clone ? new Rectangle() : this)
   }
   area() {
-    return this.width * this.height
+    return this.width * this.height || 0
   }
-  center() {
-    const x = this.x + this.width / 2
-    const y = this.y + this.height / 2
-    return { x, y }
+  get centerX() { return this.x + this.width / 2 }
+  get centerY() { return this.y + this.height / 2 }
+  center(receiver = { x: 0, y: 0 }) {
+    receiver.x = this.centerX
+    receiver.y = this.centerY
+    return receiver
+  }
+  relativePoint(tx: number, ty: number, receiver = { x: 0, y: 0 }) {
+    receiver.x = this.x + this.width * tx
+    receiver.y = this.y + this.height * ty
+    return receiver
   }
   contains(other: Rectangle) {
     return (
@@ -131,9 +150,6 @@ export class Rectangle {
       x <= this.xMax && 
       y >= this.yMin && 
       y <= this.yMax)
-  }
-  isDegenerate() {
-    return Number.isNaN(this.width) || Number.isNaN(this.height)
   }
   toString() {
     return `Bounds{ x: ${this.x}, y: ${this.y}, width: ${this.width}, height:${this.height} }`
