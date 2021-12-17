@@ -55,7 +55,10 @@ const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
 
     if (overlay) {
       if (overlayBackgroundColor) {
-        divRef.current!.style.backgroundColor = overlayBackgroundColor
+        // overlayBackgroundColor is cool on Safari iOS (avoid to see the body underneath)
+        // but that should only be set when transition is almost done
+        yield state.alpha.onPassAbove(.999, () => divRef.current!.style.backgroundColor = overlayBackgroundColor)
+        yield state.alpha.onPassBelow(.999, () => divRef.current!.style.backgroundColor = '')
       }
 
       const child = childRef.current!

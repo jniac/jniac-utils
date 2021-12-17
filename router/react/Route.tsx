@@ -76,7 +76,7 @@ export const Route: React.FC<RouteProps> = ({
     transitionDuration,
     status: new Observable<RouteStatus>('invisible'),
     active: new ObservableBoolean(false),
-    alpha: new ObservableNumber(1),
+    alpha: new ObservableNumber(0),
   // NOTE: be prudent with this
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [])
@@ -94,8 +94,10 @@ export const Route: React.FC<RouteProps> = ({
       if (transitionDuration === 0) {
         if (value) {
           state.status.setValue('visible')
+          state.alpha.setValue(1)
         } else {
           state.status.setValue('invisible')
+          state.alpha.setValue(0)
         }
       } else {
         if (value) {
