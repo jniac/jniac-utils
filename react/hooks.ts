@@ -35,14 +35,14 @@ export function useComplexEffects(complexEffects: () => Generator<Destroyable>, 
 }
 
 export function useForceUpdate({
-  useSetImmediate = true,
+  waitNextFrame = true,
 } = {}) {
   const [, forceUpdate] = React.useReducer(x => x + 1, 0)
   // NOTE: setImmediate here avoid some dependency call bug with React.
   // The kind that happens when a distant component is modifying an observable used here.
   // "setImmediate" solve the probleme because the update is delayed to the next frame.
-  return (useSetImmediate
-    ? () => setImmediate(forceUpdate)
+  return (waitNextFrame
+    ? () => window.requestAnimationFrame(forceUpdate)
     : forceUpdate
   )
 }
