@@ -14,10 +14,15 @@ export class Observable<T> {
 
   #hasChanged = false
   get hasChanged() { return this.#hasChanged }
+
+  destroy: () => void
   
   constructor(initialValue:T) {
     this.#valueOld = initialValue
     this.#value = initialValue
+
+    // NOTE: "destroy" has to be "bind" since the method could be called without "this" scope.
+    this.destroy = () => this.clear()
   }
 
   setValue(value: T | ((value: T) => T), {
