@@ -1,22 +1,18 @@
-/* "html, body" are only here to give some strength to the selector */
+/* "html body" are only here to give some strength to the selector */
 /* https://developer.mozilla.org/en-US/docs/Web/CSS/Specificity */
-/* html body .Route {
-  position: absolute;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  overflow: hidden;
-}
-html body .Route.Scrollable {
-  overflow: hidden scroll;
-} */
 
 html body .DivRoute {
-  height: 100%;
-  overflow: scroll;
+  /* Force block display (because flex break layout). */
+  display: block;
+}
+
+html body .DivRoute > div {
+  /* Force block display (because flex break layout). */
+  display: block;
 }
 
 html body .DivRoute.leaving {
+  /* No pointer events on a leaving route. Make sense. */
   pointer-events: none;
 }
 
