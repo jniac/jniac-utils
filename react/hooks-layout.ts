@@ -155,6 +155,8 @@ export function useIntersectionBounds(
     element2: HTMLElement | Window,
     bounds1: Rectangle,
     bounds2: Rectangle,
+    areaRatio1: number,
+    areaRatio2: number,
   }) => void,
   {
     alwaysRecalculate = false, // should recalculate on any render?
@@ -179,7 +181,10 @@ export function useIntersectionBounds(
         resolveBounds(element2, bounds2)
         Rectangle.intersection(bounds1, bounds2, intersection, { degenerate: false })
         if (intersection.equals(intersectionOld) === false) {
-          callback(intersection, { element1, element2, bounds1, bounds2 })
+          const area = intersection.area()
+          const areaRatio1 = area / bounds1.area()
+          const areaRatio2 = area / bounds2.area()
+          callback(intersection, { element1, element2, bounds1, bounds2, areaRatio1, areaRatio2 })
           intersectionOld.copy(intersection)
         }
       }

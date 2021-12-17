@@ -6,7 +6,9 @@ body, body * {
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  min-height: 100vh;
+  
+  /* no because Safari iOS and its strange height */
+  /* min-height: 100vh; */
 }
 
 

@@ -1,23 +1,29 @@
 
-type RectangleSetParams = {
+type IRectangle = {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+type RectangleSetParams = Partial<IRectangle> & {
   xMin?: number
   yMin?: number
   xMax?: number
   yMax?: number
-  x?: number
-  y?: number
-  width?: number
-  height?: number
 }
 
 export class Rectangle {
-  static intersection(a: Rectangle, b: Rectangle, receiver: Rectangle = new Rectangle(), {
+  static intersection(a: IRectangle, b: IRectangle): Rectangle
+  static intersection(a: IRectangle, b: IRectangle, receiver: Rectangle, options?: { degenerate: boolean }): Rectangle
+  static intersection(a: IRectangle, b: IRectangle, receiver: IRectangle, options?: { degenerate: boolean }): IRectangle
+  static intersection(a: IRectangle, b: IRectangle, receiver: IRectangle = new Rectangle(), {
     degenerate = true,
   } = {}) {
-    const xMin = Math.max(a.xMin, b.xMin)
-    const yMin = Math.max(a.yMin, b.yMin)
-    const xMax = Math.min(a.xMax, b.xMax)
-    const yMax = Math.min(a.yMax, b.yMax)
+    const xMin = Math.max(a.x, b.x)
+    const yMin = Math.max(a.y, b.y)
+    const xMax = Math.min(a.x + a.width, b.x + b.width)
+    const yMax = Math.min(a.y + a.height, b.y + b.height)
     const width = xMax - xMin
     const height = yMax - yMin
     if (width < 0) {
@@ -36,15 +42,31 @@ export class Rectangle {
     }
     return receiver
   }
-  static union(a: Rectangle, b: Rectangle, receiver: Rectangle = new Rectangle()) {
-    const xMin = Math.min(a.xMin, b.xMin)
-    const yMin = Math.min(a.yMin, b.yMin)
-    const xMax = Math.max(a.xMax, b.xMax)
-    const yMax = Math.max(a.yMax, b.yMax)
+  static union(a: IRectangle, b: IRectangle): Rectangle
+  static union(a: IRectangle, b: IRectangle, receiver: Rectangle): Rectangle
+  static union(a: IRectangle, b: IRectangle, receiver: IRectangle): IRectangle
+  static union(a: IRectangle, b: IRectangle, receiver: IRectangle = new Rectangle()) {
+    const xMin = Math.min(a.x, b.x)
+    const yMin = Math.min(a.y, b.y)
+    const xMax = Math.max(a.x + a.width, b.x + b.width)
+    const yMax = Math.max(a.y + a.height, b.y + b.height)
     receiver.x = xMin
     receiver.width = xMax - xMin
     receiver.y = yMin
     receiver.height = yMax - yMin
+    return receiver
+  }
+  static distance(a: IRectangle, b: IRectangle, receiver = { x: 0, y: 0}) {
+    const axMin = a.x
+    const axMax = a.x + a.width
+    const bxMin = b.x
+    const bxMax = b.x + b.width
+    const ayMin = a.y
+    const ayMax = a.y + a.height
+    const byMin = b.y
+    const byMax = b.y + b.height
+    receiver.x = bxMin > axMax ? bxMin - axMax : bxMax < axMin ? bxMax - axMin : 0
+    receiver.y = byMin > ayMax ? byMin - ayMax : byMax < ayMin ? byMax - ayMin : 0
     return receiver
   }
   x = 0;
@@ -55,14 +77,14 @@ export class Rectangle {
   get yMin() { return this.y }
   get xMax() { return this.x + this.width }
   get yMax() { return this.y + this.height }
-  equals(other: Rectangle) {
-    return this.isDegenerate() ? other.isDegenerate() : (
+  equals(other: IRectangle) {
+    return this.isDegenerate() ? (isNaN(other.width) || isNaN(other.height)) : (
       this.x === other.x &&
       this.y === other.y &&
       this.width === other.width &&
       this.height === other.height)
   }
-  copy(other: Rectangle) {
+  copy(other: IRectangle) {
     this.x = other.x
     this.y = other.y
     this.width = other.width
@@ -121,6 +143,9 @@ export class Rectangle {
   }
   union(other: Rectangle, { clone = false } = {}) {
     return Rectangle.union(this, other, clone ? new Rectangle() : this)
+  }
+  distance(other: Rectangle, receiver = { x: 0, y: 0 }) {
+    return Rectangle.distance(this, other, receiver)
   }
   area() {
     return this.width * this.height || 0

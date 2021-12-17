@@ -2,13 +2,13 @@ import React from 'react'
 import { setUrl } from '../location'
 import { RouterContext } from '../react/Router'
 
-export const Link: React.FC<{
+export const Link = React.forwardRef<HTMLAnchorElement, {
   to: string
-} & React.HTMLAttributes<HTMLAnchorElement>> = ({
+} & React.HTMLAttributes<HTMLAnchorElement>>(({
   to, 
   children, 
   ...props
-}) => {
+}, ref) => {
   const { baseUrl } = React.useContext(RouterContext)
   const onClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     e.preventDefault()
@@ -20,8 +20,8 @@ export const Link: React.FC<{
     }
   }
   return (
-    <a {...props} href={to} onClick={onClick}>
+    <a {...props} ref={ref} href={to} onClick={onClick}>
       {children}
     </a>
   )
-}
+})
