@@ -26,3 +26,23 @@ export const computeBounds = (element: HTMLElement, receiver: Rectangle = new Re
 
   return receiver.setDimensions(x, y, width, height)
 }
+
+
+
+export const isParentOf = (parent: any, child: any, {
+  includeSelf = false,
+} = {}) => {
+  if (!parent) {
+    return false
+  }
+  if (includeSelf === false) {
+    child = child.parentElement
+  }
+  while (child) {
+    if (child === parent) {
+      return true
+    }
+    child = child.parentElement
+  }
+  return false
+}

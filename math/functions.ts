@@ -7,6 +7,8 @@ export const lerp = (a: number, b: number, t: number) => a + (b - a) * clamp01(t
 
 export const inverseLerp = (a: number, b: number, t: number) => clamp01((t - a) / (b - a))
 
+export const distance = (x: number, y: number) => Math.sqrt(x * x + y * y)
+
 export const sin01 = (x: number) => Math.sin(x * Math.PI * 2)
 
 // https://en.wikipedia.org/wiki/Smoothstep
