@@ -23,6 +23,9 @@ export const computeBounds = (element: HTMLElement, receiver: Rectangle = new Re
   // one last step
   x += element.offsetLeft + element.clientLeft
   y += element.offsetTop + element.clientTop
+  // on last step after the last step...
+  x += -(document.scrollingElement?.scrollLeft ?? 0)
+  y += -(document.scrollingElement?.scrollTop ?? 0)
 
   return receiver.setDimensions(x, y, width, height)
 }
