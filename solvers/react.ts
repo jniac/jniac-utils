@@ -2,8 +2,8 @@ import React from 'react'
 import { Solver } from '.'
 
 export const useSolverChild = <T>(solver: Solver<T>, initialValue: T) => {
-  const { child, destroy } = React.useMemo(() => solver.createChild(initialValue), [solver, initialValue])
-  React.useEffect(() => destroy, [destroy])
+  const child = React.useMemo(() => solver.createChild(initialValue), [solver, initialValue])
+  React.useEffect(() => child.destroy, [child])
   return child
 }
 
