@@ -19,17 +19,30 @@ export type Destroyable = { destroy: () => void}  | (() => void)
  *       yield () => window.removeEventListener('scroll', onScroll)
  *     }, [username])
  */
-export function useComplexEffects(complexEffects: () => Generator<Destroyable>, deps?: React.DependencyList) {
+export function useComplexEffects(
+  complexEffects: () => Generator<Destroyable>, 
+  deps?: React.DependencyList,
+  { debug = '' } = {}
+) {
+
   React.useEffect(() => {
-    const onDestroyArray: (() => void)[] = []
+    
+    const destroyArray = [] as (() => void)[]
+
     for (const destroy of complexEffects()) {
-      onDestroyArray.push(typeof destroy === 'function' ? destroy : destroy.destroy)
+      destroyArray.push(typeof destroy === 'function' ? destroy : destroy.destroy)
     }
+    
+    if (debug) {
+      console.log(`useComplexEffects debug ${debug}: ${destroyArray.length} callbacks`)
+    }
+
     return () => {
-      for (const cb of onDestroyArray) {
-        cb()
+      for (const destroy of destroyArray) {
+        destroy()
       }
     }
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }

@@ -1,5 +1,4 @@
 import cssColors from 'some-utils/color/css-color.json'
-import { TwoWayMap } from 'some-utils/collections/TwoWayMap'
 
 /**
  * Returns an array with text and color argument for the web console (chrome / firefox).
