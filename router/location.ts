@@ -53,10 +53,10 @@ export const internalUpdate = (url: string) => {
 
   // NOTE: important here to change EVERY parts BEFORE calling the callbacks
   // (since any callbacks should retrieve any parts with new value)
-  if (hashHasChanged) location.hash.triggerCallbacks()
-  if (searchHasChanged) location.search.triggerCallbacks()
-  if (pathnameHasChanged) location.pathname.triggerCallbacks()
-  if (hrefHasChanged) location.href.triggerCallbacks()
+  if (hashHasChanged) location.hash.triggerChangeCallbacks()
+  if (searchHasChanged) location.search.triggerChangeCallbacks()
+  if (pathnameHasChanged) location.pathname.triggerChangeCallbacks()
+  if (hrefHasChanged) location.href.triggerChangeCallbacks()
 
   return {
     href,

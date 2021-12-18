@@ -1,9 +1,33 @@
 
+type ObservableCallback<T> = (value:T, target:Observable<T>) => void
+
+class DestroyedObservable {
+  static errorMessage = `This observable has been destroyed.\nYou should not use it anymore. "onDestroy" callback helps to prevent any usage after destruction.`
+  setValue() {
+    throw new Error(DestroyedObservable.errorMessage)
+  }
+  setValueWithDelay() {
+    throw new Error(DestroyedObservable.errorMessage)
+  }
+  onChange() {
+    throw new Error(DestroyedObservable.errorMessage)
+  }
+  onDestroy() {
+    throw new Error(DestroyedObservable.errorMessage)
+  }
+  destroy() {
+    throw new Error(DestroyedObservable.errorMessage)
+  }
+  get destroyed() { return true }
+}
+
 export class Observable<T> {
+  
   private static count:number = 0
   readonly id = Observable.count++
 
-  #callbacks:Set<(value:T, target:Observable<T>) => void> = new Set()
+  #onChange = new Set() as Set<ObservableCallback<T>>
+  #onDestroy = new Set() as Set<ObservableCallback<T>>
 
   #value:T
   get value() { return this.#value }
@@ -15,14 +39,30 @@ export class Observable<T> {
   #hasChanged = false
   get hasChanged() { return this.#hasChanged }
 
+  destroyed = false
   destroy: () => void
   
   constructor(initialValue:T) {
     this.#valueOld = initialValue
     this.#value = initialValue
 
-    // NOTE: "destroy" has to be "bind" since the method could be called without "this" scope.
-    this.destroy = () => this.clear()
+    // NOTE: destroy here change the prototype of "this". This is critical but helps 
+    // here to prevent any usage of the current observable after destruction.
+    // Could be remove, if considered as "too bad".
+    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/setPrototypeOf
+    this.destroy = () => {
+      const value = this.#value
+      for (const callback of this.#onDestroy) {
+        callback(value, this)
+      }
+      this.#onChange.clear()
+      this.#onDestroy.clear()
+
+      Object.setPrototypeOf(this, DestroyedObservable.prototype)
+      //@ts-ignore
+      delete this.destroy
+      Object.freeze(this)
+    }
   }
 
   setValue(value: T | ((value: T) => T), {
@@ -40,7 +80,7 @@ export class Observable<T> {
       this.#valueOld = this.#value
       this.#value = value
       if (ignoreCallbacks === false) {
-        for (const callback of this.#callbacks) {
+        for (const callback of this.#onChange) {
           callback(value, this)
         }
       }
@@ -49,10 +89,18 @@ export class Observable<T> {
     return this.#hasChanged
   }
 
-  triggerCallbacks() {
-    const value = this.#value
-    for (const callback of this.#callbacks) {
-      callback(value, this)
+  /**
+   * NOTE: triggerChangeCallbacks() allows to defer the callbacks call (eg: after 
+   * further / other changes). Since this break the implicit contract of "onChange"
+   * callbacks (that should be called only when the value has changed), this should
+   * be used very carefully.
+   */
+  triggerChangeCallbacks({ force = false } = {}) {
+    if (this.#hasChanged || force) {
+      const value = this.#value
+      for (const callback of this.#onChange) {
+        callback(value, this)
+      }
     }
   }
 
@@ -62,16 +110,16 @@ export class Observable<T> {
     this.#setValueWithDelayTimeoutID = window.setTimeout(() => this.setValue(value), seconds * 1000)
   }
 
-  onChange(callback:(value:T, target:Observable<T>) => void, { execute = false } = {}) {
-    this.#callbacks.add(callback)
+  onChange(callback: ObservableCallback<T>, { execute = false } = {}) {
+    this.#onChange.add(callback)
     if (execute) {
       callback(this.#value, this)
     }
-    const destroy = () => { this.#callbacks.delete(callback) }
+    const destroy = () => { this.#onChange.delete(callback) }
     return { destroy }
   }
 
-  clear() {
-    this.#callbacks.clear()
+  onDestroy(callback: ObservableCallback<T>) {
+    this.#onDestroy.add(callback)
   }
 }
