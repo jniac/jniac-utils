@@ -1,5 +1,5 @@
-
-type ObservableCallback<T> = (value:T, target:Observable<T>) => void
+import { setValueWithDelay } from './delay'
+import { ValueSetter, ObservableCallback } from './types'
 
 class DestroyedObservable {
   static errorMessage = `This observable has been destroyed.\nYou should not use it anymore. "onDestroy" callback helps to prevent any usage after destruction.`
@@ -21,28 +21,39 @@ class DestroyedObservable {
   get destroyed() { return true }
 }
 
+let valueSetter: ValueSetter<any> | null = null
+export const consumeValueSetter = () => {
+  const tmp = valueSetter
+  valueSetter = null
+  return tmp
+}
+
 export class Observable<T> {
-  
-  private static count:number = 0
-  readonly id = Observable.count++
+
+  static create<T>(initialValue: T) {
+    const observable = new Observable(initialValue)
+    const setValue = consumeValueSetter()!
+    return { observable, setValue }
+  }
+
+  static #count = 0
+  readonly id = Observable.#count++
 
   #onChange = new Set() as Set<ObservableCallback<T>>
   #onDestroy = new Set() as Set<ObservableCallback<T>>
 
-  #value:T
-  get value() { return this.#value }
-  set value(value:T) { this.setValue(value) }
-
-  #valueOld:T
-  get valueOld() { return this.#valueOld }
-
+  #value: T
+  #valueOld: T
   #hasChanged = false
-  get hasChanged() { return this.#hasChanged }
 
-  destroyed = false
-  destroy: () => void
+  get value() { return this.#value }
+  get valueOld() { return this.#valueOld }
+  get hasChanged() { return this.#hasChanged }
+  get destroyed() { return false }
   
-  constructor(initialValue:T) {
+  destroy: () => void
+
+  constructor(initialValue: T) {
     this.#valueOld = initialValue
     this.#value = initialValue
 
@@ -63,30 +74,26 @@ export class Observable<T> {
       delete this.destroy
       Object.freeze(this)
     }
-  }
-
-  setValue(value: T | ((value: T) => T), {
-    ignoreCallbacks = false
-  } = {}): boolean {
-    window.clearTimeout(this.#setValueWithDelayTimeoutID)
-
-    if (typeof value === 'function') {
-      const newValue = (value as (value: T) => T)(this.#value)
-      return this.setValue(newValue)
-    }
-
-    this.#hasChanged = this.#value !== value
-    if (this.#hasChanged) {
-      this.#valueOld = this.#value
-      this.#value = value
-      if (ignoreCallbacks === false) {
-        for (const callback of this.#onChange) {
-          callback(value, this)
+    
+    // NOTE: "valueSetter" is created here. It's the only access to set the inner value.
+    // It can only be consumed by "consumeValueSetter".
+    valueSetter = (value: T, {
+      ignoreCallbacks = false
+    } = {}): boolean => {
+  
+      this.#hasChanged = this.#value !== value
+      if (this.#hasChanged) {
+        this.#valueOld = this.#value
+        this.#value = value
+        if (ignoreCallbacks === false) {
+          for (const callback of this.#onChange) {
+            callback(value, this)
+          }
         }
       }
+  
+      return this.#hasChanged
     }
-
-    return this.#hasChanged
   }
 
   /**
@@ -104,22 +111,66 @@ export class Observable<T> {
     }
   }
 
-  #setValueWithDelayTimeoutID = -1
-  setValueWithDelay(value: T | ((value: T) => T), seconds: number) {
-    window.clearTimeout(this.#setValueWithDelayTimeoutID)
-    this.#setValueWithDelayTimeoutID = window.setTimeout(() => this.setValue(value), seconds * 1000)
-  }
-
   onChange(callback: ObservableCallback<T>, { execute = false } = {}) {
     this.#onChange.add(callback)
     if (execute) {
       callback(this.#value, this)
     }
-    const destroy = () => { this.#onChange.delete(callback) }
+    const destroy = () => {
+      this.#onChange.delete(callback)
+    }
     return { destroy }
+  }
+
+  until(predicate: (value: T) => boolean, {
+    enter,
+    leave,
+  } : {
+    enter?: ObservableCallback<T>
+    leave?: ObservableCallback<T>
+  }) {
+    let ok = predicate(this.#value)
+    if (ok) {
+      enter?.(this.#value, this)
+    }
+    return this.onChange(value => {
+      const okNew = predicate(value)
+      if (ok !== okNew) {
+        ok = okNew
+        if (ok) {
+          enter?.(value, this)
+        }
+        else {
+          leave?.(value, this)
+        }
+      }
+    })
   }
 
   onDestroy(callback: ObservableCallback<T>) {
     this.#onDestroy.add(callback)
   }
 }
+
+
+
+export class MutObservable<T> extends Observable<T> {
+
+  #valueSetter!: ValueSetter<T>
+
+  constructor(intialValue: T) {
+    super(intialValue)
+    this.#valueSetter = consumeValueSetter() as ValueSetter<T>
+  }
+
+  setValue(value: T, options?: { ignoreCallbacks: boolean} ) {
+    return this.#valueSetter(value, options)
+  }
+
+  setValueWithDelay(value: T, seconds: number, { clear = true } = {}) {
+    setValueWithDelay(this, this.#valueSetter, value, seconds, clear)
+  }
+
+  set value(value: T) { this.setValue(value) }
+}
+
