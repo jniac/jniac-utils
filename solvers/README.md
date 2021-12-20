@@ -20,7 +20,7 @@ console.log(solver.value) // false
 solver.onChange(newValue => console.log(`current value is: ${newValue}`))
 
 // Here we create a child (which can be seen as a dependency of the solver)
-const { child } = solver.createChild(false)
+const child = solver.createChild(false)
 
 // solver is still set to false, because the child as false as initialValue
 console.log(solver.value) // false
@@ -30,15 +30,15 @@ child.setValue(true) // "current value is: true" to the console
 ```
 
 ### destroy
-Along with the child, an destroy method is served, so before, we could have written:
+Observable children are destroyable, so
 ```js
-const { destroy, child } = solver.createChild(false)
+const child = solver.createChild(false)
 
 // here everything happens as before
 child.setValue(true) // "current value is: true" to the console
 
 // but if call destroy, we can notice that the value is updated:
-destroy() // "current value is: false" to the console
+child.destroy() // "current value is: false" to the console
 ```
 
 ### immutable children

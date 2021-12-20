@@ -1,5 +1,10 @@
+import { setValueWithDelay } from './utils/delay'
 
-type ObservableCallback<T> = (value:T, target:Observable<T>) => void
+export type ObservableCallback<T> = (value:T, target:Observable<T>) => void
+export type SetValueOptions = {
+  ignoreCallbacks?: boolean
+  owner?: any
+}
 
 class DestroyedObservable {
   static errorMessage = `This observable has been destroyed.\nYou should not use it anymore. "onDestroy" callback helps to prevent any usage after destruction.`
@@ -39,7 +44,15 @@ export class Observable<T> {
   #hasChanged = false
   get hasChanged() { return this.#hasChanged }
 
-  destroyed = false
+  #owner = null as any
+  own(owner: any) {
+    if (this.#owner !== null) {
+      throw new Error(`Ownership has already been set.`)
+    }
+    this.#owner = owner
+  }
+
+  get destroyed() { return false }
   destroy: () => void
   
   constructor(initialValue:T) {
@@ -65,10 +78,14 @@ export class Observable<T> {
     }
   }
 
-  setValue(value: T | ((value: T) => T), {
-    ignoreCallbacks = false
-  } = {}): boolean {
-    window.clearTimeout(this.#setValueWithDelayTimeoutID)
+  setValue(value: T | ((v: T) => T), {
+    ignoreCallbacks = false,
+    owner = null,
+  }: SetValueOptions = {}): boolean {
+
+    if (this.#owner !== owner) {
+      throw new Error(`Value cannot be changed with an invalid "owner" value.`)
+    }
 
     if (typeof value === 'function') {
       const newValue = (value as (value: T) => T)(this.#value)
@@ -104,10 +121,11 @@ export class Observable<T> {
     }
   }
 
-  #setValueWithDelayTimeoutID = -1
-  setValueWithDelay(value: T | ((value: T) => T), seconds: number) {
-    window.clearTimeout(this.#setValueWithDelayTimeoutID)
-    this.#setValueWithDelayTimeoutID = window.setTimeout(() => this.setValue(value), seconds * 1000)
+  setValueWithDelay(value: T | ((v: T) => T), seconds: number, {
+    clearOnChange = true,
+    clearPrevious = true,
+  } = {}) {
+    setValueWithDelay(this, value, seconds, clearOnChange, clearPrevious)
   }
 
   onChange(callback: ObservableCallback<T>, { execute = false } = {}) {
@@ -121,5 +139,55 @@ export class Observable<T> {
 
   onDestroy(callback: ObservableCallback<T>) {
     this.#onDestroy.add(callback)
+  }
+
+  /**
+   * enter() is called when the first time the predicate returns true afer returning false
+   * every() is called every time the predicates returns true
+   * leave() is called when the first time the predicate returns false afer returning true
+   */
+  when(predicate: (value: T) => boolean, {
+    enter,
+    leave,
+    every,
+  } : {
+    enter?: ObservableCallback<T>
+    leave?: ObservableCallback<T>
+    every?: ObservableCallback<T>
+  }) {
+    let ok = predicate(this.#value)
+    if (ok) {
+      enter?.(this.#value, this)
+      every?.(this.#value, this)
+    }
+    return this.onChange(value => {
+      const okNew = predicate(value)
+      every?.(value, this)
+      if (ok !== okNew) {
+        ok = okNew
+        if (ok) {
+          enter?.(value, this)
+        }
+        else {
+          leave?.(value, this)
+        }
+      }
+    })
+  }
+
+  child<U>(predicate: (v: Observable<T>) => U) {
+    const child = new Observable(predicate(this))
+    const { destroy } = this.onChange(() => {
+      child.setValue(() => predicate(this))
+    })
+    child.onDestroy(destroy)
+    return child
+  }
+
+  // utils
+  logOnChange(name: string) {
+    return this.onChange(value => {
+      console.log(`"${name}" has changed: ${value}`)
+    })
   }
 }
