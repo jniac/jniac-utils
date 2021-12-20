@@ -59,24 +59,6 @@ export function useObservable<T>(observable: Observable<T>, { useValueOld = fals
   return observable.value
 }
 
-export function mapWithSeparator<T, U, V>(
-  data: T[],
-  map: (item: T, index: number) => U,
-  separator: (index: number) => V,
-) {
-
-  if (data.length === 0) {
-    return []
-  }
-
-  const result = [map(data[0], 0)] as (T | U | V)[]
-  for (let index = 1; index < data.length; index++) {
-    result.push(separator(index - 1))
-    result.push(map(data[index], index))
-  }
-  return result
-}
-
 export function useFetchJson<T = any>(url: string): T | null
 export function useFetchJson<T = any>(url: string, initialValue: T): T
 export function useFetchJson<T = any>(url: string, initialValue: T | null = null) {
@@ -91,4 +73,19 @@ export function useFetchJson<T = any>(url: string, initialValue: T | null = null
     }).catch(e => console.error(e))
   }, [url])
   return data
+}
+
+export function useAnimationFrame(callback: (ms: number) => void) {
+  React.useEffect(() => {
+    let id = -1
+    const loop = (ms: number) => { 
+      id = window.requestAnimationFrame(loop)
+      callback(ms)
+    }
+    id = window.requestAnimationFrame(loop)
+    return () => {
+      window.cancelAnimationFrame(id)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 }

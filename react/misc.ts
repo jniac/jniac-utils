@@ -27,3 +27,22 @@ export const safeClassName = (...args: any[]) => args
   .flat(Infinity)
   .filter(value => !!value)
   .join(' ')
+
+
+  export function mapWithSeparator<T, U, V>(
+    data: T[],
+    map: (item: T, index: number) => U,
+    separator: (index: number) => V,
+  ) {
+  
+    if (data.length === 0) {
+      return []
+    }
+  
+    const result = [map(data[0], 0)] as (T | U | V)[]
+    for (let index = 1; index < data.length; index++) {
+      result.push(separator(index - 1))
+      result.push(map(data[index], index))
+    }
+    return result
+  }
