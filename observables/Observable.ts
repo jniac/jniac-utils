@@ -123,6 +123,13 @@ export class Observable<T> {
     }
   }
 
+  /**
+   * Should not exists. Here because used somewhere.
+   */
+  clearCallbacks() {
+    this.#onChange.clear()
+  }
+
   setValueWithDelay(value: T | ((v: T) => T), seconds: number, {
     clearOnChange = true,
     clearPrevious = true,
