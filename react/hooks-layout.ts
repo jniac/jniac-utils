@@ -3,17 +3,19 @@ import { Rectangle } from '../geom'
 import { BoundsCallback, track, untrack } from '../dom/bounds'
 import { computeBounds } from "../dom/utils"
 
+
 export function useBounds(target: React.RefObject<HTMLElement>, callback: BoundsCallback, {
   alwaysRecalculate = false, // should recalculate on any render?
   usingBoundingClientRect = false,
 } = {}) {
   React.useEffect(() => {
     const element = target.current
+    const safeCallback: BoundsCallback = (b, e) => target.current && callback(b, e)
 
     if (element) {
-      track(element, callback, { usingBoundingClientRect })
+      track(element, safeCallback, { usingBoundingClientRect })
       return () => {
-        untrack(element, callback)
+        untrack(element, safeCallback)
       }
     }
 
