@@ -54,6 +54,8 @@ export class Observable<T> {
 
   get destroyed() { return false }
   destroy: () => void
+
+  ignoreCallbacks = false
   
   constructor(initialValue:T) {
     this.#valueOld = initialValue
@@ -96,7 +98,7 @@ export class Observable<T> {
     if (this.#hasChanged) {
       this.#valueOld = this.#value
       this.#value = value
-      if (ignoreCallbacks === false) {
+      if (ignoreCallbacks === false && this.ignoreCallbacks === false) {
         for (const callback of this.#onChange) {
           callback(value, this)
         }
