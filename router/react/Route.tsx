@@ -68,8 +68,8 @@ export const Route: React.FC<RouteProps> = ({
   const { baseUrl } = React.useContext(RouterContext)
 
   const innerState = React.useMemo(() => ({
-    visible: new Observable<boolean>(false),
-    mounted: new Observable<boolean>(false),
+    visible: new ObservableBoolean(false),
+    mounted: new ObservableBoolean(false),
   }), [])
 
   const state: RouteState = React.useMemo<RouteState>(() => ({

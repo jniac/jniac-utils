@@ -2,6 +2,8 @@
 export class Register<K, V> {
   #map = new Map<K, Set<V>>()
 
+  get keyCount() { return this.#map.size }
+
   add(key: K, value: V) {
     const create = () => {
       const set = new Set<V>()
@@ -25,7 +27,7 @@ export class Register<K, V> {
     return -1
   }
 
-  getValues(key: K) {
+  get(key: K) {
     return this.#map.get(key)
   }
 

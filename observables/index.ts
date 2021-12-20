@@ -1,3 +1,5 @@
 export { Observable } from './Observable'
 export { ObservableNumber } from './ObservableNumber'
 export { ObservableBoolean } from './ObservableBoolean'
+export { ObservableBitmask } from './ObservableBitmask'
+export { own } from './own'

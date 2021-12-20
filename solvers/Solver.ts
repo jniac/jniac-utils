@@ -1,40 +1,64 @@
 import { Observable } from '../observables'
 
-export class Solver<U, V = null> extends Observable<U> {
+type SolverState = Record<string, Observable<any>> | Observable<any>[]
 
-  #children = new Set<{ child: Observable<U>, props: Partial<V> }>()
-  #update: () => void
+export const solve = <T, S extends SolverState>(
+  observable: Observable<T>,
+  state: S,
+  solver: (state: S) => T | undefined,
+) => {
+  observable.own(observable)
+  const initialValue = observable.value
+  const update = () => observable.setValue(solver(state) ?? initialValue, {
+    owner: observable,
+  })
+  for (const child of Object.values(state)) {
+    child.onChange(update)
+  }
+  return update
+}
 
-  constructor(initialValue: U, solver: (values: { value:U, props: Partial<V> }[]) => U) {
+export class Solver<T, S extends SolverState> extends Observable<T> {
+  constructor(initialValue: T, state: S, solver: (state: S) => T | undefined) {
     super(initialValue)
-    this.#update = () => {
-      const values = [...this.#children].map(({ child, props }) => ({ value: child.value, props }))
-      const value = values.length > 0 ? solver(values) : initialValue
-      super.setValue(value)
-    }
-  }
-
-  createChild(initialValue: U, childProps?: V) {
-    const child = new Observable(initialValue)
-    child.onChange(this.#update)
-    const bundle = { child, props: childProps ?? {} }
-    this.#children.add(bundle)
-    this.#update()
-    const destroy = () => {
-      this.#children.delete(bundle)
-      child.clear()
-      this.#update()
-    }
-    return { child, destroy }
-  }
-
-  createImmutableChild(value: U, childProps?: V) {
-    const { destroy } = this.createChild(value, childProps)
-    return { destroy }
-  }
-
-  override setValue() {
-    console.warn('Solver cannot be set directly. Use "getChild" to change the inner value.')
-    return false
+    solve(this, state, solver)
   }
 }
+
+export class ArraySolver<T> extends Observable<T> {
+
+  #children: Set<Observable<T>>
+  #update: () => void
+
+  constructor(
+    initialValue: T, 
+    solver: (children: Observable<T>[]) => T,
+  ) {
+    super(initialValue)
+    this.own(this)
+    this.#children = new Set()
+    this.#update = () => {
+      const values = [...this.#children]
+      const value = values.length > 0 ? solver(values) : initialValue
+      super.setValue(value, { owner: this })
+    }
+  }
+
+  createChild(initialValue: T) {
+    const child = new Observable(initialValue)
+    child.onChange(this.#update)
+    child.onDestroy(() => {
+      this.#children.delete(child)
+      this.#update()
+    })
+    this.#children.add(child)
+    this.#update()
+    return child
+  }
+
+  createImmutableChild(value: T) {
+    const { destroy } = this.createChild(value)
+    return { destroy }
+  }
+}
+

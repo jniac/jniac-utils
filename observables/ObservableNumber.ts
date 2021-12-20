@@ -1,6 +1,27 @@
 import { Observable } from './Observable'
 
 export class ObservableNumber extends Observable<number> {
+
+  #min: number
+  #max: number
+
+  constructor(initialValue: number, { min = -Infinity, max = Infinity } = {}) {
+    super(initialValue)
+    this.#min = min
+    this.#max = max
+  }
+
+  setValue(value: number | ((v: number) => number), { 
+    ignoreCallbacks = false,
+    owner = null as any,
+  } = {}): boolean {
+      if (typeof value === 'function') {
+        value = value(this.value)
+      }
+      value = value < this.#min ? this.#min : value > this.#max ? this.#max : value
+      return super.setValue(value, { ignoreCallbacks, owner })
+  }
+
   get delta() { return this.value - this.valueOld }
   
   passedAbove(threshold: number ) {

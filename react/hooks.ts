@@ -60,34 +60,20 @@ export function useForceUpdate({
   )
 }
 
+type UseObservableOption<T, O extends Observable<T>, U> = Partial<{ useValueOld: boolean, extract: (o: O) => U }>
 export function useObservable<T>(observable: Observable<T>): T
-export function useObservable<T>(observable: Observable<T>, option: { useValueOld: true }): { value: T, valueOld: T }
-export function useObservable<T>(observable: Observable<T>, { useValueOld = false } = {}) {
+export function useObservable<T, O extends Observable<any> = Observable<T>, U = any>(observable: O, options: UseObservableOption<T, O, U>): T
+export function useObservable<T, O extends Observable<any> = Observable<T>, U = any>(observable: O, { useValueOld = false, extract }: UseObservableOption<T, O, U> = {}) {
   const forceUpdate = useForceUpdate()
   React.useEffect(() => observable.onChange(forceUpdate).destroy, [forceUpdate, observable]);
   if (useValueOld) {
     const { value, valueOld } = observable
     return { value, valueOld }
   }
+  if (extract) {
+    return extract(observable)
+  }
   return observable.value
-}
-
-export function mapWithSeparator<T, U, V>(
-  data: T[],
-  map: (item: T, index: number) => U,
-  separator: (index: number) => V,
-) {
-
-  if (data.length === 0) {
-    return []
-  }
-
-  const result = [map(data[0], 0)] as (T | U | V)[]
-  for (let index = 1; index < data.length; index++) {
-    result.push(separator(index - 1))
-    result.push(map(data[index], index))
-  }
-  return result
 }
 
 export function useFetchJson<T = any>(url: string): T | null
@@ -104,4 +90,19 @@ export function useFetchJson<T = any>(url: string, initialValue: T | null = null
     }).catch(e => console.error(e))
   }, [url])
   return data
+}
+
+export function useAnimationFrame(callback: (ms: number) => void) {
+  React.useEffect(() => {
+    let id = -1
+    const loop = (ms: number) => { 
+      id = window.requestAnimationFrame(loop)
+      callback(ms)
+    }
+    id = window.requestAnimationFrame(loop)
+    return () => {
+      window.cancelAnimationFrame(id)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 }
