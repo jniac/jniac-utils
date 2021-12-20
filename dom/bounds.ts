@@ -18,7 +18,7 @@ const resizeObserver = new ResizeObserver(entries => {
     // NOTE: `entry.contentRect` is ignored, since we are dealing with global left / top (window space)
     computeBounds(element, offset)
     client.copy(element.getBoundingClientRect())
-    const callbacks = allCallbacks.getValues(element)!
+    const callbacks = allCallbacks.get(element)!
     for (const callback of callbacks) {
       const { usingBoundingClientRect } = allOptions.get(callback)!
       callback(usingBoundingClientRect ? client : offset, element)
