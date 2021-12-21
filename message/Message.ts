@@ -1,21 +1,24 @@
 import { Register } from '../collections'
 
-interface Message<P = any> {
+export interface Message {
   target: any
   type: any
-  props: P
+  props: any
+}
+
+interface MessageSent {
   stopPropagation: () => void
 }
 
-type MessageCallback<P = any> = (message: Message<P>) => void
+type MessageCallback = (message: any) => void
 
 interface SendModality {
   propagation: (currentTarget: any) => any[]
 }
 
-interface Listener<P = any> {
+interface Listener {
   type: any
-  callback: MessageCallback<P>
+  callback: MessageCallback
 }
 
 const register = new Register<any, Listener>()
@@ -48,15 +51,15 @@ const getMatchingCallbacks = (target: any, type: any) => {
   return []
 }
 
-export const send = <P = any>(
-  target: any, 
-  type: any, 
-  props?: P, 
+export const send = <M extends Message = any>(
+  target: M['target'],
+  type: M['type'],
+  props?: M['props'],
   modality?: SendModality,
 ) => {
   const callbacks = getMatchingCallbacks(target, type)
   if (callbacks) {
-    const message: Message = {
+    const message: Message & MessageSent = {
       target,
       type,
       props,
@@ -68,10 +71,10 @@ export const send = <P = any>(
   }
 }
 
-export const on = <P>(
-  target: any,
-  type: any,
-  callback: MessageCallback<P>,
+export const on = <M extends Message>(
+  target: M['target'],
+  type: M['type'],
+  callback: (message: M & MessageSent) => void,
 ) => {
   const listener = { type, callback }
   register.add(target, listener)
