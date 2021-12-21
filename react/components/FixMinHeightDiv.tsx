@@ -1,5 +1,7 @@
 import React from 'react'
-import { useParentBounds } from '.'
+import { useParentBounds } from '..'
+
+// NOTE: Not very sure of that component pertinence.
 
 export const FixMinHeightDiv = React.forwardRef<HTMLDivElement, {
   parentSelector: string | string[]
