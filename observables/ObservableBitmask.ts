@@ -1,4 +1,4 @@
-import { bitmask } from './utils/bitmask'
+import { bitmask } from './utils/bitmask-16'
 import { Observable, SetValueOptions } from './Observable'
 
 export class ObservableBitmask extends Observable<number> {
