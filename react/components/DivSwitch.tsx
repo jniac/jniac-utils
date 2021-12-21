@@ -11,7 +11,7 @@ export const DivSwitch: React.FC<{
 } & React.HTMLAttributes<HTMLDivElement>> = ({
   index = 0, 
   items = [],
-  duration = 10.8,
+  duration = .8,
   className = '',
   ...props
 }) => {
