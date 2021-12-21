@@ -1,4 +1,4 @@
-import cssColors from 'some-utils/color/css-color.json'
+import cssColors from '../color/css-color.json'
 
 /**
  * Returns an array with text and color argument for the web console (chrome / firefox).

@@ -1,6 +1,6 @@
 import React from 'react'
-import * as Animation from 'utils/Animation'
-import * as MathUtils from 'some-utils/math'
+import * as Animation from '../../Animation'
+import * as MathUtils from '../../math'
 import { SwitchChildProps, Switch } from './Switch'
 import './DivSwitch.css'
 

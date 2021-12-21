@@ -1,7 +1,7 @@
 import React from 'react'
-import * as Animation from 'utils/Animation'
-import { Observable } from 'some-utils/observables'
-import { useComplexEffects } from 'some-utils/react'
+import * as Animation from '../../Animation'
+import { Observable } from '../../observables'
+import { useComplexEffects } from '../hooks'
 
 export interface SwitchChildProps { 
   entering?: boolean
