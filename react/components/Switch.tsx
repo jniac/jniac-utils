@@ -11,7 +11,7 @@ export interface SwitchChildProps {
 export interface SwitchProps<T> {
   index?: number
   items?: React.ElementType[]
-  duration?: number
+  transitionDuration?: number
   onTransition?: (entering: T | null, leaving: T | null, progress: number) => void
   debugDisplayAll?: boolean
 }
@@ -19,7 +19,7 @@ export interface SwitchProps<T> {
 export const Switch = <T extends unknown>({
   index = 0,
   items = [],
-  duration = 0.8,
+  transitionDuration = 0.8,
   debugDisplayAll = false,
   onTransition,
 }: SwitchProps<T>) => {
@@ -42,7 +42,7 @@ export const Switch = <T extends unknown>({
       setTransition(true)
       const inverse = inverseObs.value
       const [entering, leaving] = inverse ? [ref1, ref2] : [ref2, ref1]
-      Animation.duringWithTarget(indexObs, { duration, immediate: true }, ({ progress }) => {
+      Animation.duringWithTarget(indexObs, { duration: transitionDuration, immediate: true }, ({ progress }) => {
         onTransition?.(entering.current, leaving.current, progress)
       }).onComplete(() => {
         setTransition(false)

@@ -7,12 +7,12 @@ import './DivSwitch.css'
 export const DivSwitch: React.FC<{
   index?: number
   items?: React.ElementType[]
-  duration?: number
+  transitionDuration?: number
   debugDisplayAll?: boolean
 } & React.HTMLAttributes<HTMLDivElement>> = ({
   index = 0, 
   items = [],
-  duration = .8,
+  transitionDuration = .8,
   debugDisplayAll = false,
   className = '',
   ...props
@@ -32,7 +32,7 @@ export const DivSwitch: React.FC<{
       <div className={`DivSwitch ${className}`} {...props}>
         <Switch<HTMLDivElement>
           index={index}
-          duration={duration}
+          transitionDuration={transitionDuration}
           items={mapItems}
           debugDisplayAll={debugDisplayAll}
           onTransition={(entering, leaving, t) => {
