@@ -8,10 +8,12 @@ export const DivSwitch: React.FC<{
   index?: number
   items?: React.ElementType[]
   duration?: number
+  debugDisplayAll?: boolean
 } & React.HTMLAttributes<HTMLDivElement>> = ({
   index = 0, 
   items = [],
   duration = .8,
+  debugDisplayAll = false,
   className = '',
   ...props
 }) => {
@@ -32,6 +34,7 @@ export const DivSwitch: React.FC<{
           index={index}
           duration={duration}
           items={mapItems}
+          debugDisplayAll={debugDisplayAll}
           onTransition={(entering, leaving, t) => {
             if (t < 1) {
               entering?.classList.add('entering')

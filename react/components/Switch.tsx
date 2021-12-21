@@ -13,14 +13,17 @@ export interface SwitchProps<T> {
   items?: React.ElementType[]
   duration?: number
   onTransition?: (entering: T | null, leaving: T | null, progress: number) => void
+  debugDisplayAll?: boolean
 }
 
 export const Switch = <T extends unknown>({
   index = 0,
   items = [],
   duration = 0.8,
+  debugDisplayAll = false,
   onTransition,
 }: SwitchProps<T>) => {
+
   const ref1 = React.useRef<T>(null)
   const ref2 = React.useRef<T>(null)
 
@@ -57,6 +60,12 @@ export const Switch = <T extends unknown>({
   const index2 = inverse ? indexObs.value : indexObs.valueOld
   const Content1 = items[index1]
   const Content2 = items[index2]
+
+  if (debugDisplayAll) {
+    return (
+      <>{items.map((Item, index) => <Item key={index} />)}</>
+    )
+  }
 
   return (
     <>
