@@ -62,7 +62,7 @@ export function useForceUpdate({
 
 type UseObservableOption<T, O extends Observable<T>, U> = Partial<{ useValueOld: boolean, extract: (o: O) => U }>
 export function useObservable<T>(observable: Observable<T>): T
-export function useObservable<T, O extends Observable<any> = Observable<T>, U = any>(observable: O, options: UseObservableOption<T, O, U>): T
+export function useObservable<T, O extends Observable<any> = Observable<T>, U = any>(observable: O, options: UseObservableOption<T, O, U>): U
 export function useObservable<T, O extends Observable<any> = Observable<T>, U = any>(observable: O, { useValueOld = false, extract }: UseObservableOption<T, O, U> = {}) {
   const forceUpdate = useForceUpdate()
   React.useEffect(() => observable.onChange(forceUpdate).destroy, [forceUpdate, observable]);

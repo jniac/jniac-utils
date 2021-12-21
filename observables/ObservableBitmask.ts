@@ -27,7 +27,20 @@ export class ObservableBitmask extends Observable<number> {
     }, { execute })
   }
 
-  toggle(mask: number, options?: SetValueOptions) {
+  toggle(
+    mask: number,
+    mode: boolean | ('normal' | 'inverse' | 'toggle') = 'normal',
+    options?: SetValueOptions,
+  ) {
+    if (typeof mode === 'boolean') {
+      mode = mode ? 'normal' : 'inverse'
+    }
+    if (mode === 'toggle') {
+      mode = bitmask.compare(mask, this.value) ? 'inverse' : 'normal'
+    }
+    if (mode === 'inverse') {
+      mask = bitmask.invert(mask)
+    }
     this.setValue(bitmask.apply(mask, this.value), options)
   }
 }
