@@ -1,11 +1,17 @@
-.DivSwitch.Item {
+.DivSwitch > .Item {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   pointer-events: none;
+
+  /* inherit all display property */
+  display: inherit;
+  flex-direction: inherit;
+  align-items: inherit;
+  justify-content: inherit;
 }
-.DivSwitch.Item:not(.leaving) > * {
+.DivSwitch > .Item:not(.leaving) > * {
   pointer-events: all;
 }

@@ -8,13 +8,17 @@ export const DivSwitch: React.FC<{
   index?: number
   items?: React.ElementType[]
   duration?: number
-}> = ({
-  index = 0, items = [], duration = 0.8,
+} & React.HTMLAttributes<HTMLDivElement>> = ({
+  index = 0, 
+  items = [],
+  duration = 10.8,
+  className = '',
+  ...props
 }) => {
 
     const mapItems = React.useMemo(() => (
       items.map(Item => React.forwardRef<HTMLDivElement, SwitchChildProps>(({ entering }, ref) => (
-        <div ref={ref} className="DivSwitch Item" style={{ opacity: `${entering ? 0 : 1}` }}>
+        <div ref={ref} className="Item" style={{ opacity: `${entering ? '0' : ''}` }}>
           <Item />
         </div>
       )))
@@ -23,26 +27,28 @@ export const DivSwitch: React.FC<{
     ), items)
 
     return (
-      <Switch<HTMLDivElement>
-        index={index}
-        duration={duration}
-        items={mapItems}
-        onTransition={(entering, leaving, t) => {
-          if (t < 1) {
-            entering?.classList.add('entering')
-            leaving?.classList.add('leaving')
-          }
-          if (t === 1) {
-            entering?.classList.remove('entering')
-          }
-          if (leaving) {
-            const t1 = MathUtils.inverseLerp(0, 0.6, t)
-            leaving.style.opacity = Animation.easing.in4((1 - t1)).toFixed(2)
-          }
-          if (entering) {
-            entering.style.opacity = MathUtils.inout(t, 3, .3).toFixed(2)
-          }
-        }}
-      />
+      <div className={`DivSwitch ${className}`} {...props}>
+        <Switch<HTMLDivElement>
+          index={index}
+          duration={duration}
+          items={mapItems}
+          onTransition={(entering, leaving, t) => {
+            if (t < 1) {
+              entering?.classList.add('entering')
+              leaving?.classList.add('leaving')
+            }
+            if (t === 1) {
+              entering?.classList.remove('entering')
+            }
+            if (leaving) {
+              const t1 = MathUtils.inverseLerp(0, 0.6, t)
+              leaving.style.opacity = Animation.easing.in4((1 - t1)).toFixed(2)
+            }
+            if (entering) {
+              entering.style.opacity = t < 1 ? MathUtils.inout(t, 3, .3).toFixed(2) : ''
+            }
+          }}
+        />
+      </div>
     )
   }
