@@ -1,16 +1,31 @@
 import React from 'react'
 import { Rectangle } from '../geom'
-import { BoundsCallback, track, untrack } from '../dom/bounds'
+import { BoundsCallback, onResizeEnd, track, untrack } from '../dom/bounds'
 import { computeBounds } from "../dom/utils"
+import { useComplexEffects } from '.'
 
+const resolveRef = <T>(target: 'createRef' | React.RefObject<T>) => {
+  if (target === 'createRef') {
+    // that condition should never change during program execution, so we can perform a test here
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    return React.useRef<T>(null)
+  }
+  return target
+}
 
-export function useBounds(target: React.RefObject<HTMLElement>, callback: BoundsCallback, {
-  alwaysRecalculate = false, // should recalculate on any render?
-  usingBoundingClientRect = false,
-} = {}) {
+export function useBounds<T extends HTMLElement = HTMLElement>(
+  target: 'createRef' | React.RefObject<T>,
+  callback: BoundsCallback, 
+  {
+    alwaysRecalculate = false, // should recalculate on any render?
+    usingBoundingClientRect = false,
+  } = {},
+) {
+  const ref = resolveRef(target)
+
   React.useEffect(() => {
-    const element = target.current
-    const safeCallback: BoundsCallback = (b, e) => target.current && callback(b, e)
+    const element = ref.current
+    const safeCallback: BoundsCallback = (b, e) => ref.current && callback(b, e)
 
     if (element) {
       track(element, safeCallback, { usingBoundingClientRect })
@@ -22,7 +37,9 @@ export function useBounds(target: React.RefObject<HTMLElement>, callback: Bounds
     console.warn(`useBounds() is useless here, since the given ref is always null.`)
     // "callback" is not a reasonable dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, alwaysRecalculate ? undefined : [target])
+  }, alwaysRecalculate ? undefined : [ref])
+
+  return ref
 }
 
 export function useWindowBounds(callback: BoundsCallback, {
@@ -74,17 +91,23 @@ const parentQuerySelector = (element: HTMLElement | null | undefined, parentSele
   }
 }
 
-export function useParentBounds(target: React.RefObject<HTMLElement>, callback: BoundsCallback, {
-  parentSelector = '*' as string | string[],
-  includeSelf = false,
-  alwaysRecalculate = false, // should recalculate on any render?
-  usingBoundingClientRect = false,
-} = {}) {
+export function useParentBounds<T extends HTMLElement = HTMLElement>(
+  target: 'createRef' | React.RefObject<T>,
+  callback: BoundsCallback, 
+  {
+    parentSelector = '*' as string | string[],
+    includeSelf = false,
+    alwaysRecalculate = false, // should recalculate on any render?
+    usingBoundingClientRect = false,
+  } = {},
+) {
+
+  const ref = resolveRef(target)
 
   React.useEffect(() => {
     const element = Array.isArray(parentSelector) 
-      ? mapFirst(parentSelector, str => parentQuerySelector(target.current, str, { includeSelf }))
-      : parentQuerySelector(target.current, parentSelector, { includeSelf })
+      ? mapFirst(parentSelector, str => parentQuerySelector(ref.current, str, { includeSelf }))
+      : parentQuerySelector(ref.current, parentSelector, { includeSelf })
 
     if (element) {
       track(element, callback, { usingBoundingClientRect })
@@ -97,6 +120,8 @@ export function useParentBounds(target: React.RefObject<HTMLElement>, callback: 
     // "callback" is not a reasonable dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, alwaysRecalculate ? undefined : [target])
+
+  return ref
 }
 
 type AnyTarget = 
@@ -209,4 +234,47 @@ export function useIntersectionBounds(
     // "callback" is not a reasonable dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, alwaysRecalculate ? undefined : [target1, target2])
+}
+
+
+export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
+  target: 'createRef' | React.RefObject<T>,
+  selectors: string[], 
+  callback: (allBounds: Rectangle[], elements: HTMLElement[]) => void,
+  {
+    alwaysRecalculate = false, // should recalculate on any render?
+    usingBoundingClientRect = true,
+  } = {},
+) {
+  
+  const ref = resolveRef<T>(target)
+
+  useComplexEffects(function* () {
+    const parent = ref.current!
+    const elements = [parent, ...selectors.map(str => parent.querySelector(str) as HTMLElement)]
+    
+    if (elements.some(e => e === null)) {
+      throw new Error(`Invalid element`)
+    }
+
+    const allBounds = elements.map(() => new Rectangle())
+    let resizeCount = 0
+    for (const [index, element] of elements.entries()) {
+      // eslint-disable-next-line no-loop-func
+      yield track(element, bounds => {
+        allBounds[index].copy(bounds)
+        resizeCount++
+      }, { usingBoundingClientRect })
+    }
+    
+    yield onResizeEnd(() => {
+      if (resizeCount > 0) {
+        resizeCount = 0
+        callback(allBounds, elements)
+      }
+    })
+    
+  }, alwaysRecalculate ? undefined : [target, selectors])
+
+  return ref
 }
