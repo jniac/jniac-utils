@@ -1,8 +1,20 @@
 const isObject = (x: any) => x !== null && typeof x === 'object'
-export const deepEquals = (source: any, destination: any) => {
+
+/**
+ * NOTE: The source may have less keys than the destination, the result still may
+ * be true. This is the meaning of "Partial". Eg:
+ * ```js
+ * deepPartialEquals({ foo: 1 }, { foo: 1, bar: 2 }) // true
+ * ```
+ * So, the order is important here, and keep in mind that this could be true:
+ * ```js 
+ * deepPartialEquals(x, y) !== deepPartialEquals(y, x)
+ * ```
+ */
+export const deepPartialEquals = (source: any, destination: any) => {
   if (isObject(source)) {
     for (const key in source) {
-      if (deepEquals(source[key], destination[key]) === false) {
+      if (deepPartialEquals(source[key], destination[key]) === false) {
         return false
       }
     }
@@ -10,12 +22,13 @@ export const deepEquals = (source: any, destination: any) => {
   }
   return source === destination
 }
-export const deepCopy = (source: any, destination: any) => {
+
+export const deepPartialCopy = (source: any, destination: any) => {
   let hasChanged = false
   for (const key in source) {
     const value = source[key]
     if (isObject(value)) {
-      deepCopy(value, destination[key])
+      deepPartialCopy(value, destination[key])
     }
     else {
       hasChanged = true
@@ -24,6 +37,7 @@ export const deepCopy = (source: any, destination: any) => {
   }
   return hasChanged
 }
+
 export const deepClone = <T extends unknown>(source: T) => {
   if (isObject(source)) {
     // @ts-ignore
