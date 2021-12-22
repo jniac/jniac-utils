@@ -69,10 +69,16 @@ export class Rectangle {
     receiver.y = byMin > ayMax ? byMin - ayMax : byMax < ayMin ? byMax - ayMin : 0
     return receiver
   }
-  x = 0;
-  y = 0;
-  width = 0;
-  height = 0;
+  x: number
+  y: number
+  width: number
+  height: number
+  constructor(x = 0, y = 0, width = 1, height = 1) {
+    this.x = x
+    this.y = y
+    this.width = width
+    this.height = height    
+  }
   get xMin() { return this.x }
   get yMin() { return this.y }
   get xMax() { return this.x + this.width }
