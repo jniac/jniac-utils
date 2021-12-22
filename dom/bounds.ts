@@ -11,6 +11,7 @@ interface BoundsOptions {
 const allCallbacks = new Register<HTMLElement, BoundsCallback>()
 const allOptions = new Map<BoundsCallback, BoundsOptions>()
 const allBounds = new Map<HTMLElement, { offset: Rectangle, client: Rectangle }>()
+const onResizeEndCallbacks = new Set<() => void>()
 const resizeObserver = new ResizeObserver(entries => {
   for (const entry of entries) {
     const element = entry.target as HTMLElement
@@ -23,6 +24,9 @@ const resizeObserver = new ResizeObserver(entries => {
       const { usingBoundingClientRect } = allOptions.get(callback)!
       callback(usingBoundingClientRect ? client : offset, element)
     }
+  }
+  for (const callback of onResizeEndCallbacks) {
+    callback()
   }
 })
 
@@ -56,7 +60,8 @@ export const track = (
 ) => {
 
   if (element instanceof Window) {
-    return trackWindow(callback)
+    trackWindow(callback)
+    return () => untrackWindow(callback)
   }
 
   allCallbacks.add(element, callback)
@@ -71,7 +76,10 @@ export const track = (
     const { usingBoundingClientRect } = options
     const { client, offset } = current
     callback(usingBoundingClientRect ? client : offset, element)
-}
+  }
+
+  const destroy = () => untrack(element, callback)
+  return { destroy }
 }
 
 export const untrack = (element: HTMLElement | Window, callback: BoundsCallback) => {
@@ -88,4 +96,12 @@ export const untrack = (element: HTMLElement | Window, callback: BoundsCallback)
     allBounds.delete(element)
   }
   allOptions.delete(callback)
+}
+
+export const onResizeEnd = (callback: () => void) => {
+  onResizeEndCallbacks.add(callback)
+  const destroy = () => {
+    onResizeEndCallbacks.delete(callback)
+  }
+  return { destroy }
 }
