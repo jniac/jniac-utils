@@ -45,6 +45,7 @@ export class Observable<T> {
   get hasChanged() { return this.#hasChanged }
 
   #owner = null as any
+  get owner() { return this.#owner }
   own(owner: any) {
     if (this.#owner !== null) {
       throw new Error(`Ownership has already been set.`)
@@ -57,7 +58,7 @@ export class Observable<T> {
 
   ignoreCallbacks = false
   
-  constructor(initialValue:T) {
+  constructor(initialValue: T) {
     this.#valueOld = initialValue
     this.#value = initialValue
 
@@ -80,6 +81,37 @@ export class Observable<T> {
     }
   }
 
+  /**
+   * For inner / protected usage only.
+   */
+  _setValue(value: T) {
+    this.#value = value
+  }
+
+  /**
+   * For inner / protected usage only.
+   */
+  _setValueOld(value: T) {
+    this.#valueOld = value
+  }
+
+  /**
+   * For inner / protected usage only.
+   * Make sense with "object" values only (avoid a deep copy).
+   */
+  _permuteValues() {
+    const tmp = this.#value
+    this.#value = this.#valueOld
+    this.#valueOld = tmp
+  }
+
+  /**
+   * For inner / protected usage only.
+   */
+  _setHasChanged(value: boolean) {
+    this.#hasChanged = value
+  }
+
   setValue(value: T | ((v: T) => T), {
     ignoreCallbacks = false,
     owner = null,
@@ -90,8 +122,7 @@ export class Observable<T> {
     }
 
     if (typeof value === 'function') {
-      const newValue = (value as (value: T) => T)(this.#value)
-      return this.setValue(newValue)
+      value = (value as (value: T) => T)(this.#value)
     }
 
     this.#hasChanged = this.#value !== value
