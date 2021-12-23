@@ -252,10 +252,6 @@ export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
   useComplexEffects(function* () {
     const parent = ref.current!
     const elements = [parent, ...selectors.map(str => parent.querySelector(str) as HTMLElement)]
-    
-    if (elements.some(e => e === null)) {
-      throw new Error(`Invalid element`)
-    }
 
     const allBounds = elements.map(() => new Rectangle())
     let resizeCount = 0
