@@ -47,6 +47,22 @@ export function useComplexEffects(
   }, deps)
 }
 
+/**
+ * Same as `useComplexEffects` but with a ref (short-hand).
+ */
+export function useRefComplexEffects<T = HTMLElement>(
+  complexEffects: (current: T) => Generator<Destroyable>, 
+  deps?: React.DependencyList,
+) {
+  const ref = React.useRef<T>(null)
+
+  useComplexEffects(function* () {
+    yield* complexEffects(ref.current!)
+  }, deps)
+
+  return ref
+}
+
 export function useForceUpdate({
   waitNextFrame = true,
 } = {}) {

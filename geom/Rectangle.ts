@@ -182,6 +182,22 @@ export class Rectangle {
       y >= this.yMin && 
       y <= this.yMax)
   }
+  inflate(padding: number | { left: number, right: number, top: number, bottom: number }) {
+    if (typeof padding === 'number') {
+      this.x += -padding
+      this.y += -padding
+      this.width += 2 * padding
+      this.height += 2 * padding
+    }
+    else {
+      const { left, right, top, bottom } = padding
+      this.x += -left
+      this.y += -top
+      this.width += right + left
+      this.height += top + bottom
+    }
+    return this
+  }
   toString() {
     return `Bounds{ x: ${this.x}, y: ${this.y}, width: ${this.width}, height:${this.height} }`
   }
