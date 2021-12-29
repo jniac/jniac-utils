@@ -1,5 +1,5 @@
 const isObject = (x: any) => x !== null && typeof x === 'object'
-const isPlainObjectOrArray = (x: any) => isObject(x) && (x.constructor === Object || x.constructor === Array)
+// const isPlainObjectOrArray = (x: any) => isObject(x) && (x.constructor === Object || x.constructor === Array)
 
 /**
  * NOTE: The source may have less keys than the destination, the result still may
@@ -14,6 +14,10 @@ const isPlainObjectOrArray = (x: any) => isObject(x) && (x.constructor === Objec
  */
 export const deepPartialEquals = (source: any, destination: any) => {
   if (isObject(source)) {
+    if (isObject(destination) === false) {
+      // source exists, but not destination!
+      return false
+    }
     if (source === destination) {
       // same reference, no need to loop over properties
       return true
@@ -29,16 +33,25 @@ export const deepPartialEquals = (source: any, destination: any) => {
   return source === destination
 }
 
-export const deepPartialCopy = (source: any, destination: any) => {
+/**
+ * `deepPartialCopy` assumes that source and destination have the same structure.
+ * 
+ * `deepPartialCopy` will silently skip over undefined value
+ */
+export const deepPartialCopy = (source: any, destination: any): boolean => {
   let hasChanged = false
-  for (const key in source) {
+  for (const key of Object.keys(source)) {
     const value = source[key]
-    if (isPlainObjectOrArray(value)) {
-      deepPartialCopy(value, destination[key])
+    if (isObject(value)) {
+      if (destination && deepPartialCopy(value, destination[key])) {
+        hasChanged = true
+      }
     }
     else {
-      hasChanged = true
-      destination[key] = value
+      if (destination && Object.getOwnPropertyDescriptor(destination, key)?.writable === true) {
+        destination[key] = value
+        hasChanged = true
+      }
     }
   }
   return hasChanged
