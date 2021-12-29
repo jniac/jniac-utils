@@ -1,3 +1,4 @@
+import { Point } from './Point'
 
 export type IRectangle = {
   x: number
@@ -158,7 +159,27 @@ export class Rectangle {
   }
   get centerX() { return this.x + this.width / 2 }
   get centerY() { return this.y + this.height / 2 }
-  center(receiver = { x: 0, y: 0 }) {
+  topLeft(receiver = new Point()) {
+    receiver.x = this.x
+    receiver.y = this.y
+    return receiver
+  }
+  topRight(receiver = new Point()) {
+    receiver.x = this.x + this.width
+    receiver.y = this.y
+    return receiver
+  }
+  bottomLeft(receiver = new Point()) {
+    receiver.x = this.x
+    receiver.y = this.y + this.height
+    return receiver
+  }
+  bottomRight(receiver = new Point()) {
+    receiver.x = this.x + this.width
+    receiver.y = this.y + this.height
+    return receiver
+  }
+  center(receiver = new Point()) {
     receiver.x = this.centerX
     receiver.y = this.centerY
     return receiver
