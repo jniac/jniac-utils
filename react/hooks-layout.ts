@@ -237,6 +237,11 @@ export function useIntersectionBounds(
 }
 
 
+/**
+ * Will invoke the callback with the bounds of the children, on the first time
+ * and as soon as a child has been resized.
+ * @returns 
+ */
 export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
   target: 'createRef' | React.RefObject<T>,
   selectors: string[], 
@@ -244,6 +249,7 @@ export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
   {
     alwaysRecalculate = false, // should recalculate on any render?
     usingBoundingClientRect = true,
+    querySelectorAll = false,
   } = {},
 ) {
   
@@ -251,21 +257,24 @@ export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
 
   useComplexEffects(function* () {
     const parent = ref.current!
-    const elements = [parent, ...selectors.map(str => parent.querySelector(str) as HTMLElement)]
+    const elements = querySelectorAll
+      ? [parent, ...selectors.map(str => parent.querySelector(str) as HTMLElement)]
+      : [parent, ...selectors.map(str => [...parent.querySelectorAll(str)] as HTMLElement[])].flat()
 
     const allBounds = elements.map(() => new Rectangle())
     let resizeCount = 0
+    const incrementResizeCount = () => resizeCount++
+    const resetResizeCount = () => resizeCount = 0
     for (const [index, element] of elements.entries()) {
-      // eslint-disable-next-line no-loop-func
       yield track(element, bounds => {
         allBounds[index].copy(bounds)
-        resizeCount++
+        incrementResizeCount()
       }, { usingBoundingClientRect })
     }
     
     yield onResizeEnd(() => {
       if (resizeCount > 0) {
-        resizeCount = 0
+        resetResizeCount()
         callback(allBounds, elements)
       }
     })
