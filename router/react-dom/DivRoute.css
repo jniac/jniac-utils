@@ -6,7 +6,7 @@ html body .DivRoute {
   display: block;
 }
 
-html body .DivRoute > div {
+html body .DivRoute > div:not(.flex-column-center) {
   /* Force block display (because flex break layout). */
   display: block;
 }
