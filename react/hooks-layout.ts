@@ -1,7 +1,7 @@
 import React from 'react'
 import { Rectangle } from '../geom'
-import { BoundsCallback, onResizeEnd, track, untrack } from '../dom/bounds'
-import { computeBounds } from "../dom/utils"
+import { BoundsCallback, BoundsType, onResizeEnd, track, untrack } from '../dom/bounds'
+import { computeOffsetBounds, computeLocalBounds } from "../dom/utils"
 import { useComplexEffects } from '.'
 
 const resolveRef = <T>(target: 'createRef' | React.RefObject<T>) => {
@@ -18,7 +18,7 @@ export function useBounds<T extends HTMLElement = HTMLElement>(
   callback: BoundsCallback, 
   {
     alwaysRecalculate = false, // should recalculate on any render?
-    usingBoundingClientRect = false,
+    boundsType = 'offset' as BoundsType,
   } = {},
 ) {
   const ref = resolveRef(target)
@@ -28,7 +28,7 @@ export function useBounds<T extends HTMLElement = HTMLElement>(
     const safeCallback: BoundsCallback = (b, e) => ref.current && callback(b, e)
 
     if (element) {
-      track(element, safeCallback, { usingBoundingClientRect })
+      track(element, safeCallback, { boundsType })
       return () => {
         untrack(element, safeCallback)
       }
@@ -98,7 +98,7 @@ export function useParentBounds<T extends HTMLElement = HTMLElement>(
     parentSelector = '*' as string | string[],
     includeSelf = false,
     alwaysRecalculate = false, // should recalculate on any render?
-    usingBoundingClientRect = false,
+    boundsType = 'offset' as BoundsType,
   } = {},
 ) {
 
@@ -110,7 +110,7 @@ export function useParentBounds<T extends HTMLElement = HTMLElement>(
       : parentQuerySelector(ref.current, parentSelector, { includeSelf })
 
     if (element) {
-      track(element, callback, { usingBoundingClientRect })
+      track(element, callback, { boundsType })
       return () => {
         untrack(element, callback)
       }
@@ -147,7 +147,7 @@ const resolveManyTarget = (target: ManyTarget) => (
 
 export function useAnyBounds(target: ManyTarget, callback: BoundsCallback, {
   alwaysRecalculate = false, // should recalculate on any render?
-  usingBoundingClientRect = false,
+  boundsType = 'offset' as BoundsType,
 } = {}) {
 
   React.useEffect(() => {
@@ -155,7 +155,7 @@ export function useAnyBounds(target: ManyTarget, callback: BoundsCallback, {
     const element = resolveManyTarget(target)
 
     if (element) {
-      track(element, callback, { usingBoundingClientRect })
+      track(element, callback, { boundsType })
       return () => {
         untrack(element, callback)
       }
@@ -169,14 +169,22 @@ export function useAnyBounds(target: ManyTarget, callback: BoundsCallback, {
   }, alwaysRecalculate ? undefined : [target])
 }
 
-const resolveBounds = (element: HTMLElement | Window, receiver: Rectangle = new Rectangle(), usingBoundingClientRect = false) => {
+const resolveBounds = (element: HTMLElement | Window, receiver: Rectangle = new Rectangle(), boundsType: BoundsType = 'client') => {
   if (element instanceof Window) {
     return receiver.set(0, 0, window.innerWidth, window.innerHeight)
   }
 
-  return (usingBoundingClientRect
-    ? receiver.copy(element.getBoundingClientRect())
-    : computeBounds(element, receiver))
+  if (boundsType === 'client') {
+    receiver.copy(element.getBoundingClientRect())
+  }
+  else if (boundsType === 'local') {
+    computeLocalBounds(element, receiver)
+  }
+  else {
+    computeOffsetBounds(element, receiver)
+  }
+
+  return receiver
 }
 
 export function useIntersectionBounds(
@@ -192,7 +200,7 @@ export function useIntersectionBounds(
   }) => void,
   {
     alwaysRecalculate = false, // should recalculate on any render?
-    usingBoundingClientRect = true,
+    boundsType = 'client' as BoundsType,
   } = {},
 ) {
 
@@ -210,8 +218,8 @@ export function useIntersectionBounds(
       let id = -1
       const loop = () => {
         id = window.requestAnimationFrame(loop)
-        resolveBounds(element1, bounds1, usingBoundingClientRect)
-        resolveBounds(element2, bounds2, usingBoundingClientRect)
+        resolveBounds(element1, bounds1, boundsType)
+        resolveBounds(element2, bounds2, boundsType)
         Rectangle.intersection(bounds1, bounds2, intersection, { degenerate: false })
         if (intersection.equals(intersectionOld) === false) {
           const area = intersection.area()
@@ -248,7 +256,7 @@ export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
   callback: (allBounds: Rectangle[], elements: HTMLElement[]) => void,
   {
     alwaysRecalculate = false, // should recalculate on any render?
-    usingBoundingClientRect = true,
+    boundsType = 'offset' as BoundsType,
     querySelectorAll = false,
   } = {},
 ) {
@@ -269,7 +277,7 @@ export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
       yield track(element, bounds => {
         allBounds[index].copy(bounds)
         incrementResizeCount()
-      }, { usingBoundingClientRect })
+      }, { boundsType })
     }
     
     yield onResizeEnd(() => {

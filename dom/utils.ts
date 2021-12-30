@@ -1,13 +1,22 @@
 import { Rectangle } from '../geom'
 
+export const computeLocalBounds = (element: HTMLElement, receiver = new Rectangle()) => {
+  return receiver.setDimensions(
+    element.offsetLeft + element.clientLeft,
+    element.offsetTop + element.clientTop,
+    element.clientWidth, 
+    element.clientHeight,
+  )
+}
+
 /**
  * Compute the bounds of an HTMLElement. 
  * 
  * This IS NOT the same thing than `element.getBoundingClientRect()`, since
  * here transformation (style.transform) is deliberately ignored.
  */
-export const computeBounds = (element: HTMLElement, receiver: Rectangle = new Rectangle()) => {
-  let width = element.clientWidth, height = element.clientHeight
+export const computeOffsetBounds = (element: HTMLElement, receiver: Rectangle = new Rectangle()) => {
+  const width = element.clientWidth, height = element.clientHeight
 
   if (!element) {
     return receiver.setDegenerate()
