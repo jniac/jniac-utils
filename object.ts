@@ -1,5 +1,5 @@
 const isObject = (x: any) => x !== null && typeof x === 'object'
-// const isPlainObjectOrArray = (x: any) => isObject(x) && (x.constructor === Object || x.constructor === Array)
+const isPlainObjectOrArray = (x: any) => isObject(x) && (x.constructor === Object || x.constructor === Array)
 
 /**
  * NOTE: The source may have less keys than the destination, the result still may
@@ -34,7 +34,17 @@ export const deepPartialEquals = (source: any, destination: any) => {
 }
 
 /**
- * `deepPartialCopy` assumes that source and destination have the same structure.
+ * `deepPartialCopy` assumes that source and destination have the same structure. 
+ * "Writable" properties of array & "plain" object are copied ONLY. Objects withs
+ * constructor are copied via reference (allowing to copy "native" properties as 
+ * HTMLElement, Event etc.): 
+ * ```js
+ * // 'foo.x' is copied (and not 'foo'), but 'target' is copied as is.
+ * deepPartialCopy({ 
+ *   foo: { x: 1 }, 
+ *   target: document.body,
+ * }, dest)
+ * ```
  * 
  * `deepPartialCopy` will silently skip over undefined value
  */
@@ -42,7 +52,7 @@ export const deepPartialCopy = (source: any, destination: any): boolean => {
   let hasChanged = false
   for (const key of Object.keys(source)) {
     const value = source[key]
-    if (isObject(value)) {
+    if (isPlainObjectOrArray(value)) {
       if (destination && deepPartialCopy(value, destination[key])) {
         hasChanged = true
       }
