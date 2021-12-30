@@ -1,6 +1,7 @@
 import { setValueWithDelay } from './utils/delay'
 
-export type ObservableCallback<T> = (value:T, target:Observable<T>) => void
+export type Destroyable = { destroy: () => void }
+export type ObservableCallback<T> = (value: T, target: Observable<T>) => void
 export type SetValueOptions = {
   ignoreCallbacks?: boolean
   owner?: any
@@ -25,6 +26,15 @@ class DestroyedObservable {
   }
   get destroyed() { return true }
 }
+
+
+export type WhenOptionA<T> = {
+  enter?: ObservableCallback<T>
+  leave?: ObservableCallback<T>
+  every?: ObservableCallback<T>
+}
+
+export type WhenOptionB<T> = (target: Observable<T>) => { destroy: () => void }
 
 export class Observable<T> {
   
@@ -168,7 +178,7 @@ export class Observable<T> {
     setValueWithDelay(this, value, seconds, clearOnChange, clearPrevious)
   }
 
-  onChange(callback: ObservableCallback<T>, { execute = false } = {}) {
+  onChange(callback: ObservableCallback<T>, { execute = false } = {}): Destroyable {
     this.#onChange.add(callback)
     if (execute) {
       callback(this.#value, this)
@@ -182,24 +192,49 @@ export class Observable<T> {
   }
 
   /**
-   * enter() is called when the first time the predicate returns true afer returning false
-   * every() is called every time the predicates returns true
-   * leave() is called when the first time the predicate returns false afer returning true
+   * Two callback options:
+   * - A: enter / leave / every
+   * - B: callback that returns a destroyable
+   * 
+   * 
+   * Option A details:
+   * - `enter()` is called when the first time the predicate returns true afer returning false
+   * - `every()` is called every time the predicates returns true
+   * - `leave()` is called when the first time the predicate returns false afer returning true
+   * 
+   * Option B allows declarative callback declaration:
+   * ```js
+   * const obs = new Observable(3)
+   * obs.when(v => v >= 1 && v < 2, () => someOtherObs.onChange(doSomething)))
+   * ```
    */
-  when(predicate: (value: T) => boolean, {
-    enter,
-    leave,
-    every,
-  } : {
-    enter?: ObservableCallback<T>
-    leave?: ObservableCallback<T>
-    every?: ObservableCallback<T>
-  }) {
+  when(predicate: (value: T) => boolean, option: WhenOptionA<T> | WhenOptionB<T> ): Destroyable {
+
+    if (typeof option === 'function') {
+      let destroyable = null as Destroyable | null
+      return this.when(predicate, {
+        enter: () => {
+          destroyable = option(this)
+        },
+        leave: () => {
+          destroyable?.destroy()
+        },
+      })
+    }
+
+    const {
+      enter,
+      leave,
+      every,
+    } = option
+
     let ok = predicate(this.#value)
+
     if (ok) {
       enter?.(this.#value, this)
       every?.(this.#value, this)
     }
+
     return this.onChange(value => {
       const okNew = predicate(value)
       every?.(value, this)
@@ -214,6 +249,8 @@ export class Observable<T> {
       }
     })
   }
+
+
 
   child<U>(predicate: (v: Observable<T>) => U) {
     const child = new Observable(predicate(this))
