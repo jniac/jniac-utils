@@ -1,3 +1,4 @@
+import { IPoint } from '.'
 import { Point } from './Point'
 
 export type IRectangle = {
@@ -232,9 +233,15 @@ export class Rectangle {
     receiver.y = this.centerY
     return receiver
   }
-  relativePoint(tx: number, ty: number, receiver = { x: 0, y: 0 }) {
-    receiver.x = this.x + this.width * tx
-    receiver.y = this.y + this.height * ty
+  relativePoint({ x, y }: IPoint, receiver = new Point()) {
+    receiver.x = this.x + this.width * x
+    receiver.y = this.y + this.height * y
+    return receiver
+  }
+  closestPoint({ x, y }: IPoint, receiver = new Point()) {
+    const { xMin, xMax, yMin, yMax } = this
+    receiver.x = x < xMin ? xMin : x > xMax ? xMax : x
+    receiver.y = y < yMin ? yMin : y > yMax ? yMax : y
     return receiver
   }
   contains(other: Rectangle) {
@@ -244,7 +251,7 @@ export class Rectangle {
       other.yMin >= this.yMin && 
       other.yMax <= this.yMax)
   }
-  containsPoint({ x, y }: { x: number, y: number }) {
+  containsPoint({ x, y }: IPoint) {
     return (
       x >= this.xMin && 
       x <= this.xMax && 
