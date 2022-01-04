@@ -81,9 +81,13 @@ export class Rectangle {
     this.height = height    
   }
   get xMin() { return this.x }
+  set xMin(value) { this.setXMin(value) }
   get yMin() { return this.y }
+  set yMin(value) { this.setYMin(value) }
   get xMax() { return this.x + this.width }
+  set xMax(value) { this.setXMax(value) }
   get yMax() { return this.y + this.height }
+  set yMax(value) { this.setYMax(value) }
   equals(other: IRectangle) {
     return this.isDegenerate() ? (isNaN(other.width) || isNaN(other.height)) : (
       this.x === other.x &&
@@ -138,6 +142,50 @@ export class Rectangle {
     }
 
     throw new Error(`invalid args: ${args}`)
+  }
+  setXMin(value: number) {
+    const delta = value - this.x
+    if (delta < this.width) {
+      this.width += -delta
+    }
+    else {
+      this.width = 0
+    }
+    this.x = value
+    return this
+  }
+  setXMax(value: number) {
+    const delta = this.xMax - value
+    if (delta < this.width) {
+      this.width += -delta
+    }
+    else {
+      this.x = value
+      this.width = 0
+    }
+    return this
+  }
+  setYMin(value: number) {
+    const delta = value - this.y
+    if (delta < this.height) {
+      this.height += -delta
+    }
+    else {
+      this.height = 0
+    }
+    this.y = value
+    return this
+  }
+  setYMax(value: number) {
+    const delta = this.yMax - value
+    if (delta < this.height) {
+      this.height += -delta
+    }
+    else {
+      this.y = value
+      this.height = 0
+    }
+    return this
   }
   isDegenerate() {
     return Number.isNaN(this.width) || Number.isNaN(this.height)
