@@ -42,6 +42,7 @@ interface RouteState {
   status: Observable<RouteStatus>
   active: ObservableBoolean
   alpha: ObservableNumber
+  routeProps: RouteProps
 }
 
 export const RouteStateContext = React.createContext<RouteState>(null!)
@@ -77,6 +78,9 @@ export const Route: React.FC<RouteProps> = ({
     status: new Observable<RouteStatus>('invisible'),
     active: new ObservableBoolean(false),
     alpha: new ObservableNumber(0),
+
+    // exposing routeProps to any child, for debugging purpose essentially
+    routeProps: { path, excludePath, search, hash, exact, transitionDuration }
   // NOTE: be prudent with this
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [])

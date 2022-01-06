@@ -6,26 +6,33 @@ export type Destroyable = { destroy: () => void}  | (() => void)
 /**
  * Using generator to allow multiple "on destroy" callbacks.
  * 
- * Callbacks are return with "yield".
+ * Callbacks are return with "`yield`".
+ * 
+ * Internally uses `React.useLayoutEffect` by default.
  * 
  * Usage:
  * 
- *     useComplexEffects(function* () {
- *       subscribe(username)
- *       yield () => unsubscribe(username)
- *       
- *       const onScroll = () => doSomethingCool(username)
- *       window.addEventListener('scroll', onScroll)
- *       yield () => window.removeEventListener('scroll', onScroll)
- *     }, [username])
+ * ```js
+ * useComplexEffects(function* () {
+ *   subscribe(username)
+ *   yield () => unsubscribe(username)
+ *   
+ *   const onScroll = () => doSomethingCool(username)
+ *   window.addEventListener('scroll', onScroll)
+ *   yield () => window.removeEventListener('scroll', onScroll)
+ * }, [username])
+ * ```
  */
 export function useComplexEffects(
   complexEffects: () => Generator<Destroyable>, 
   deps?: React.DependencyList,
-  { debug = '' } = {}
+  { debug = '', useLayoutEffect = true } = {}
 ) {
 
-  React.useEffect(() => {
+  // NOTE: For animation purpose, useLayoutEffect should be used to avoid "first frame glitches"
+  const use = useLayoutEffect ? React.useLayoutEffect : React.useEffect
+
+  use(() => {
     
     const destroyArray = [] as (() => void)[]
 
@@ -43,7 +50,6 @@ export function useComplexEffects(
       }
     }
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
 }
 

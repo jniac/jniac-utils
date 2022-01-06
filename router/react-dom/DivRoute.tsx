@@ -51,7 +51,7 @@ const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
           child.style.removeProperty('opacity')
         }
       }
-    })
+    }, { execute: true })
 
     if (overlay) {
       if (overlayBackgroundColor) {
