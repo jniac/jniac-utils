@@ -58,3 +58,24 @@ export const isParentOf = (parent: any, child: any, {
   }
   return false
 }
+
+/**
+ * Same as `querySelector()`, but going up the tree.
+ */
+export const parentQuerySelector = (element: any, selector: string, {
+  includeSelf = false,
+} = {}) => {
+  if (!element) {
+    return null
+  }
+  if (includeSelf === false) {
+    element = element.parentElement
+  }
+  while(element) {
+    if ((element as HTMLElement).matches(selector)) {
+      return element as HTMLElement
+    }
+    element = (element as HTMLElement).parentElement
+  }
+  return null
+}
