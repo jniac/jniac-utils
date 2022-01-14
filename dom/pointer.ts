@@ -1,4 +1,4 @@
-import { ObservableBoolean, ObservableObject } from 'some-utils/observables'
+import { ObservableBoolean, ObservableObject } from '../observables'
 
 export const pointerInfo = {
   position: new ObservableObject({ x: 0, y: 0, down: false }),
