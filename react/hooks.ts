@@ -72,12 +72,24 @@ export function useRefComplexEffects<T = HTMLElement>(
 export function useForceUpdate({
   waitNextFrame = true,
 } = {}) {
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0)
-  // NOTE: setImmediate here avoid some dependency call bug with React.
+  // NOTE: `requestAnimationFrame` & `mounted` here avoid some dependency call bug with React.
   // The kind that happens when a distant component is modifying an observable used here.
   // "setImmediate" solve the probleme because the update is delayed to the next frame.
+  const [, forceUpdate] = React.useReducer(x => x + 1, 0)
+  const mounted = React.useRef(true)
+  React.useEffect(() => {
+    return () => {
+      mounted.current = false
+    }
+  }, [])
+  const forceUpdateNextFrame = () => window.requestAnimationFrame(() => {
+    if (mounted.current) {
+      // DO NOT trigger `forceUpdate` on unmounted component
+      forceUpdate()
+    }
+  })
   return (waitNextFrame
-    ? () => window.requestAnimationFrame(forceUpdate)
+    ? forceUpdateNextFrame
     : forceUpdate
   )
 }
