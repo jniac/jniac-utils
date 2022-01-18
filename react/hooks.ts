@@ -1,13 +1,6 @@
 import React from 'react'
 import { Observable } from '../observables'
 
-export function useAsyncEffect(callback: () => void, deps?: React.DependencyList) {
-  React.useEffect(() => {
-    callback()
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps)
-}
-
 export type Destroyable = { destroy: () => void}  | (() => void)
 
 /**
