@@ -90,6 +90,7 @@ export const setLocation = ({
 }
 
 export const getPathname = () => location.pathname.value
+export const getPathnameOld = () => location.pathname.valueOld
 export const setPathname = (pathname: string, { replace = false } = {}) => setLocation({ pathname, replace })
 export const getSearch = () => location.search.value
 export const setSearch = (search: string, { replace = false } = {}) => setLocation({ search, replace })
