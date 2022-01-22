@@ -53,6 +53,7 @@ export interface RouteProps {
   search?: StringMask
   hash?: StringMask
   exact?: boolean
+  strict?: boolean
   transitionDuration?: number
 }
 
@@ -62,6 +63,7 @@ export const Route: React.FC<RouteProps> = ({
   hash,
   search,
   exact = false,
+  strict = false, // should consider the last slash? otherwise `/foo/` and `/foo` are considered as a same vlaue. cf express "strict" property
   transitionDuration = 0,
   children,
 }) => {
@@ -125,8 +127,13 @@ export const Route: React.FC<RouteProps> = ({
     })
 
     const baseUrlRe = new RegExp(baseUrl ? `^/${baseUrl}` : '') // remove baseUrl from the current pathname
+    const getPathname = () => {
+      let str = location.pathname.value.replace(baseUrlRe, '')
+      str = strict ? str : str.replace(/\/$/, '')
+      return str || '/' // pathname must at least contain '/'
+    }
     const isVisible = () => {
-      const pathname = location.pathname.value.replace(baseUrlRe, '') || '/' // pathname must at least contain '/'
+      const pathname = getPathname()
       const exclude = excludePath && compareString(pathname, excludePath, exact)
       return (!exclude 
         && compareString(pathname, path, exact)
