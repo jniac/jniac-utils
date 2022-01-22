@@ -9,25 +9,43 @@ for a React usage, but not only.
 
 ### basic
 Here below, we are declaring a solver that is saying:  
-> If any child of me has true as inner value, then i'm having true too.
+- if scroll is bigger than 10, i'm `"hidden"`.
+- if the video is paused, i'm `"normal"`.
+- if the user has just interacted, i'm `"normal"` too.
+- otherwise i'm `"minimized"`.
 ```js
-const solver = new Solver(false, children => values.some(c => c.value))
+  const controls = new Solver('minimized', { scroll, playState, userJustInteracted }, ({ 
+    scroll, 
+    playState,
+    userJustInteracted,
+  }) => {
+    // If one of the observable changes, the solver will compute this to know the new inner value.
+    // Here it's easy to describe what we want:
 
-// For the moment value is false (the initial given value)
-console.log(solver.value) // false
+    // First the scroll, if greater than 10 NEVER show the controls.
+    if (scroll.value > 10) {
+      return 'hidden'
+    }
 
-// If the solver change, print the new value
-solver.onChange(newValue => console.log(`current value is: ${newValue}`))
+    // If the video is paused then show the controls.
+    if (playState.value === 'paused') {
+      return 'normal'
+    
+    }
+    // Or if the user interacted too.
+    if (userJustInteracted.value) {
+      return 'normal'
+    }
 
-// Here we create a child (which can be seen as a dependency of the solver)
-const child = solver.createChild(false)
-
-// solver is still set to false, because the child as false as initialValue
-console.log(solver.value) // false
-
-// but will change as soon as we change the child value:
-child.setValue(true) // "current value is: true" to the console
+    // Without what, only display the progress bar.
+    return 'minimized'
+  })
 ```
+
+
+
+
+// THIS IS OBSOLETE BELOW
 
 ### destroy
 Observable children are destroyable, so
