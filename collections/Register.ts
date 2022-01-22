@@ -27,6 +27,10 @@ export class Register<K, V> {
     return -1
   }
 
+  removeAll(key: K) {
+    return this.#map.delete(key)
+  }
+
   get(key: K) {
     return this.#map.get(key)
   }
