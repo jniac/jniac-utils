@@ -23,22 +23,29 @@ export type Destroyable = { destroy: () => void}  | (() => void)
  * }, [username])
  * ```
  */
-export function useComplexEffects(
-  complexEffects: () => Generator<Destroyable>, 
+export function useComplexEffects<T = void>(
+  complexEffects: () => Generator<Destroyable, T>, 
   deps?: React.DependencyList,
   { debug = '', useLayoutEffect = true } = {}
 ) {
 
   // NOTE: For animation purpose, useLayoutEffect should be used to avoid "first frame glitches"
   const use = useLayoutEffect ? React.useLayoutEffect : React.useEffect
+  const result = React.useRef<T>(undefined as unknown as T)
 
   use(() => {
     
     const destroyArray = [] as (() => void)[]
 
-    for (const destroy of complexEffects()) {
-      destroyArray.push(typeof destroy === 'function' ? destroy : destroy.destroy)
+    const iterator = complexEffects()
+    let item = iterator.next()
+    while (item.done === false) {
+      const { value } = item
+      destroyArray.push(typeof value === 'function' ? value : value.destroy)
+      item = iterator.next()
     }
+
+    result.current = item.value as T
     
     if (debug) {
       console.log(`useComplexEffects debug ${debug}: ${destroyArray.length} callbacks`)
@@ -51,6 +58,8 @@ export function useComplexEffects(
     }
 
   }, deps)
+
+  return result
 }
 
 /**
