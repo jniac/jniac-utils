@@ -472,3 +472,17 @@ export {
 export type {
   AnimationInstance,
 }
+
+export const Animation = {
+  info,
+  BREAK,
+  loop,
+  loopWithTarget,
+  loopCancelTarget,
+  during,
+  duringWithTarget,
+  duringCancelTarget,
+  wait,
+  tween,
+  AnimationInstance,
+}
