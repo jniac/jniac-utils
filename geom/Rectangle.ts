@@ -1,5 +1,4 @@
-import { IPoint } from '.'
-import { Point } from './Point'
+import { IPoint, Point } from './Point'
 
 export type IRectangle = {
   x: number
@@ -200,7 +199,7 @@ export class Rectangle {
   union(other: Rectangle, { clone = false } = {}) {
     return Rectangle.union(this, other, clone ? new Rectangle() : this)
   }
-  distance(other: Rectangle, receiver = { x: 0, y: 0 }) {
+  distance(other: Rectangle, receiver = new Point()) {
     return Rectangle.distance(this, other, receiver)
   }
   area() {
