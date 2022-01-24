@@ -3,6 +3,66 @@ const clamp = (x: number, min = 0, max = 1) => x < min ? min : x > max ? max : x
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const nothing = [][Symbol.iterator]()
 
+
+// CUBIC-BEZIER >
+const cubic01 = (x2: number, x3: number, t: number) => {
+  const ti = 1 - t
+  const t2 = t * t
+  return (
+    + 3 * ti * ti  * t * x2
+    + 3 * ti * t2 * x3
+    + t2 * t
+  )
+}
+
+export const cubic01SearchT = (
+  x2: number,
+  x3: number,
+  x: number,
+  iterations = 6,
+  precision = 0.0001,
+  lowerT = 0,
+  upperT = 1,
+  lowerX = 0,
+  upperX = 1,
+) => {
+  if (x <= precision) {
+    return 0
+  }
+  if (x >= 1 - precision) {
+    return 1
+  }
+
+  let diffX = 0, currentX = 0, currentT = 0
+  for (let i = 0; i < iterations; i++) {
+    currentT = (lowerT + upperT) / 2
+    currentX = cubic01(x2, x3, currentT)
+    diffX = x - currentX
+    if (Math.abs(diffX) <= precision) {
+      return currentT
+    }
+    if (diffX < 0) {
+      upperT = currentT
+      upperX = currentX
+    } else {
+      lowerT = currentT
+      lowerX = currentX
+    }
+  }
+
+  // return the final linear interpolation between lower and upper bounds
+  return lowerT + (upperT - lowerT) * (x - lowerX) / (upperX - lowerX)
+}
+
+export const solveCubicEasing = (x1: number, y1: number, x2: number, y2: number, x: number, iterations?: number, precision?: number) => {
+  const t = cubic01SearchT(x1, x2, x, iterations, precision)
+  const y = cubic01(y1, y2, t)
+  return y
+}
+// CUBIC-BEZIER <
+
+
+
 /**
  * Clone a value. If value is an object will return a shallow clone.
  * Used by tween().
@@ -315,14 +375,23 @@ const wait = (duration: number) => during(duration).waitDestroy()!
 type TweenParams<T> = {
   from?: T | Partial<Record<keyof T, number>>
   to?: T | Partial<Record<keyof T, number>>
-  ease?: ((t: number) => number) | (keyof typeof easing)
+  ease?: ((t: number) => number) | (keyof typeof easing) | `cubic-bezier(${number}, ${number}, ${number}, ${number})`
   onChange?: AnimationCallback,
   onComplete?: AnimationCallback,
 }
 
-const safeEase = (ease?: ((t: number) => number) | (keyof typeof easing)) => {
+const safeEase = (ease?: TweenParams<any>['ease']) => {
   if (typeof ease === 'string') {
-    return easing[ease]
+    if (ease.startsWith('cubic-bezier')) {
+      const [x1, y1, x2, y2] = ease
+        .slice(13, -1)
+        .split(/\s*,\s*/)
+        .map(s => parseFloat(s))
+      return (x: number) => solveCubicEasing(x1, y1, x2, y2, x)
+    }
+    else {
+      return easing[ease as keyof typeof easing]
+    }
   }
   if (typeof ease === 'function') {
     return ease
