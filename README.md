@@ -12,8 +12,9 @@ typescript, il est nécessaire d'activer les réglages suivants :
 ```js
 {
   "compilerOptions": {
-    "target": "ES2015", // because of class private members
-    "downlevelIteration": true, // because iteration is cool (but low perf?)
+    "target": "ES2015",           // because of class private members
+    "downlevelIteration": true,   // because iteration is cool (but low perf?)
+    "resolveJsonModule": true,    // because of colors.json & others
   }
 }
 ```
