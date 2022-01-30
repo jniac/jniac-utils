@@ -1,6 +1,12 @@
 
+export interface IInterval {
+  min: number
+  max: number
+}
+
 export type IntervalParams = 
-  | { min?: number, max?: number }
+  | Partial<IInterval>
+  | { center: number, length: number }
   | [number, number]
 
 export type IntervalDegenerateMode = 'collapse' | 'swap'
@@ -44,6 +50,32 @@ const intersection = (a: Interval, b: Interval, receiver: Interval, options?: Sa
   return safeSet(receiver, min, max, options)
 }
 
+const signedDistanceToValue = (interval: Interval, x: number) => {
+  return (
+    x < interval.min ? x - interval.min :
+    x > interval.max ? x - interval.max : 0
+  )
+}
+
+const signedDistance = (a: Interval, b: Interval) => {
+  return (
+    a.max < b.min ? b.min - a.max :
+    a.min > b.max ? b.max - a.min : 0
+  )
+}
+
+const signedGreatestDistance = (a: Interval, b: Interval) => {
+  const min = -signedDistanceToValue(b, a.min)
+  const max = -signedDistanceToValue(b, a.max)
+  return min > -max ? min : max
+}
+
+const uncoveredLength = (a: Interval, b: Interval) => {
+  const min = signedDistanceToValue(b, a.min)
+  const max = signedDistanceToValue(b, a.max)
+  return max - min
+}
+
 export class Interval {
 
   // Static
@@ -52,11 +84,18 @@ export class Interval {
   }
 
   // Instance
-  min: number
-  max: number
-  constructor(min = 0, max = 1) {
-    this.min = min
-    this.max = max
+  min: number = 0
+  max: number = 1
+  get length() { return this.max - this.min }
+  get center() { return (this.max + this.min) / 2 }
+  constructor()
+  constructor(min: number, max: number, options?: SafeSetOptions)
+  constructor(params: IntervalParams)
+  constructor(...args: any[]) {
+    if (args.length > 0) {
+      // @ts-ignore
+      this.set(...args)
+    }
   }
   set(min: number, max: number, options?: SafeSetOptions): Interval
   set(params: IntervalParams): Interval
@@ -69,6 +108,10 @@ export class Interval {
       return safeSet(this, arg[0], arg[1])
     }
     if (typeof arg === 'object') {
+      if ('center' in arg) {
+        const { center, length } = arg
+        return safeSet(this, center - length / 2, center + length / 2)
+      }
       const {
         min = 0,
         max = 1,
@@ -76,6 +119,12 @@ export class Interval {
       return safeSet(this, min, max)
     }
     throw new Error(`invalid args: ${args}`)
+  }
+  equals(other: Interval) {
+    return equals(this, other)
+  }
+  equivalent(other: IntervalParams) {
+    return equals(this, ensure(other))
   }
   isDegenerate() {
     return this.min > this.max
@@ -94,16 +143,18 @@ export class Interval {
     return intersection(this, ensure(other), receiver)
   }
   signedDistanceToValue(value: number) {
-    const { min, max } = this
-    return (
-      value < min ? value - min :
-      value > max ? value - max : 0
-    )
+    return signedDistanceToValue(this, value)
   }
-  equals(other: Interval) {
-    return equals(this, other)
+  signedDistance(other: IntervalParams) {
+    return signedDistance(this, ensure(other))
   }
-  equivalent(other: IntervalParams) {
-    return equals(this, ensure(other))
+  signedGreatestDistance(other: IntervalParams) {
+    return signedGreatestDistance(this, ensure(other))
+  }
+  uncoveredLength(other: IntervalParams) {
+    return uncoveredLength(this, ensure(other))
+  }
+  uncoveredRatio(other: IntervalParams) {
+    return uncoveredLength(this, ensure(other)) / this.length
   }
 }
