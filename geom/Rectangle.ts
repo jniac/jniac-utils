@@ -7,7 +7,7 @@ export type IRectangle = {
   height: number
 }
 
-type RectangleSetParams = Partial<IRectangle> & {
+type RectangleParams = Partial<IRectangle> & {
   xMin?: number
   yMin?: number
   xMax?: number
@@ -114,7 +114,7 @@ export class Rectangle {
   }
   set(x: number, y: number, width: number, height: number): Rectangle
   set(width: number, height: number): Rectangle
-  set(arg: RectangleSetParams): Rectangle
+  set(arg: RectangleParams): Rectangle
   set(...args: any[]) {
     if (args.length === 2) {
       return this.setDimensions(0, 0, parseFloat(args[0]), parseFloat(args[1]))
