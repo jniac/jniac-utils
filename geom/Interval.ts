@@ -70,10 +70,10 @@ const signedGreatestDistance = (a: Interval, b: Interval) => {
   return min > -max ? min : max
 }
 
-const uncoveredLength = (a: Interval, b: Interval) => {
-  const min = signedDistanceToValue(b, a.min)
-  const max = signedDistanceToValue(b, a.max)
-  return max - min
+const coverLength = (a: Interval, b: Interval) => {
+  const min = Math.max(a.min, b.min)
+  const max = Math.min(a.max, b.max)
+  return min >= max ? 0 : max - min
 }
 
 export class Interval {
@@ -151,10 +151,10 @@ export class Interval {
   signedGreatestDistance(other: IntervalParams) {
     return signedGreatestDistance(this, ensure(other))
   }
-  uncoveredLength(other: IntervalParams) {
-    return uncoveredLength(this, ensure(other))
+  coverLength(other: IntervalParams) {
+    return coverLength(this, ensure(other))
   }
-  uncoveredRatio(other: IntervalParams) {
-    return uncoveredLength(this, ensure(other)) / this.length
+  coverRatio(other: IntervalParams) {
+    return coverLength(this, ensure(other)) / this.length
   }
 }
