@@ -263,8 +263,8 @@ export class Observable<T> {
 
   // utils
   logOnChange(name: string) {
-    return this.onChange(value => {
-      console.log(`"${name}" has changed: ${value}`)
+    return this.onChange(() => {
+      console.log(`"${name}" has changed: ${this.value} (previous: ${this.valueOld})`)
     })
   }
 }
