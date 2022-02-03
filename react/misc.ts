@@ -32,7 +32,7 @@ export const safeClassName = (...args: any[]) => args
   export function mapWithSeparator<T, U, V>(
     data: T[],
     map: (item: T, index: number) => U,
-    separator: (index: number) => V,
+    separator: (autoKey: string, index: number) => V,
   ) {
   
     if (data.length === 0) {
@@ -41,7 +41,7 @@ export const safeClassName = (...args: any[]) => args
   
     const result = [map(data[0], 0)] as (T | U | V)[]
     for (let index = 1; index < data.length; index++) {
-      result.push(separator(index - 1))
+      result.push(separator(`separator-${index-1}`, index - 1))
       result.push(map(data[index], index))
     }
     return result
