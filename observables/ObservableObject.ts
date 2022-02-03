@@ -1,5 +1,5 @@
 
-import { deepClone, deepPartialEquals, deepPartialCopy } from '../object'
+import { deepClone, deepPartialEquals, deepPartialCopy } from '../object/clone'
 import { Observable, SetValueOptions } from './Observable'
 
 export class ObservableObject<T> extends Observable<T> {

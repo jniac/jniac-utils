@@ -1,5 +1,4 @@
-const isObject = (x: any) => x !== null && typeof x === 'object'
-const isPlainObjectOrArray = (x: any) => isObject(x) && (x.constructor === Object || x.constructor === Array)
+import { isObject, isPlainObjectOrArray } from './isObject'
 
 /**
  * NOTE: The source may have less keys than the destination, the result still may
