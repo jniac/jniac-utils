@@ -7,6 +7,12 @@ export const lerp = (a: number, b: number, t: number) => a + (b - a) * clamp01(t
 
 export const inverseLerp = (a: number, b: number, t: number) => clamp01((t - a) / (b - a))
 
+export const floor = (x: number, base = 1) => Math.floor(x / base) * base
+
+export const ceil = (x: number, base = 1) => Math.ceil(x / base) * base
+
+export const round = (x: number, base = 1) => Math.round(x / base) * base
+
 export const distance = (x: number, y: number) => Math.sqrt(x * x + y * y)
 
 export const sin01 = (x: number) => Math.sin(x * Math.PI * 2)
@@ -71,9 +77,14 @@ export const inout5 = (x: number) => {
 export const radian = (degree: number) => degree * Math.PI / 180
 export const degree = (radian: number) => radian / Math.PI * 180
 
+export const positiveModulo = (x: number, modulo: number) => {
+  x %= modulo
+  return x < 0 ? x + modulo : x
+}
+
 export const clampModulo = (x: number, min: number, max: number) => {
   const delta = max - min
-  return min + (x - min) % delta
+  return min + positiveModulo(x - min, delta)
 }
 
 // https://github.com/mrdoob/three.js/blob/master/src/math/MathUtils.js#L133-L144

@@ -108,7 +108,9 @@ export function useObservable<T>(observable: Observable<T>): T
 export function useObservable<T, O extends Observable<any> = Observable<T>, U = any>(observable: O, options: UseObservableOption<T, O, U>): U
 export function useObservable<T, O extends Observable<any> = Observable<T>, U = any>(observable: O, { useValueOld = false, extract }: UseObservableOption<T, O, U> = {}) {
   const forceUpdate = useForceUpdate()
-  React.useEffect(() => observable.onChange(forceUpdate).destroy, [forceUpdate, observable]);
+  // "forceUpdate" is different on each render, this should not be used as dep.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  React.useEffect(() => observable.onChange(forceUpdate).destroy, [observable]);
   if (useValueOld) {
     const { value, valueOld } = observable
     return { value, valueOld }
