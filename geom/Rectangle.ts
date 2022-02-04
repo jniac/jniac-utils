@@ -36,6 +36,7 @@ const copy = (a: IRectangle, b: IRectangle) => {
 }
 
 const setDimensions = (rectangle: IRectangle, x: number, y: number, width: number, height: number, mode: RectangleDegenerateMode) => {
+
   if (width < 0) {
     if (mode === 'collapse') {
       x += width / 2
@@ -46,6 +47,7 @@ const setDimensions = (rectangle: IRectangle, x: number, y: number, width: numbe
       width = -width
     }
   }
+
   if (height < 0) {
     if (mode === 'collapse') {
       y += height / 2
@@ -56,10 +58,12 @@ const setDimensions = (rectangle: IRectangle, x: number, y: number, width: numbe
       height = -height
     }
   }
+
   rectangle.x = x
   rectangle.y = y
   rectangle.width = width
   rectangle.height = height
+
   return rectangle
 }
 
@@ -130,6 +134,34 @@ const signedDistance = (a: IRectangle, b: IRectangle, receiver: IPoint) => {
   return receiver
 }
 
+const signedDistanceToValue = (min: number, max: number, x: number) => {
+  return (
+    x < min ? x - min :
+    x > max ? x - max : 0
+  )
+}
+
+const signedGreatestDistance = (a: IRectangle, b: IRectangle, receiver: IPoint) => {
+  const axMin = a.x
+  const axMax = a.x + a.width
+  const bxMin = b.x
+  const bxMax = b.x + b.width
+  const ayMin = a.y
+  const ayMax = a.y + a.height
+  const byMin = b.y
+  const byMax = b.y + b.height
+
+  const xMin = -signedDistanceToValue(bxMin, bxMax, axMin)
+  const xMax = -signedDistanceToValue(bxMin, bxMax, axMax)
+  receiver.x = xMin > -xMax ? xMin : xMax
+
+  const yMin = -signedDistanceToValue(byMin, byMax, ayMin)
+  const yMax = -signedDistanceToValue(byMin, byMax, ayMax)
+  receiver.y = yMin > -yMax ? yMin : yMax
+
+  return receiver
+}
+
 const closestPoint = (r: IRectangle, p: IPoint, receiver: IPoint) => {
   const xMin = r.x
   const yMin = r.y
@@ -175,14 +207,17 @@ const inflate = (r: IRectangle, left: number, right: number, top: number, bottom
 }
 
 export class Rectangle {
+  
   static ensure(params: RectangleParams, mode = 'collapse' as RectangleDegenerateMode) { return ensure(params, mode) }
+
   x = 0
   y = 0
   width = 1
   height = 1
+
   constructor()
-  constructor(width: number, height: number, mode?: RectangleDegenerateMode)
   constructor(x: number, y: number, width: number, height: number, mode?: RectangleDegenerateMode)
+  constructor(width: number, height: number, mode?: RectangleDegenerateMode)
   constructor(params: RectangleParams, mode?: RectangleDegenerateMode)
   constructor(...args: any[]) {
     if (args.length > 0) {
@@ -190,9 +225,10 @@ export class Rectangle {
       this.set.apply(this, args)
     }
   }
+
   set(x: number, y: number, width: number, height: number, mode?: RectangleDegenerateMode): Rectangle
   set(width: number, height: number, mode?: RectangleDegenerateMode): Rectangle
-  set(arg: RectangleParams, mode?: RectangleDegenerateMode): Rectangle
+  set(params: RectangleParams, mode?: RectangleDegenerateMode): Rectangle
   set(...args: any[]) {
 
     if (args.length === 5) {
@@ -227,17 +263,21 @@ export class Rectangle {
   equals(other: Rectangle) {
     return equals(this, other)
   }
+
   copy(other: IRectangle) {
     return copy(this, other)
   }
+
   clone() {
     return new Rectangle().copy(this)
   }
+
   setDimensions(x: number, y: number, width: number, height: number, {
     mode = 'collapse',
   } = {} as { mode?: RectangleDegenerateMode }) {
     return setDimensions(this, x, y, width, height, mode)
   }
+
   setXMin(value: number) {
     const delta = value - this.x
     if (delta < this.width) {
@@ -249,6 +289,7 @@ export class Rectangle {
     this.x = value
     return this
   }
+
   setXMax(value: number) {
     const delta = this.xMax - value
     if (delta < this.width) {
@@ -260,6 +301,7 @@ export class Rectangle {
     }
     return this
   }
+
   setYMin(value: number) {
     const delta = value - this.y
     if (delta < this.height) {
@@ -271,6 +313,7 @@ export class Rectangle {
     this.y = value
     return this
   }
+
   setYMax(value: number) {
     const delta = this.yMax - value
     if (delta < this.height) {
@@ -284,7 +327,7 @@ export class Rectangle {
   }
 
   union<T extends IRectangle = Rectangle>(other: RectangleParams, { 
-    receiver = this, 
+    receiver = new Rectangle(), 
   } = {} as { 
     receiver?: T
   }) {
@@ -292,7 +335,7 @@ export class Rectangle {
   }
 
   intersection<T extends IRectangle = Rectangle>(other: RectangleParams, { 
-    receiver = this, 
+    receiver = new Rectangle(), 
     mode = 'collapse',
   } = {} as { 
     receiver?: T
@@ -304,9 +347,17 @@ export class Rectangle {
   signedDistance<T extends IPoint = Point>(other: RectangleParams, {
     receiver = new Point(),
   } = {} as {
-    receiver?: T,
+    receiver?: T
   }) {
     return signedDistance(this, ensure(other), receiver) as T
+  }
+
+  signedGreatestDistance<T extends IPoint = Point>(other: RectangleParams, {
+    receiver = new Point(),
+  } = {} as {
+    receiver?: T
+  }) {
+    return signedGreatestDistance(this, ensure(other), receiver)
   }
 
   area() {
@@ -318,26 +369,31 @@ export class Rectangle {
     receiver.y = this.y
     return receiver
   }
+
   topRight<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }) {
     receiver.x = this.x + this.width
     receiver.y = this.y
     return receiver
   }
+
   bottomLeft<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }) {
     receiver.x = this.x
     receiver.y = this.y + this.height
     return receiver
   }
+
   bottomRight<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }) {
     receiver.x = this.x + this.width
     receiver.y = this.y + this.height
     return receiver
   }
+
   center<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }) {
     receiver.x = this.centerX
     receiver.y = this.centerY
     return receiver
   }
+
   relativePoint<T extends IPoint = Point>({ x, y }: IPoint, { 
     receiver = new Point(),
   } = {} as { receiver?: T }) {
@@ -345,17 +401,21 @@ export class Rectangle {
     receiver.y = this.y + this.height * y
     return receiver
   }
+
   closestPoint<T extends IPoint = Point>(point: IPoint, { 
     receiver = new Point(),
   } = {} as { receiver?: T }) {
     return closestPoint(this, point, receiver)
   }
+  
   contains(other: RectangleParams) {
     return contains(this, ensure(other))
   }
+  
   containsPoint(point: IPoint) {
     return containsPoint(this, point)
   }
+
   inflate(padding: number | { left: number, right: number, top: number, bottom: number }) {
     if (typeof padding === 'number') {
       return inflate(this, padding, padding, padding, padding)
@@ -365,7 +425,8 @@ export class Rectangle {
       return inflate(this, left, right, top, bottom)
     }
   }
+
   toString() {
-    return `Bounds{ x: ${this.x}, y: ${this.y}, width: ${this.width}, height:${this.height} }`
+    return `Rectangle{ x: ${this.x}, y: ${this.y}, width: ${this.width}, height:${this.height} }`
   }
 }
