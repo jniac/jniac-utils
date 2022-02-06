@@ -1,4 +1,5 @@
-export * from './functions'
-export * from './functions-misc'
+export * from './basic-functions'
+export * from './easing-functions'
+export * from './misc-functions'
 export * from './PRNG'
 export * from './bezier'
