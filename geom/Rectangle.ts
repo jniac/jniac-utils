@@ -43,7 +43,7 @@ const setDegenerate = <T extends IRectangle>(rectangle: T) => {
 }
 
 const isDegenerate = (rectangle: IRectangle) => (
-  isNaN(rectangle.width) &&
+  isNaN(rectangle.width) ||
   isNaN(rectangle.height)
 )
 
@@ -152,12 +152,67 @@ const union = (a: IRectangle, b: IRectangle, receiver: IRectangle) => {
   return receiver
 }
 
-const intersection = <T extends IRectangle>(a: IRectangle, b: IRectangle, receiver: T, mode: DegenerateMode) => {
-  const xMin = Math.max(a.x, b.x)
-  const yMin = Math.max(a.y, b.y)
-  const xMax = Math.min(a.x + a.width, b.x + b.width)
-  const yMax = Math.min(a.y + a.height, b.y + b.height)
-  return setDimensions(receiver, xMin, yMin, xMax - xMin, yMax - yMin, mode)
+enum IntersectionMode {
+  Clamp,
+  Ignore,
+  Degenerate,
+}
+const intersection = <T extends IRectangle>(a: IRectangle, b: IRectangle, receiver: T, mode = IntersectionMode.Clamp) => {
+  const axMin = a.x
+  const axMax = a.x + a.width
+  const bxMin = b.x
+  const bxMax = b.x + b.width
+  const ayMin = a.y
+  const ayMax = a.y + a.height
+  const byMin = b.y
+  const byMax = b.y + b.height
+
+  const xMin = Math.max(axMin, bxMin)
+  const yMin = Math.max(ayMin, byMin)
+  const xMax = Math.min(axMax, bxMax)
+  const yMax = Math.min(ayMax, byMax)
+
+  let x = xMin
+  let y = yMin
+  let width = xMax - xMin
+  let height = yMax - yMin
+
+  if (width < 0) {
+    switch (mode) {
+      case IntersectionMode.Clamp: {
+        width = 0
+        x = axMax < bxMin ? axMax : axMin
+        break
+      }
+      case IntersectionMode.Degenerate: {
+        width = NaN
+        x = axMax < bxMin ? axMax : axMin
+        break
+      }
+    }
+  }
+
+  if (height < 0) {
+    switch (mode) {
+      case IntersectionMode.Clamp: {
+        height = 0
+        y = ayMax < byMin ? ayMax : ayMin
+        break
+      }
+      case IntersectionMode.Degenerate: {
+        height = NaN
+        y = ayMax < byMin ? ayMax : ayMin
+        break
+      }
+    }
+  }
+
+  receiver.x = x
+  receiver.y = y
+  receiver.width = width
+  receiver.height = height
+
+  return receiver
 }
 
 const signedDistance = (a: IRectangle, b: IRectangle, receiver: IPoint) => {
@@ -387,10 +442,10 @@ export class Rectangle {
 
   intersection<T extends IRectangle = Rectangle>(other: RectangleParams, { 
     receiver = new Rectangle(), 
-    mode = DegenerateMode.Collapse,
+    mode = IntersectionMode.Clamp,
   } = {} as { 
     receiver?: T
-    mode?: DegenerateMode
+    mode?: IntersectionMode
   }) {
     return intersection(this, ensure(other), receiver, mode) as T
   }
