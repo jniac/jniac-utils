@@ -220,7 +220,7 @@ export function useIntersectionBounds(
         id = window.requestAnimationFrame(loop)
         resolveBounds(element1, bounds1, boundsType)
         resolveBounds(element2, bounds2, boundsType)
-        Rectangle.intersection(bounds1, bounds2, intersection, { degenerate: false })
+        Rectangle.intersection(bounds1, bounds2, intersection, Rectangle.DegenerateMode.CollapseMin)
         if (intersection.equals(intersectionOld) === false) {
           const area = intersection.area()
           const areaRatio1 = area / bounds1.area()

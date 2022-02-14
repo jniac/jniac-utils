@@ -18,7 +18,14 @@ type RectangleParams =
     yMax?: number
   }
 
-type RectangleDegenerateMode = 'collapse' | 'swap' | 'ignore'
+enum DegenerateMode {
+  Collapse,
+  CollapseMin,
+  CollapseMax,
+  Swap,
+  Degenerate,
+  Ignore,
+}
 
 const equals = (a: IRectangle, b: IRectangle) => (
   a.x === b.x &&
@@ -27,7 +34,20 @@ const equals = (a: IRectangle, b: IRectangle) => (
   a.height === b.height
 )
 
-const copy = (a: IRectangle, b: IRectangle) => {
+const setDegenerate = <T extends IRectangle>(rectangle: T) => {
+  rectangle.x = 0
+  rectangle.y = 0
+  rectangle.width = NaN
+  rectangle.height = NaN
+  return rectangle
+}
+
+const isDegenerate = (rectangle: IRectangle) => (
+  isNaN(rectangle.width) &&
+  isNaN(rectangle.height)
+)
+
+const copy = <T extends IRectangle>(a: T, b: IRectangle) => {
   a.x = b.x
   a.y = b.y
   a.width = b.width
@@ -35,27 +55,47 @@ const copy = (a: IRectangle, b: IRectangle) => {
   return a
 }
 
-const setDimensions = (rectangle: IRectangle, x: number, y: number, width: number, height: number, mode: RectangleDegenerateMode) => {
+const setDimensions = <T extends IRectangle>(rectangle: T, x: number, y: number, width: number, height: number, mode: DegenerateMode): T => {
 
   if (width < 0) {
-    if (mode === 'collapse') {
+    if (mode === DegenerateMode.Collapse) {
       x += width / 2
       width = 0 
     }
-    else if (mode === 'swap') {
+    else if (mode === DegenerateMode.CollapseMin) {
+      x += width
+      width = 0 
+    }
+    else if (mode === DegenerateMode.CollapseMax) {
+      width = 0 
+    }
+    else if (mode === DegenerateMode.Swap) {
       x += width
       width = -width
+    }
+    else if (mode === DegenerateMode.Degenerate) {
+      return setDegenerate(rectangle)
     }
   }
 
   if (height < 0) {
-    if (mode === 'collapse') {
+    if (mode === DegenerateMode.Collapse) {
       y += height / 2
       height = 0 
     }
-    else if (mode === 'swap') {
+    else if (mode === DegenerateMode.CollapseMin) {
+      y += height
+      height = 0 
+    }
+    else if (mode === DegenerateMode.CollapseMax) {
+      height = 0 
+    }
+    else if (mode === DegenerateMode.Swap) {
       y += height
       height = -height
+    }
+    else if (mode === DegenerateMode.Degenerate) {
+      return setDegenerate(rectangle)
     }
   }
 
@@ -67,7 +107,7 @@ const setDimensions = (rectangle: IRectangle, x: number, y: number, width: numbe
   return rectangle
 }
 
-const set = (rectangle: IRectangle, params: RectangleParams, mode: RectangleDegenerateMode) => {
+const set = (rectangle: IRectangle, params: RectangleParams, mode: DegenerateMode) => {
   
   if (Array.isArray(params)) {
     if (params.length === 4) {
@@ -98,7 +138,7 @@ const set = (rectangle: IRectangle, params: RectangleParams, mode: RectangleDege
   return setDimensions(rectangle, x, y, width, height, mode)
 }
 
-const ensure = (x: RectangleParams, mode = 'collapse' as RectangleDegenerateMode) => x instanceof Rectangle ? x : set(new Rectangle(), x, mode)
+const ensure = (x: RectangleParams, mode = DegenerateMode.Collapse) => x instanceof Rectangle ? x : set(new Rectangle(), x, mode)
 
 const union = (a: IRectangle, b: IRectangle, receiver: IRectangle) => {
   const xMin = Math.min(a.x, b.x)
@@ -112,7 +152,7 @@ const union = (a: IRectangle, b: IRectangle, receiver: IRectangle) => {
   return receiver
 }
 
-const intersection = (a: IRectangle, b: IRectangle, receiver: IRectangle, mode: RectangleDegenerateMode) => {
+const intersection = <T extends IRectangle>(a: IRectangle, b: IRectangle, receiver: T, mode: DegenerateMode) => {
   const xMin = Math.max(a.x, b.x)
   const yMin = Math.max(a.y, b.y)
   const xMax = Math.min(a.x + a.width, b.x + b.width)
@@ -208,7 +248,10 @@ const inflate = (r: IRectangle, left: number, right: number, top: number, bottom
 
 export class Rectangle {
   
-  static ensure(params: RectangleParams, mode = 'collapse' as RectangleDegenerateMode) { return ensure(params, mode) }
+  static get DegenerateMode() { return DegenerateMode }
+  static ensure(params: RectangleParams, mode = DegenerateMode.Collapse) { return ensure(params, mode) }
+  static get intersection() { return intersection }
+  static get union() { return union }
 
   x = 0
   y = 0
@@ -216,9 +259,9 @@ export class Rectangle {
   height = 1
 
   constructor()
-  constructor(x: number, y: number, width: number, height: number, mode?: RectangleDegenerateMode)
-  constructor(width: number, height: number, mode?: RectangleDegenerateMode)
-  constructor(params: RectangleParams, mode?: RectangleDegenerateMode)
+  constructor(x: number, y: number, width: number, height: number, mode?: DegenerateMode)
+  constructor(width: number, height: number, mode?: DegenerateMode)
+  constructor(params: RectangleParams, mode?: DegenerateMode)
   constructor(...args: any[]) {
     if (args.length > 0) {
       // @ts-ignore
@@ -226,25 +269,25 @@ export class Rectangle {
     }
   }
 
-  set(x: number, y: number, width: number, height: number, mode?: RectangleDegenerateMode): Rectangle
-  set(width: number, height: number, mode?: RectangleDegenerateMode): Rectangle
-  set(params: RectangleParams, mode?: RectangleDegenerateMode): Rectangle
+  set(x: number, y: number, width: number, height: number, mode?: DegenerateMode): Rectangle
+  set(width: number, height: number, mode?: DegenerateMode): Rectangle
+  set(params: RectangleParams, mode?: DegenerateMode): Rectangle
   set(...args: any[]) {
 
     if (args.length === 5) {
       return set(this, args.slice(0, 4) as [number, number, number, number], args[4])
     }
     if (args.length === 4) {
-      return set(this, args as [number, number, number, number], 'collapse')
+      return set(this, args as [number, number, number, number], DegenerateMode.Collapse)
     }
     if (args.length === 3) {
       return set(this, args.slice(0, 2) as [number, number], args[2])
     }
     if (args.length === 2 && typeof args[0] === 'number') {
-      return set(this, args as [number, number], 'collapse')
+      return set(this, args as [number, number], DegenerateMode.Collapse)
     }
 
-    const [arg, mode = 'collapse'] = args
+    const [arg, mode = DegenerateMode.Collapse] = args
 
     return set(this, arg, mode)
   }
@@ -260,8 +303,16 @@ export class Rectangle {
   get centerX() { return this.x + this.width / 2 }
   get centerY() { return this.y + this.height / 2 }
 
-  equals(other: Rectangle) {
+  equals(other: IRectangle) {
     return equals(this, other)
+  }
+
+  setDegenerate() {
+    return setDegenerate(this)
+  }
+
+  isDegenerate() {
+    return isDegenerate(this)
   }
 
   copy(other: IRectangle) {
@@ -273,8 +324,8 @@ export class Rectangle {
   }
 
   setDimensions(x: number, y: number, width: number, height: number, {
-    mode = 'collapse',
-  } = {} as { mode?: RectangleDegenerateMode }) {
+    mode = DegenerateMode.Collapse,
+  } = {} as { mode?: DegenerateMode }) {
     return setDimensions(this, x, y, width, height, mode)
   }
 
@@ -336,10 +387,10 @@ export class Rectangle {
 
   intersection<T extends IRectangle = Rectangle>(other: RectangleParams, { 
     receiver = new Rectangle(), 
-    mode = 'collapse',
+    mode = DegenerateMode.Collapse,
   } = {} as { 
     receiver?: T
-    mode?: RectangleDegenerateMode
+    mode?: DegenerateMode
   }) {
     return intersection(this, ensure(other), receiver, mode) as T
   }
