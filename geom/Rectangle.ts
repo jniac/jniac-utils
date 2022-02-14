@@ -304,6 +304,7 @@ const inflate = (r: IRectangle, left: number, right: number, top: number, bottom
 export class Rectangle {
   
   static get DegenerateMode() { return DegenerateMode }
+  static get IntersectionMode() { return IntersectionMode }
   static ensure(params: RectangleParams, mode = DegenerateMode.Collapse) { return ensure(params, mode) }
   static get intersection() { return intersection }
   static get union() { return union }
