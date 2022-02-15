@@ -308,6 +308,7 @@ export class Rectangle {
   static ensure(params: RectangleParams, mode = DegenerateMode.Collapse) { return ensure(params, mode) }
   static get intersection() { return intersection }
   static get union() { return union }
+  static get signedDistance() { return signedDistance }
 
   x = 0
   y = 0
