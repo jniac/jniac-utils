@@ -187,6 +187,14 @@ export class Observable<T> {
     return { destroy }
   }
 
+  onValue(value: T, callback: ObservableCallback<T>, { execute = false } = {}): Destroyable {
+    return this.onChange(() => {
+      if (this.#value === value) {
+        callback(value, this)
+      }
+    }, { execute })
+  }
+
   onDestroy(callback: ObservableCallback<T>) {
     this.#onDestroy.add(callback)
   }

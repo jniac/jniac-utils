@@ -1,4 +1,4 @@
-import { Observable, SetValueOptions, WhenOptionA, WhenOptionB } from './Observable'
+import { Observable, ObservableCallback, SetValueOptions, WhenOptionA, WhenOptionB } from './Observable'
 
 export class ObservableBoolean extends Observable<boolean> {
   
@@ -8,6 +8,14 @@ export class ObservableBoolean extends Observable<boolean> {
   
   isFalse() {
     return this.value === false
+  }
+
+  onTrue(callback: ObservableCallback<boolean>, { execute = false } = {}) {
+    return this.onValue(true, callback, { execute })
+  }
+
+  onFalse(callback: ObservableCallback<boolean>, { execute = false } = {}) {
+    return this.onValue(false, callback, { execute })
   }
 
   whenTrue(option: WhenOptionA<boolean> | WhenOptionB<boolean>) {
