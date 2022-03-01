@@ -3,7 +3,8 @@ import { Register } from '../collections'
 export interface Message {
   target: any
   type: any
-  props: any
+  props?: any
+  sendModality?: SendModality
 }
 
 interface MessageSent {
@@ -51,7 +52,7 @@ const getMatchingCallbacks = (target: any, type: any) => {
   return []
 }
 
-export const send = <M extends Message = any>(
+const __send = <M extends Message = any>(
   target: M['target'],
   type: M['type'],
   props?: M['props'],
@@ -68,6 +69,23 @@ export const send = <M extends Message = any>(
     for (const callback of callbacks) {
       callback(message)
     }
+  }
+  // TODO: SendModality!
+}
+export function send<M extends Message = any>(message: M): void
+export function send<M extends Message = any>(
+  target: M['target'],
+  type: M['type'],
+  props?: M['props'],
+  modality?: SendModality,
+): void
+export function send(...args: any[]) {
+  if (args.length === 1) {
+    const message = args[0] as Message
+    __send(message.target, message.type, message.props, message.sendModality)
+  }
+  else if (args.length > 1) {
+    __send(args[0], args[1], args[2], args[3])
   }
 }
 
