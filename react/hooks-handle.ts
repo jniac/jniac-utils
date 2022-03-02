@@ -1,12 +1,21 @@
 import React from 'react'
 
+type DistanceInfo = { x: number, y: number, magnitude: number }
+
 type PointerHandleOptions = {
   onDown?: (event: PointerEvent, downEvent: PointerEvent) => void
   onUp?: (event: PointerEvent, downEvent: PointerEvent) => void
   onMove?: (event: PointerEvent, downEvent: PointerEvent | null) => void
   onOver?: (event: PointerEvent) => void
   onOut?: (event: PointerEvent) => void
-  onDrag?: (info: { dx: number, dy: number, distance: number, event: PointerEvent, downEvent: PointerEvent }) => void
+  onDrag?: (info: { distanceTotal: DistanceInfo, distanceDelta: DistanceInfo, event: PointerEvent, downEvent: PointerEvent }) => void
+}
+
+const getDistanceInfo = (A: PointerEvent, B: PointerEvent): DistanceInfo => {
+  const x = B.x - A.x
+  const y = B.y - A.y
+  const magnitude = Math.sqrt(x * x + y * y)
+  return { x, y, magnitude }
 }
 
 export const pointerHandle = (element: HTMLElement, options: PointerHandleOptions) => {
@@ -21,22 +30,21 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
   } = options
 
   let downEvent: PointerEvent | null = null
+  let previousMoveEvent: PointerEvent | null = null
 
   const onPointerMove = (event: PointerEvent) => {
     onMove?.(event, downEvent)
     if (downEvent) {
       if (onDrag) {
-        const dx = event.x - downEvent.x
-        const dy = event.y - downEvent.y
         onDrag({
-          dx, 
-          dy,
-          distance: Math.sqrt(dx * dx + dy * dy),
+          distanceDelta: getDistanceInfo(event, previousMoveEvent!),
+          distanceTotal: getDistanceInfo(event, downEvent),
           event,
           downEvent,
         })
       }
     }
+    previousMoveEvent = event
   }
   const onPointerOver = (event: PointerEvent) => {
     onOver?.(event)
@@ -48,6 +56,7 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
     downEvent = event
+    previousMoveEvent = event
     onDown?.(event, downEvent)
   }
   const onPointerUp = (event: PointerEvent) => {
