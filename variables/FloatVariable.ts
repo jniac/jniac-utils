@@ -11,7 +11,12 @@ export class FloatVariable {
   get floatSize() { return this.#array instanceof Float32Array ? 32 : 64 }
 
   get value() { return this.#array[this.#index] }
-  set value(value: number) { this.setNewValue(value) }
+
+  get newValue() { return this.#array[this.#index] }
+  set newValue(value: number) { this.setNewValue(value) }
+
+  get currentValue() { return this.#array[this.#index] }
+  set currentValue(value: number) { this.setCurrentValue(value) }
 
   get sum() { return this.#sum }
   get average() { return this.#sum / this.#array.length }
@@ -40,9 +45,10 @@ export class FloatVariable {
     if (this.#derivative) {
       this.#derivative.fill(0)
     }
+    return this
   }
 
-  setNewValue(value: number) {
+  setValue(value: number, asNewValue: boolean) {
     const array = this.#array
     const index = this.#index
     const size = array.length
@@ -50,15 +56,25 @@ export class FloatVariable {
     if (this.#derivative) {
       const valueOld = array[index]
       const delta = value - valueOld
-      this.#derivative.setNewValue(delta)
+      this.#derivative.setValue(delta, asNewValue)
     }
 
-    const indexNew = index < size ? index + 1 : 0
+    const indexNew = asNewValue ? (index + 1 < size ? index + 1 : 0) : index
     this.#sum += value - array[indexNew]
 
     // At the end, update:
     array[indexNew] = value
     this.#index = indexNew
+
+    return this
+  }
+
+  setCurrentValue(value: number) {
+    return this.setValue(value, false)
+  }
+
+  setNewValue(value: number) {
+    return this.setValue(value, true)
   }
 
   toString({ precision = 2, floatMaxCount = 16 } = {}) {
