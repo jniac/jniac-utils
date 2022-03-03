@@ -2,14 +2,15 @@ import React from 'react'
 
 type DistanceInfo = { x: number, y: number, magnitude: number }
 
-type PointerHandleOptions = {
-  onDown?: (event: PointerEvent, downEvent: PointerEvent) => void
-  onUp?: (event: PointerEvent, downEvent: PointerEvent) => void
-  onMove?: (event: PointerEvent, downEvent: PointerEvent | null) => void
-  onOver?: (event: PointerEvent) => void
-  onOut?: (event: PointerEvent) => void
-  onDrag?: (info: { distanceTotal: DistanceInfo, distanceDelta: DistanceInfo, event: PointerEvent, downEvent: PointerEvent }) => void
-}
+type PointerHandleOptions = Partial<{
+  onDown: (event: PointerEvent, downEvent: PointerEvent) => void
+  onUp: (event: PointerEvent, downEvent: PointerEvent) => void
+  onMove: (event: PointerEvent, downEvent: PointerEvent | null) => void
+  onOver: (event: PointerEvent) => void
+  onOut: (event: PointerEvent) => void
+  onDrag: (info: { distanceTotal: DistanceInfo, distanceDelta: DistanceInfo, moveEvent: PointerEvent, downEvent: PointerEvent }) => void
+  dragDistanceThreshold: number
+}>
 
 const getDistanceInfo = (A: PointerEvent, B: PointerEvent): DistanceInfo => {
   const x = B.x - A.x
@@ -17,6 +18,20 @@ const getDistanceInfo = (A: PointerEvent, B: PointerEvent): DistanceInfo => {
   const magnitude = Math.sqrt(x * x + y * y)
   return { x, y, magnitude }
 }
+const getDragInfo = (downEvent: PointerEvent, moveEvent: PointerEvent, previousMoveEvent: PointerEvent) => {
+  return {
+    distanceDelta: getDistanceInfo(moveEvent, previousMoveEvent),
+    distanceTotal: getDistanceInfo(moveEvent, downEvent),
+    moveEvent,
+    downEvent,
+  }
+}
+const dragHasStart = (downEvent: PointerEvent, moveEvent: PointerEvent, distanceThreshold: number) => {
+  const x = moveEvent.x - downEvent.x
+  const y = moveEvent.y - downEvent.y
+  return (x * x) + (y * y) > distanceThreshold * distanceThreshold
+}
+
 
 export const pointerHandle = (element: HTMLElement, options: PointerHandleOptions) => {
 
@@ -27,24 +42,27 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
     onOver,
     onOut,
     onDrag,
+    dragDistanceThreshold = 10,
   } = options
 
   let downEvent: PointerEvent | null = null
+  let moveEvent: PointerEvent | null = null
   let previousMoveEvent: PointerEvent | null = null
-
+  
   const onPointerMove = (event: PointerEvent) => {
     onMove?.(event, downEvent)
-    if (downEvent) {
-      if (onDrag) {
-        onDrag({
-          distanceDelta: getDistanceInfo(event, previousMoveEvent!),
-          distanceTotal: getDistanceInfo(event, downEvent),
-          event,
-          downEvent,
-        })
-      }
+    moveEvent = event
+  }
+
+  let onDownFrameId = -1
+  let dragStart = false
+  const onDownFrame = () => {
+    onDownFrameId = window.requestAnimationFrame(onDownFrame)
+    dragStart = dragStart || dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
+    if (dragStart && onDrag) {
+      onDrag(getDragInfo(downEvent!, moveEvent!, previousMoveEvent!))
     }
-    previousMoveEvent = event
+    previousMoveEvent = moveEvent
   }
   const onPointerOver = (event: PointerEvent) => {
     onOver?.(event)
@@ -56,14 +74,18 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
     downEvent = event
+    moveEvent = event
     previousMoveEvent = event
     onDown?.(event, downEvent)
+    onDownFrame()
   }
   const onPointerUp = (event: PointerEvent) => {
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('pointerup', onPointerUp)
+    window.cancelAnimationFrame(onDownFrameId)
     onUp?.(event, downEvent!)
     downEvent = null
+    dragStart = false
   }
   element.addEventListener('pointerover', onPointerOver)
   element.addEventListener('pointerout', onPointerOut)
@@ -73,8 +95,9 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
     element.removeEventListener('pointerover', onPointerOver)
     element.removeEventListener('pointerout', onPointerOut)
     element.removeEventListener('pointerdown', onPointerDown)
-    window.removeEventListener('pointerup', onPointerUp)
     window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointerup', onPointerUp)
+    window.cancelAnimationFrame(onDownFrameId)
   }
 
   return { destroy }
