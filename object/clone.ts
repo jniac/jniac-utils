@@ -79,7 +79,7 @@ export const deepClone = <T extends unknown>(source: T) => {
     } 
     catch (e: any) {
       // if object is not clonable return it
-      if (e.message === 'Illegal constructor') {
+      if (/Illegal constructor/i.test(e.message)) {
         return source
       }
       // otherwise let raise an error
