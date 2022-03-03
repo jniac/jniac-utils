@@ -54,15 +54,18 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
     moveEvent = event
   }
 
+  let isDown = false
   let onDownFrameId = -1
   let dragStart = false
   const onDownFrame = () => {
-    onDownFrameId = window.requestAnimationFrame(onDownFrame)
-    dragStart = dragStart || dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
-    if (dragStart && onDrag) {
-      onDrag(getDragInfo(downEvent!, moveEvent!, previousMoveEvent!))
+    if (isDown) {
+      onDownFrameId = window.requestAnimationFrame(onDownFrame)
+      dragStart ||= dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
+      if (dragStart && onDrag) {
+        onDrag(getDragInfo(downEvent!, moveEvent!, previousMoveEvent!))
+      }
+      previousMoveEvent = moveEvent
     }
-    previousMoveEvent = moveEvent
   }
   const onPointerOver = (event: PointerEvent) => {
     onOver?.(event)
@@ -73,6 +76,8 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
   const onPointerDown = (event: PointerEvent) => {
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
+    isDown = true
+    dragStart = false
     downEvent = event
     moveEvent = event
     previousMoveEvent = event
@@ -84,6 +89,7 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
     window.removeEventListener('pointerup', onPointerUp)
     window.cancelAnimationFrame(onDownFrameId)
     onUp?.(event, downEvent!)
+    isDown = false
     downEvent = null
     dragStart = false
   }
