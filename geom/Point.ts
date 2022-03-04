@@ -7,30 +7,40 @@ export interface IPoint {
 export type PointParams =
   | Partial<IPoint>
   | [number, number]
+  | number[]
 
-const set = (point: Point, x: number, y: number) => {
+const set = (point: IPoint, x: number, y: number) => {
   point.x = x
   point.y = y
   return point
 }
 
-const ensure = (x: PointParams) => x instanceof Point ? x : new Point().set(x)
+const ensure = (p: PointParams) => p instanceof Point ? p : new Point().set(p)
 
-const equals = (a: Point, b: Point) => (
+const ensureIPoint = (p: PointParams) => ('x' in p && 'y' in p) ? p as IPoint : new Point().set(p)
+
+const equals = (a: IPoint, b: IPoint) => (
   a.x === b.x && a.y === b.y
 )
 
-const add = (a: Point, b: Point, receiver: Point) => {
+const add = <T extends IPoint>(a: IPoint, b: IPoint, receiver: T) => {
   receiver.x = a.x + b.x
   receiver.y = a.y + b.y
   return receiver
 }
 
-const subtract = (a: Point, b: Point, receiver: Point) => {
+const subtract = <T extends IPoint>(a: IPoint, b: IPoint, receiver: T) => {
   receiver.x = a.x - b.x
   receiver.y = a.y - b.y
   return receiver
 }
+
+const sqMagnitude = (p: IPoint) => {
+  const { x, y } = p
+  return x * x + y * y
+}
+
+const magnitude = (p: IPoint) => Math.sqrt(sqMagnitude(p))
 
 export class Point {
   static ensure(x: PointParams) {
@@ -71,15 +81,18 @@ export class Point {
     return new Point(this.x, this.y)
   }
   add(other: PointParams, receiver = new Point()) {
-    return add(this, ensure(other), receiver)
+    return add(this, ensureIPoint(other), receiver)
   }
   subtract(other: PointParams, receiver = new Point()) {
-    return subtract(this, ensure(other), receiver)
+    return subtract(this, ensureIPoint(other), receiver)
   }
   equals(other: Point) {
     return equals(this, other)
   }
   equivalent(other: PointParams) {
-    return equals(this, ensure(other))
+    return equals(this, ensureIPoint(other))
   }
+
+  get magnitude() { return magnitude(this) }
+  get sqMagnitude() { return sqMagnitude(this) }
 }
