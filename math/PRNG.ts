@@ -12,9 +12,11 @@ const init = (initialSeed: number) => {
 export class PRNG {
   static seedMax = 2147483647
   static seedDefault = 123456
+  static #staticSeed: number = PRNG.seedDefault
 
   #initialSeed: number
   #seed: number
+
   
   constructor(seed = PRNG.seedDefault) {
     this.#initialSeed = seed
@@ -35,15 +37,17 @@ export class PRNG {
     this.#seed = init(seed)
   }
 
+  static reset(seed = PRNG.seedDefault) {
+    PRNG.#staticSeed = next(seed)
+  }
+
   float() {
     return this.next()
   }
 
-  static float({ seed = PRNG.seedDefault, offset = 0 }) {
-    while (offset-- >= 0) {
-      seed = next(seed)
-    }
-    return map(seed)
+  static float({ seed = PRNG.#staticSeed } = {}) {
+    PRNG.#staticSeed = next(seed)
+    return map(PRNG.#staticSeed)
   }
 
   range(min = 0, max = 1, { power = 1 } = {}) {
@@ -53,11 +57,11 @@ export class PRNG {
     return min + (max - min) * (this.next() ** power)
   }
   
-  static range(min = 0, max = 1, { seed = PRNG.seedDefault, offset = 0, power = 1 } = {}) {
+  static range(min = 0, max = 1, { seed = PRNG.seedDefault, power = 1 } = {}) {
     if (power === 1) {
-      return min + (max - min) * PRNG.float({ seed, offset })
+      return min + (max - min) * PRNG.float({ seed })
     }
-    return min + (max - min) * (PRNG.float({ seed, offset }) ** power)
+    return min + (max - min) * (PRNG.float({ seed }) ** power)
   }
 
   integer(min = 0, max = 100) {
