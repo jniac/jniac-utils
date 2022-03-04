@@ -1,5 +1,6 @@
 export * from './basic-functions'
 export * from './easing-functions'
 export * from './misc-functions'
+export * from './wave-functions'
 export * from './PRNG'
 export * from './bezier'
