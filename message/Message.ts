@@ -19,12 +19,14 @@ interface SendModality {
 
 interface Listener {
   type: any
+  test: (type: any) => boolean
   callback: MessageCallback
+  priority: number
 }
 
 const register = new Register<any, Listener>()
 
-const getTypeTester = (type: any) => {
+const getTypeTest = (type: any) => {
   if (type === '*') {
     return () => true   
   }
@@ -40,14 +42,14 @@ const getTypeTester = (type: any) => {
 const getMatchingCallbacks = (target: any, type: any) => {
   const listeners = register.get(target)
   if (listeners) {
-    const array = [] as MessageCallback[]
+    const result = [] as Listener[]
     for (const listener of listeners) {
-      const tester = getTypeTester(listener.type)
-      if (tester(type)) {
-        array.push(listener.callback)
+      if (listener.test(type)) {
+        result.push(listener)
       }
     }
-    return array
+    result.sort((A, B) => A.priority > B.priority ? -1 : 1)
+    return result.map(listener => listener.callback)
   }
   return []
 }
@@ -72,6 +74,7 @@ const __send = <M extends Message = any>(
   }
   // TODO: SendModality!
 }
+
 export function send<M extends Message = any>(message: M): void
 export function send<M extends Message = any>(
   target: M['target'],
@@ -93,11 +96,25 @@ export const on = <M extends Message>(
   target: M['target'],
   type: M['type'],
   callback: (message: M & MessageSent) => void,
+  {
+    priority = 0,
+  } = {}
 ) => {
-  const listener = { type, callback }
+  const listener = { 
+    type, 
+    priority,
+    test: getTypeTest(type),
+    callback,
+  }
   register.add(target, listener)
   const destroy = () => {
     register.remove(target, listener)
   }
   return { destroy }
 }
+
+// RAW TEST: PRIORITY
+// on('lol', '*', m => console.log(m.type, 'lol #0'))
+// on('lol', 'ok', m => console.log(m.type, 'lol #100'), { priority: 100 })
+// on('lol', /ok/, m => console.log(m.type, 'lol #Infinity'), { priority: Infinity })
+// send('lol', 'ok')
