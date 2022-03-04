@@ -2,7 +2,6 @@ import React from 'react'
 import { IPoint, Point } from 'some-utils/geom'
 
 type DragInfo = { total: Point, delta: Point, moveEvent: PointerEvent, downEvent: PointerEvent }
-type WheelInfo = { total: Point, delta: Point }
 
 type PointerHandleOptions = Partial<{
   onDown: (event: PointerEvent, downEvent: PointerEvent) => void
