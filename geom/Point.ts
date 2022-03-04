@@ -64,7 +64,7 @@ export class Point {
     }
     throw new Error(`invalid args: ${args}`)
   }
-  copy(other: Point) {
+  copy(other: IPoint) {
     return set(this, other.x, other.y)
   }
   clone() {
