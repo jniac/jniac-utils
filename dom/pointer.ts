@@ -27,7 +27,7 @@ window.addEventListener('pointermove', event => {
 
 window.addEventListener('pointerdown', event => {
   const { x, y, timeStamp: time, target } = event
-  pointerInfo.position.updateValue({ down: true })
+  pointerInfo.position.updateValue({ down: true, x, y })
   pointerInfo.down.updateValue({
     position: { x, y },
     time,
