@@ -17,32 +17,18 @@ export class PRNG {
   #initialSeed: number
   #seed: number
 
-  
   constructor(seed = PRNG.seedDefault) {
     this.#initialSeed = seed
     this.#seed = init(seed)
   }
   
-  static random() {
-    return new PRNG(PRNG.seedMax * Math.random())
-  }
-  
-  next() {
-    this.#seed = next(this.#seed)
-    return map(this.#seed)
-  }
-  
-  reset(seed = this.#initialSeed) {
-    this.#initialSeed = seed
-    this.#seed = init(seed)
-  }
-
   static reset(seed = PRNG.seedDefault) {
     PRNG.#staticSeed = next(seed)
   }
 
-  float() {
-    return this.next()
+  reset(seed = this.#initialSeed) {
+    this.#initialSeed = seed
+    this.#seed = init(seed)
   }
 
   static float({ seed = PRNG.#staticSeed } = {}) {
@@ -50,13 +36,11 @@ export class PRNG {
     return map(PRNG.#staticSeed)
   }
 
-  range(min = 0, max = 1, { power = 1 } = {}) {
-    if (power === 1) {
-      return min + (max - min) * this.next()
-    }
-    return min + (max - min) * (this.next() ** power)
+  float() {
+    this.#seed = next(this.#seed)
+    return map(this.#seed)
   }
-  
+
   static range(min = 0, max = 1, { seed = PRNG.seedDefault, power = 1 } = {}) {
     if (power === 1) {
       return min + (max - min) * PRNG.float({ seed })
@@ -64,20 +48,45 @@ export class PRNG {
     return min + (max - min) * (PRNG.float({ seed }) ** power)
   }
 
+  range(min = 0, max = 1, { power = 1 } = {}) {
+    if (power === 1) {
+      return min + (max - min) * this.float()
+    }
+    return min + (max - min) * (this.float() ** power)
+  }
+
+  static integer(min = 0, max = 100) {
+    return Math.floor(min + (max - min) * PRNG.float())
+  }
+  
   integer(min = 0, max = 100) {
-    return Math.floor(min + (max - min) * this.next())
+    return Math.floor(min + (max - min) * this.float())
+  }
+
+  static chance(p = 0.5) {
+    return PRNG.float() <= p
   }
 
   chance(p = 0.5) {
-    return this.next() <= p
+    return this.float() <= p
   }
 
-  around({ from = 0, deviation = 1, power = 2 } = {}) {
-    const value = this.next()
+  static around({ from = 0, deviation = 1, power = 2 } = {}) {
+    const value = PRNG.float()
     return from + (value ** power) * deviation * (value * 100 % 2 > 1 ? 1 : -1) 
   }
 
-  among<T = any>(array: T[]) {
+  around({ from = 0, deviation = 1, power = 2 } = {}) {
+    const value = this.float()
+    return from + (value ** power) * deviation * (value * 100 % 2 > 1 ? 1 : -1) 
+  }
+
+  static item<T = any>(array: T[]) {
+    const index = PRNG.integer(0, array.length)
+    return array[index]
+  }
+
+  item<T = any>(array: T[]) {
     const index = this.integer(0, array.length)
     return array[index]
   }
