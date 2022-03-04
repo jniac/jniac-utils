@@ -9,7 +9,7 @@ export type PointParams =
   | [number, number]
   | number[]
 
-const set = (point: IPoint, x: number, y: number) => {
+const set = <T extends IPoint>(point: T, x: number, y: number) => {
   point.x = x
   point.y = y
   return point
