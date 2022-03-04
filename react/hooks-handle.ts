@@ -1,4 +1,5 @@
 import React from 'react'
+import { IPoint, Point } from 'some-utils/geom'
 
 type DistanceInfo = { x: number, y: number, magnitude: number }
 
@@ -8,19 +9,20 @@ type PointerHandleOptions = Partial<{
   onMove: (event: PointerEvent, downEvent: PointerEvent | null) => void
   onOver: (event: PointerEvent) => void
   onOut: (event: PointerEvent) => void
-  onDrag: (info: { distanceTotal: DistanceInfo, distanceDelta: DistanceInfo, moveEvent: PointerEvent, downEvent: PointerEvent }) => void
+  onDrag: (info: { distanceTotal: DistanceInfo, distanceDelta: DistanceInfo, moveEvent: IPoint, downEvent: IPoint }) => void
   dragDistanceThreshold: number
+  dragDamping: number
 }>
 
-const getDistanceInfo = (A: PointerEvent, B: PointerEvent): DistanceInfo => {
+const getDistanceInfo = (A: IPoint, B: IPoint): DistanceInfo => {
   const x = B.x - A.x
   const y = B.y - A.y
   const magnitude = Math.sqrt(x * x + y * y)
   return { x, y, magnitude }
 }
-const getDragInfo = (downEvent: PointerEvent, moveEvent: PointerEvent, previousMoveEvent: PointerEvent) => {
+const getDragInfo = (downEvent: IPoint, moveEvent: IPoint, previousMovePoint: IPoint) => {
   return {
-    distanceDelta: getDistanceInfo(moveEvent, previousMoveEvent),
+    distanceDelta: getDistanceInfo(moveEvent, previousMovePoint),
     distanceTotal: getDistanceInfo(moveEvent, downEvent),
     moveEvent,
     downEvent,
@@ -43,11 +45,12 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
     onOut,
     onDrag,
     dragDistanceThreshold = 10,
+    dragDamping = .1,
   } = options
 
   let downEvent: PointerEvent | null = null
   let moveEvent: PointerEvent | null = null
-  let previousMoveEvent: PointerEvent | null = null
+  let previousMovePoint = new Point()
   
   const onPointerMove = (event: PointerEvent) => {
     onMove?.(event, downEvent)
@@ -62,9 +65,10 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
       onDownFrameId = window.requestAnimationFrame(onDownFrame)
       dragStart ||= dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
       if (dragStart && onDrag) {
-        onDrag(getDragInfo(downEvent!, moveEvent!, previousMoveEvent!))
+        onDrag(getDragInfo(downEvent!, moveEvent!, previousMovePoint!))
+        previousMovePoint.x += (moveEvent!.x - previousMovePoint.x) * dragDamping
+        previousMovePoint.y += (moveEvent!.y - previousMovePoint.y) * dragDamping
       }
-      previousMoveEvent = moveEvent
     }
   }
   const onPointerOver = (event: PointerEvent) => {
@@ -80,7 +84,7 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
     dragStart = false
     downEvent = event
     moveEvent = event
-    previousMoveEvent = event
+    previousMovePoint.copy(event)
     onDown?.(event, downEvent)
     onDownFrame()
   }
