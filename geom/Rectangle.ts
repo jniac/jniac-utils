@@ -1,3 +1,4 @@
+import { PointParams } from '.'
 import { IPoint, Point } from './Point'
 
 export type IRectangle = {
@@ -11,6 +12,7 @@ type RectangleParams =
   | Partial<IRectangle> 
   | [number, number, number, number]
   | [number, number]
+  | number[]
   | {
     xMin?: number
     yMin?: number
@@ -301,6 +303,14 @@ const inflate = (r: IRectangle, left: number, right: number, top: number, bottom
   return r
 }
 
+const transposePoint = <T extends IPoint>(point: IPoint, from: IRectangle, to: IRectangle, receiver: T) => {
+  const x = (point.x - from.x) / from.width
+  const y = (point.y - from.y) / from.height
+  receiver.x = to.x + x * to.width
+  receiver.y = to.y + y * to.height
+  return receiver
+}
+
 export class Rectangle {
   
   static get DegenerateMode() { return DegenerateMode }
@@ -309,6 +319,10 @@ export class Rectangle {
   static get intersection() { return intersection }
   static get union() { return union }
   static get signedDistance() { return signedDistance }
+  
+  static transposePoint(point: PointParams, from: RectangleParams, to: RectangleParams, receiver: IPoint = new Point()) {
+    return transposePoint(Point.ensure(point), ensure(from), ensure(to), receiver)
+  }
 
   x = 0
   y = 0
