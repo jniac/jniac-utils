@@ -1,15 +1,22 @@
 import React from 'react'
 import { IPoint, Point } from 'some-utils/geom'
 
+type DragInfo = { total: Point, delta: Point, moveEvent: PointerEvent, downEvent: PointerEvent }
+type WheelInfo = { total: Point, delta: Point }
+
 type PointerHandleOptions = Partial<{
   onDown: (event: PointerEvent, downEvent: PointerEvent) => void
   onUp: (event: PointerEvent, downEvent: PointerEvent) => void
   onMove: (event: PointerEvent, downEvent: PointerEvent | null) => void
   onOver: (event: PointerEvent) => void
   onOut: (event: PointerEvent) => void
-  onDrag: (info: { total: Point, delta: Point, moveEvent: PointerEvent, downEvent: PointerEvent }) => void
+  
+  // DRAG
   dragDistanceThreshold: number
   dragDamping: number
+  onDragStart: (info: DragInfo) => void
+  onDragStop: (info: DragInfo) => void
+  onDrag: (info: DragInfo) => void
 }>
 
 const getDragInfo = (downEvent: PointerEvent, moveEvent: PointerEvent, movePoint: IPoint, previousMovePoint: IPoint) => {
@@ -35,9 +42,13 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
     onMove,
     onOver,
     onOut,
-    onDrag,
+
+    // DRAG
     dragDistanceThreshold = 10,
     dragDamping = .1,
+    onDrag,
+    onDragStart,
+    onDragStop,
   } = options
 
   let downEvent: PointerEvent | null = null
@@ -56,7 +67,13 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
   const onDownFrame = () => {
     if (onDrag && isDown) {
       onDownFrameId = window.requestAnimationFrame(onDownFrame)
-      dragStart ||= dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
+      if (dragStart === false) {
+        dragStart = dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
+        if (dragStart) {
+          // Drag Started!
+          onDragStart?.(getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint))
+        }
+      }
       if (dragStart) {
         previousMovePoint.copy(movePoint)
         movePoint.x += (moveEvent!.x - movePoint.x) * dragDamping
@@ -65,12 +82,15 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
       }
     }
   }
+  
   const onPointerOver = (event: PointerEvent) => {
     onOver?.(event)
   }
+  
   const onPointerOut = (event: PointerEvent) => {
     onOut?.(event)
   }
+
   const onPointerDown = (event: PointerEvent) => {
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
@@ -83,15 +103,20 @@ export const pointerHandle = (element: HTMLElement, options: PointerHandleOption
     onDown?.(event, downEvent)
     onDownFrame()
   }
+
   const onPointerUp = (event: PointerEvent) => {
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('pointerup', onPointerUp)
     window.cancelAnimationFrame(onDownFrameId)
     onUp?.(event, downEvent!)
+    if (dragStart) {
+      onDragStop?.(getDragInfo(downEvent!, event!, movePoint, previousMovePoint))
+    }
     isDown = false
     downEvent = null
     dragStart = false
   }
+
   element.addEventListener('pointerover', onPointerOver)
   element.addEventListener('pointerout', onPointerOut)
   element.addEventListener('pointerdown', onPointerDown)
