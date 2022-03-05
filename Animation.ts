@@ -131,6 +131,7 @@ class CallbackMap extends Map<AnimationInstance, Set<AnimationCallback>> {
 }
 
 const destroyCallbacks = new CallbackMap()
+const startCallbacks = new CallbackMap()
 const completeCallbacks = new CallbackMap()
 const frameCallbacks = new CallbackMap()
 const nextFrameCallbacks = new CallbackMap()
@@ -168,6 +169,23 @@ class AnimationInstance {
     }
     this.onFrame(cb)
     addAnimation(this)
+  }
+
+  pause() {
+    this.paused = true
+    return this
+  }
+
+  play() {
+    this.paused = false
+    return this
+  }
+
+  onStart(cb?: AnimationCallback) {
+    if (this.destroyed === false && cb) {
+      startCallbacks.add(this, cb)
+    }
+    return this
   }
 
   onFrame(cb?: AnimationCallback) {
@@ -237,8 +255,13 @@ const updateAnimation = (animation: AnimationInstance) => {
   animation.deltaTime = deltaTime * animation.timeScale
   animation.time += animation.deltaTime
   if (animation.time >= 0) {
-    animation.frame += 1
     let done = false
+    if (animation.frame === 0) {
+      for (const cb of startCallbacks.get(animation) ?? nothing) {
+        done = (cb(animation) === BREAK) || done
+      }
+    }
+    animation.frame += 1
     for (const cb of frameCallbacks.get(animation) ?? nothing) {
       done = (cb(animation) === BREAK) || done
     }
@@ -336,7 +359,7 @@ const loopCancelTarget = (target: any) => {
 }
 
 type TimingParam = 
-  | { duration: number, delay?: number, immediate?: boolean }
+  | { duration: number, delay?: number, immediate?: boolean, paused?: boolean }
   | [number, number?, boolean?]
   | number
 
@@ -353,8 +376,9 @@ const fromTimingParam = (timingParam: TimingParam) => {
 
 const during = (timing: TimingParam, cb?: AnimationCallback) => {
   const animation = new AnimationInstance(cb)
-  const { duration, delay = 0, immediate = false } = fromTimingParam(timing)
+  const { duration, delay = 0, immediate = false, paused = false } = fromTimingParam(timing)
   animation.duration = duration
+  animation.paused = paused
   animation.time = -delay
   if (immediate && cb) {
     cb(animation)
@@ -372,15 +396,25 @@ const duringCancelTarget = (target: any) => {
 
 const wait = (duration: number) => during(duration).waitDestroy()!
 
+type EaseDeclaration = 
+  | ((t: number) => number) 
+  | (keyof typeof easing) 
+  | `cubic-bezier(${number}, ${number}, ${number}, ${number})`
+
 type TweenParams<T> = {
   from?: T | Partial<Record<keyof T, number>>
   to?: T | Partial<Record<keyof T, number>>
-  ease?: ((t: number) => number) | (keyof typeof easing) | `cubic-bezier(${number}, ${number}, ${number}, ${number})`
+  ease?: EaseDeclaration
   onChange?: AnimationCallback,
   onComplete?: AnimationCallback,
 }
 
-const safeEase = (ease?: TweenParams<any>['ease']) => {
+const getEase = (ease?: EaseDeclaration) => {
+
+  if (typeof ease === 'function') {
+    return ease
+  }
+
   if (typeof ease === 'string') {
     if (ease.startsWith('cubic-bezier')) {
       const [x1, y1, x2, y2] = ease
@@ -393,9 +427,7 @@ const safeEase = (ease?: TweenParams<any>['ease']) => {
       return easing[ease as keyof typeof easing]
     }
   }
-  if (typeof ease === 'function') {
-    return ease
-  }
+
   return (x: number) => x
 }
 
@@ -419,7 +451,7 @@ const tween = <T>(target: T, timing: TimingParam, {
     return [key, value]
   })) as Record<keyof T, any>
 
-  const _ease = safeEase(ease)
+  const _ease = getEase(ease)
 
   const anim = duringWithTarget(target, timing, ({ progress }) => {
     const t = _ease(progress)
@@ -467,6 +499,7 @@ export {
   duringCancelTarget,
   wait,
   tween,
+  getEase,
 }
 
 export type {
@@ -484,5 +517,6 @@ export const Animation = {
   duringCancelTarget,
   wait,
   tween,
+  getEase,
   AnimationInstance,
 }
