@@ -1,5 +1,5 @@
 
-type Code = 'ArrowDown' | 'ArrowUp'
+type Code = 'ArrowDown' | 'ArrowUp' | 'ArrowLeft' | 'ArrowRight'
 type Mask = '*' | Code | Code[] | RegExp
 
 type Listener = [
@@ -7,10 +7,10 @@ type Listener = [
   (event: KeyboardEvent) => void,
 ]
 
-interface Options {
+type Options = Partial<{
   element: HTMLElement
   onDown: Listener[]
-}
+}>
 
 const testMask = (mask: Mask, str: string) => {
   if (mask === '*') {
@@ -28,7 +28,7 @@ const testMask = (mask: Mask, str: string) => {
 export const handleKeyboard = ({
   element = document.body,
   onDown,
-}: Partial<Options>) => {
+}: Options) => {
 
   const onKeyPress = (event: KeyboardEvent): void => {
     const { code } = event
