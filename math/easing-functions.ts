@@ -11,6 +11,20 @@ export const pow4 = (x: number) => x * x * x * x
 export const pow5 = (x: number) => x * x * x * x * x
 export const pow6 = (x: number) => x * x * x * x * x * x
 
+export {
+  pow2 as in2,
+  pow3 as in3,
+  pow4 as in4,
+  pow5 as in5,
+  pow6 as in6,
+}
+
+export const out2 = (x: number) => 1 - (x = 1 - x) * x
+export const out3 = (x: number) => 1 - (x = 1 - x) * x * x
+export const out4 = (x: number) => 1 - (x = 1 - x) * x * x * x
+export const out5 = (x: number) => 1 - (x = 1 - x) * x * x * x * x
+export const out6 = (x: number) => 1 - (x = 1 - x) * x * x * x * x * x
+
 // https://www.desmos.com/calculator/chosfesws4
 export const inout = (x:number, p: number = 3, i: number = 0.5) => {
   if (x < 0) return 0
