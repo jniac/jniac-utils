@@ -40,9 +40,18 @@ const dragHasStart = (downEvent: PointerEvent, moveEvent: PointerEvent, distance
 export const handlePointer = (element: HTMLElement, options: Options) => {
 
   const {
-    onDown, onUp, onMove, onOver, onOut,
+    onDown, 
+    onUp, 
+    onMove, 
+    onOver, 
+    onOut,
+
     // DRAG
-    dragDistanceThreshold = 10, dragDamping = .1, onDrag, onDragStart, onDragStop,
+    dragDistanceThreshold = 10, 
+    dragDamping = .4, 
+    onDrag, 
+    onDragStart, 
+    onDragStop,
   } = options
 
   let downEvent: PointerEvent | null = null
