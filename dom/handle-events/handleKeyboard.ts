@@ -4,7 +4,7 @@ type Mask = '*' | Code | Code[] | RegExp
 
 type Listener = [
   Mask,
-  (event: KeyboardEvent) => void,
+  ((event: KeyboardEvent) => void) | null | undefined,
 ]
 
 type Options = Partial<{
@@ -35,7 +35,7 @@ export const handleKeyboard = ({
     if (onDown) {
       for (const [mask, callback] of onDown) {
         if (testMask(mask, code)) {
-          callback(event)
+          callback?.(event)
         }
       }
     }
