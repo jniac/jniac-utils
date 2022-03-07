@@ -24,11 +24,13 @@ export class PRNG {
   
   static reset(seed = PRNG.seedDefault) {
     PRNG.#staticSeed = next(seed)
+    return PRNG
   }
 
   reset(seed = this.#initialSeed) {
     this.#initialSeed = seed
     this.#seed = init(seed)
+    return this
   }
 
   static float({ seed = PRNG.#staticSeed } = {}) {
