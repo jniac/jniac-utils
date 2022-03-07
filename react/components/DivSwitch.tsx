@@ -45,7 +45,7 @@ export const DivSwitch: React.FC<{
             }
             if (leaving) {
               const t1 = MathUtils.inverseLerp(0, 0.6, t)
-              leaving.style.opacity = Animation.easing.in4((1 - t1)).toFixed(2)
+              leaving.style.opacity = Animation.easings.in4((1 - t1)).toFixed(2)
             }
             if (entering) {
               entering.style.opacity = t < 1 ? MathUtils.inout(t, 3, .3).toFixed(2) : ''

@@ -4,7 +4,13 @@ const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const nothing = [][Symbol.iterator]()
 
 
+
+
+
+// EASINGS >
+
 // CUBIC-BEZIER >
+
 const cubic01 = (x2: number, x3: number, t: number) => {
   const ti = 1 - t
   const t2 = t * t
@@ -59,15 +65,85 @@ export const solveCubicEasing = (x1: number, y1: number, x2: number, y2: number,
   const y = cubic01(y1, y2, t)
   return y
 }
+
 // CUBIC-BEZIER <
 
 
+
+export const easings = (() => {
+  const clamp01 = (x: number) => x < 0 ? 0 : x > 1 ? 1 : x
+  const linear = clamp01
+  const in1 = clamp01
+  const in2 = (x: number) => clamp01(x * x)
+  const in3 = (x: number) => clamp01(x * x * x)
+  const in4 = (x: number) => clamp01(x * x * x * x)
+  const in5 = (x: number) => clamp01(x * x * x * x * x)
+  const in6 = (x: number) => clamp01(x * x * x * x * x * x)
+  const out1 = clamp01
+  const out2 = (x: number) => clamp01(1 - (x = 1 - x) * x)
+  const out3 = (x: number) => clamp01(1 - (x = 1 - x) * x * x)
+  const out4 = (x: number) => clamp01(1 - (x = 1 - x) * x * x * x)
+  const out5 = (x: number) => clamp01(1 - (x = 1 - x) * x * x * x * x)
+  const out6 = (x: number) => clamp01(1 - (x = 1 - x) * x * x * x * x * x)
+  const inout1 = clamp01
+  const inout2 = (x: number) => clamp01(x < .5 ? 2 * x * x : 1 - 2 * (x = 1 - x) * x)
+  const inout3 = (x: number) => clamp01(x < .5 ? 4 * x * x * x : 1 - 4 * (x = 1 - x) * x * x)
+  const inout4 = (x: number) => clamp01(x < .5 ? 8 * x * x * x * x : 1 - 8 * (x = 1 - x) * x * x * x)
+  const inout5 = (x: number) => clamp01(x < .5 ? 16 * x * x * x * x * x : 1 - 16 * (x = 1 - x) * x * x * x * x)
+  const inout6 = (x: number) => clamp01(x < .5 ? 32 * x * x * x * x * x * x : 1 - 32 * (x = 1 - x) * x * x * x * x * x)
+  return {
+    linear,
+    in1, in2, in3, in4, in5, in6,
+    out1, out2, out3, out4, out5, out6,
+    inout1, inout2, inout3, inout4, inout5, inout6,
+  }
+})()
+
+const getEase = (ease: EaseDeclaration) => {
+
+  if (typeof ease === 'function') {
+    return ease
+  }
+
+  if (typeof ease === 'string') {
+    if (ease.startsWith('cubic-bezier')) {
+      const [x1, y1, x2, y2] = ease
+        .slice(13, -1)
+        .split(/\s*,\s*/)
+        .map(s => parseFloat(s))
+      return (x: number) => solveCubicEasing(x1, y1, x2, y2, x)
+    }
+    else if (ease in easings) {
+      return easings[ease as keyof typeof easings]
+    }
+  }
+
+  return easings.linear
+}
+
+const easeMap = new Map<EaseDeclaration, (x: number) => number>()
+const getMemoizedEase = (ease: EaseDeclaration) => {
+  let value = easeMap.get(ease)
+  if (value === undefined) {
+    value = getEase(ease)
+    easeMap.set(ease, value)
+  }
+  return value
+}
+
+// EASINGS <
+
+
+
+
+
+// OBJECT >
 
 /**
  * Clone a value. If value is an object will return a shallow clone.
  * Used by tween().
  */
-const cloneValue = <T = any>(value: T) => {
+ const cloneValue = <T = any>(value: T) => {
   if (value && typeof value === 'object') {
     const clone = new (value as any).constructor()
     for (const key in value) {
@@ -89,18 +165,11 @@ export const lerpObject = (receiver: any, a: any, b: any, t: number) => {
   }
 }
 
-export const easing = {
-  in2: (x: number) => x * x,
-  in3: (x: number) => x * x * x,
-  in4: (x: number) => x * x * x * x,
-  in5: (x: number) => x * x * x * x * x,
-  in6: (x: number) => x * x * x * x * x * x,
-  out2: (x: number) => 1 - (x = 1 - x) * x,
-  out3: (x: number) => 1 - (x = 1 - x) * x * x,
-  out4: (x: number) => 1 - (x = 1 - x) * x * x * x,
-  out5: (x: number) => 1 - (x = 1 - x) * x * x * x * x,
-  out6: (x: number) => 1 - (x = 1 - x) * x * x * x * x * x,
-}
+// OBJECT <
+
+
+
+
 
 let time = 0
 let timeOld = 0
@@ -148,6 +217,7 @@ class AnimationInstance {
   timeOld = 0
   deltaTime = 0
   duration = Infinity
+  autoDestroy = true // autoDestroy on complete?
   destroyed = false
   frame = 0
   
@@ -176,8 +246,41 @@ class AnimationInstance {
     return this
   }
 
-  play() {
+  /**
+   * Play the animation (on next tick), from the current time, or from the given params.
+   * @param param 
+   */
+  play({ time, progress } = {} as { time?: number, progress?: number }) {
+    
     this.paused = false
+
+    // NOTE: time is modified here, but without "jumps".
+    // Any effects will happen on next tick.
+    if (progress !== undefined) {
+      time = progress * this.duration
+    }
+    if (time !== undefined) {
+      this.time = time
+    }
+
+    return this
+  }
+
+  setTime(value: number) {
+    if (value !== this.time) {
+      updateAnimation(this, value)
+    }
+    return this
+  }
+
+  setProgress(value: number) {
+    return this.setTime(value * this.duration)
+  }
+
+  triggerFrameCallbacks() {
+    for (const cb of frameCallbacks.get(this) ?? nothing) {
+      cb(this)
+    }
     return this
   }
 
@@ -223,21 +326,21 @@ class AnimationInstance {
     return new Promise<AnimationInstance>(resolve => completeCallbacks.add(this, resolve))
   }
   
-  nextFrame() {
+  waitNextFrame() {
     if (this.destroyed) {
       return null
     }
     return new Promise<AnimationInstance>(resolve => nextFrameCallbacks.add(this, resolve))
   }
   
-  async *frames(): AsyncGenerator<AnimationInstance, void, unknown> {
-    while(await this.nextFrame()) {
+  async *waitFrames(): AsyncGenerator<AnimationInstance, void, unknown> {
+    while(await this.waitNextFrame()) {
       yield this
     }
   }
 
   async *[Symbol.asyncIterator]() {
-    yield* this.frames()
+    yield* this.waitFrames()
   }
 }
 
@@ -250,10 +353,10 @@ const addAnimation = (animation: AnimationInstance) => {
   (updating ? newAnimations : animations).add(animation)
 }
 
-const updateAnimation = (animation: AnimationInstance) => {
+const updateAnimation = (animation: AnimationInstance, animationTime: number) => {
   animation.timeOld = animation.time
-  animation.deltaTime = deltaTime * animation.timeScale
-  animation.time += animation.deltaTime
+  animation.time = animationTime
+  animation.deltaTime = animationTime - animation.timeOld
   if (animation.time >= 0) {
     let done = false
     if (animation.frame === 0) {
@@ -273,7 +376,7 @@ const updateAnimation = (animation: AnimationInstance) => {
         cb(animation)
       }
     }
-    if (done || animation.complete) {
+    if (animation.autoDestroy && (done || animation.complete)) {
       animation.destroy()
     }
   }
@@ -296,7 +399,8 @@ const updateAnimations = () => {
   updating = true
   for (const animation of animations) {
     if (animation.destroyed === false && animation.paused === false) {
-      updateAnimation(animation)
+      const animationTime = animation.time + deltaTime * animation.timeScale
+      updateAnimation(animation, animationTime)
     }
   }
   for (const animation of destroyedAnimations) {
@@ -358,12 +462,12 @@ const loopCancelTarget = (target: any) => {
   loopMap.get(target)?.destroy()
 }
 
-type TimingParam = 
-  | { duration: number, delay?: number, immediate?: boolean, paused?: boolean }
+type AnimationParam = 
+  | { duration: number, delay?: number, immediate?: boolean, paused?: boolean, autoDestroy?: boolean }
   | [number, number?, boolean?]
   | number
 
-const fromTimingParam = (timingParam: TimingParam) => {
+const fromAnimationParam = (timingParam: AnimationParam) => {
   if (typeof timingParam === 'number') {
     return { duration: timingParam, delay: 0 }
   }
@@ -374,20 +478,32 @@ const fromTimingParam = (timingParam: TimingParam) => {
   return timingParam
 }
 
-const during = (timing: TimingParam, cb?: AnimationCallback) => {
+const during = (timing: AnimationParam, cb?: AnimationCallback) => {
+  
   const animation = new AnimationInstance(cb)
-  const { duration, delay = 0, immediate = false, paused = false } = fromTimingParam(timing)
+  
+  const { 
+    duration, 
+    delay = 0, 
+    immediate = false, 
+    paused = false,
+    autoDestroy = true,
+  } = fromAnimationParam(timing)
+  
   animation.duration = duration
   animation.paused = paused
   animation.time = -delay
-  if (immediate && cb) {
-    cb(animation)
+  animation.autoDestroy = autoDestroy
+  
+  if (immediate) {
+    cb?.(animation)
   }
+
   return animation
 }
 
 const duringMap = new AnimationMap()
-const duringWithTarget = (target: any, timing: TimingParam, cb: AnimationCallback = () => {}) => {
+const duringWithTarget = (target: any, timing: AnimationParam, cb: AnimationCallback = () => {}) => {
   return duringMap.set(target, during(timing, cb))
 }
 const duringCancelTarget = (target: any) => {
@@ -398,8 +514,10 @@ const wait = (duration: number) => during(duration).waitDestroy()!
 
 type EaseDeclaration = 
   | ((t: number) => number) 
-  | (keyof typeof easing) 
+  | (keyof typeof easings) 
   | `cubic-bezier(${number}, ${number}, ${number}, ${number})`
+  | null
+  | undefined 
 
 type TweenParams<T> = {
   from?: T | Partial<Record<keyof T, number>>
@@ -409,29 +527,7 @@ type TweenParams<T> = {
   onComplete?: AnimationCallback,
 }
 
-const getEase = (ease?: EaseDeclaration) => {
-
-  if (typeof ease === 'function') {
-    return ease
-  }
-
-  if (typeof ease === 'string') {
-    if (ease.startsWith('cubic-bezier')) {
-      const [x1, y1, x2, y2] = ease
-        .slice(13, -1)
-        .split(/\s*,\s*/)
-        .map(s => parseFloat(s))
-      return (x: number) => solveCubicEasing(x1, y1, x2, y2, x)
-    }
-    else {
-      return easing[ease as keyof typeof easing]
-    }
-  }
-
-  return (x: number) => x
-}
-
-const tween = <T>(target: T, timing: TimingParam, {
+const tween = <T>(target: T, timing: AnimationParam, {
   from,
   to,
   ease,
@@ -500,6 +596,7 @@ export {
   wait,
   tween,
   getEase,
+  getMemoizedEase,
 }
 
 export type {
@@ -518,5 +615,6 @@ export const Animation = {
   wait,
   tween,
   getEase,
+  getMemoizedEase,
   AnimationInstance,
 }
