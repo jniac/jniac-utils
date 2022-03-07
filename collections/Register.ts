@@ -1,5 +1,6 @@
 
 export class Register<K, V> {
+  
   #map = new Map<K, Set<V>>()
 
   get keyCount() { return this.#map.size }
@@ -40,5 +41,19 @@ export class Register<K, V> {
     if (set) {
       yield* set
     }
+  }
+
+  *allEntries() {
+    for (const set of this.#map.values()) {
+      yield* set
+    }
+  }
+
+  clear() {
+    for (const set of this.#map.values()) {
+      set.clear()
+    }
+    this.#map.clear()
+    return this
   }
 }
