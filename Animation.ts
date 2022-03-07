@@ -225,6 +225,7 @@ class AnimationInstance {
   get progress() { return clamp(this.time / this.duration, 0, 1) }
   get global() { return info }
   get complete() { return this.time >= this.duration }
+  get completeOld() { return this.timeOld >= this.duration }
 
   destroy: () => AnimationInstance
   
@@ -371,7 +372,7 @@ const updateAnimation = (animation: AnimationInstance, animationTime: number) =>
     for (const cb of nextFrameCallbacks.getAndDelete(animation) ?? nothing) {
       done = (cb(animation) === BREAK) || done
     }
-    if (animation.complete) {
+    if (animation.complete && animation.completeOld === false) {
       for (const cb of completeCallbacks.get(animation) ?? nothing) {
         cb(animation)
       }
