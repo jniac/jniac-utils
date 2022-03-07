@@ -14,6 +14,10 @@ export type Options = Partial<{
   onOver: (event: PointerEvent) => void
   onOut: (event: PointerEvent) => void
 
+  // TAP
+  tapMaxDuration: number
+  onTap: () => void
+
   // DRAG
   dragDistanceThreshold: number
   dragDamping: number
@@ -37,6 +41,10 @@ const dragHasStart = (downEvent: PointerEvent, moveEvent: PointerEvent, distance
   return (x * x) + (y * y) > distanceThreshold * distanceThreshold
 }
 
+const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: number) => {
+  return upEvent.timeStamp - downEvent.timeStamp < maxDuration * 1e3
+}
+
 export const handlePointer = (element: HTMLElement, options: Options) => {
 
   const {
@@ -45,6 +53,10 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     onMove, 
     onOver, 
     onOut,
+
+    // TAP
+    tapMaxDuration = 0.3,
+    onTap,
 
     // DRAG
     dragDistanceThreshold = 10, 
@@ -114,6 +126,9 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     onUp?.(event, downEvent!)
     if (dragStart) {
       onDragStop?.(getDragInfo(downEvent!, event!, movePoint, previousMovePoint))
+    }
+    if (onTap && isTap(downEvent!, event, tapMaxDuration)) {
+      onTap()
     }
     isDown = false
     downEvent = null
