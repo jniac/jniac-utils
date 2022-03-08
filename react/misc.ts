@@ -34,6 +34,10 @@ export const safeClassName = (...args: any[]) => args
     map: (item: T, index: number) => U,
     separator: (autoKey: string, index: number) => V,
   ) {
+
+    if (!data) {
+      throw new Error(`invalid "data" (${data})`)
+    }
   
     if (data.length === 0) {
       return []
