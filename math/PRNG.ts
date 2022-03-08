@@ -33,6 +33,14 @@ export class PRNG {
     return this
   }
 
+  static randomReset() {
+    return PRNG.reset(2147483647 * Math.random())
+  }
+
+  randomReset() {
+    return this.reset(2147483647 * Math.random())
+  }
+
   static float({ seed = PRNG.#staticSeed } = {}) {
     PRNG.#staticSeed = next(seed)
     return map(PRNG.#staticSeed)
