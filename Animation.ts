@@ -513,6 +513,10 @@ const duringCancelTarget = (target: any) => {
 
 const wait = (duration: number) => during(duration).waitDestroy()!
 
+const waitFrames = (frameCount: number) => loop(({ frame }) => {
+  if (frame >= frameCount) return BREAK
+}).waitDestroy()!
+
 type EaseDeclaration = 
   | ((t: number) => number) 
   | (keyof typeof easings) 
@@ -595,6 +599,7 @@ export {
   duringWithTarget,
   duringCancelTarget,
   wait,
+  waitFrames,
   tween,
   getEase,
   getMemoizedEase,
@@ -614,6 +619,7 @@ export const Animation = {
   duringWithTarget,
   duringCancelTarget,
   wait,
+  waitFrames,
   tween,
   getEase,
   getMemoizedEase,

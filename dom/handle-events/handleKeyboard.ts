@@ -1,5 +1,8 @@
 
-type Code = 'ArrowDown' | 'ArrowUp' | 'ArrowLeft' | 'ArrowRight'
+type Code = 
+| 'ArrowDown' | 'ArrowUp' | 'ArrowLeft' | 'ArrowRight'
+| 'LetterA' | 'LetterB' | 'LetterC' | 'LetterD' | 'LetterE' | 'LetterF' | 'LetterG' | 'LetterH' | 'LetterI' | 'LetterJ' | 'LetterK' | 'LetterL' | 'LetterM' | 'LetterN' | 'LetterO' | 'LetterP' | 'LetterQ' | 'LetterR' | 'LetterS' | 'LetterT' | 'LetterU' | 'LetterV' | 'LetterW' | 'LetterX' | 'LetterY' | 'LetterZ'
+
 type Mask = '*' | Code | Code[] | RegExp
 
 type Listener = [
@@ -31,10 +34,17 @@ export const handleKeyboard = ({
 }: Options) => {
 
   const onKeyPress = (event: KeyboardEvent): void => {
-    const { code } = event
+    const { code, key } = event
+    console.log(key)
     if (onDown) {
+      const letter = code.startsWith('Key') ? `Letter${key.toUpperCase()}` : ''
       for (const [mask, callback] of onDown) {
-        if (testMask(mask, code)) {
+        const match = (
+          testMask(mask, code) || 
+          testMask(mask, key) || 
+          testMask(mask, letter)
+        )
+        if (match) {
           callback?.(event)
         }
       }

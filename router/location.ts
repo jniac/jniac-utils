@@ -6,7 +6,9 @@ const safeParseUrl = (str: string) => {
     pathname, search, hash, origin,
   } = new URL(str, window.location.href)
 
-  pathname = pathname.replace(/\/\//g, '/')
+  pathname = pathname
+    .replace(/\/\//g, '/') // remove double slash
+    .replace(/\/$/, '') // remove trailing slash
   search = search.substring(1)
   hash = hash.substring(1)
 
