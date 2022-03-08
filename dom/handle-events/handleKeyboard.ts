@@ -35,7 +35,6 @@ export const handleKeyboard = ({
 
   const onKeyPress = (event: KeyboardEvent): void => {
     const { code, key } = event
-    console.log(key)
     if (onDown) {
       const letter = code.startsWith('Key') ? `Letter${key.toUpperCase()}` : ''
       for (const [mask, callback] of onDown) {
