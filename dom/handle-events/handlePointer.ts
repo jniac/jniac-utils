@@ -9,10 +9,12 @@ type DragInfo = {
 
 export type Options = Partial<{
   onDown: (event: PointerEvent, downEvent: PointerEvent) => void
+  onDownIgnore: (event: PointerEvent) => boolean
   onUp: (event: PointerEvent, downEvent: PointerEvent) => void
   onMove: (event: PointerEvent, downEvent: PointerEvent | null) => void
   onOver: (event: PointerEvent) => void
   onOut: (event: PointerEvent) => void
+
 
   // TAP
   tapMaxDuration: number
@@ -48,7 +50,8 @@ const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: numb
 export const handlePointer = (element: HTMLElement, options: Options) => {
 
   const {
-    onDown, 
+    onDown,
+    onDownIgnore, 
     onUp, 
     onMove, 
     onOver, 
@@ -107,6 +110,9 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
   }
 
   const onPointerDown = (event: PointerEvent) => {
+    if (onDownIgnore?.(event)) {
+      return
+    }
     window.addEventListener('pointermove', onPointerMove)
     window.addEventListener('pointerup', onPointerUp)
     isDown = true
