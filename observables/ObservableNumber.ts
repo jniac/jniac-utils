@@ -68,6 +68,6 @@ export class ObservableNumber extends Observable<number> {
         currentValue = newValue
         callback(currentValue, this)
       }
-    })
+    }, { execute })
   }
 }
