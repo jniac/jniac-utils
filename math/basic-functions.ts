@@ -33,10 +33,3 @@ export const clampModulo = (x: number, min: number, max: number) => {
   return min + positiveModulo(x - min, delta)
 }
 
-export const euclideanDistance = (...numbers: number[]) => {
-  let sum = 0
-  for (const x of numbers) {
-    sum += x * x
-  }
-  return Math.sqrt(sum)
-}
