@@ -83,6 +83,28 @@ export class PRNG {
     return from + (value ** power) * deviation * (value * 100 % 2 > 1 ? 1 : -1) 
   }
 
+  static shuffle<T = any>(array: T[], { duplicate = false } = {}) {
+    const result = duplicate ? [...array] : array
+    for (let i = 0, max = array.length; i < max; i++) {
+      const index = Math.floor(PRNG.float() * max)
+      const tmp = result[index]
+      result[index] = result[i]
+      result[i] = tmp 
+    }
+    return result
+  }
+
+  shuffle<T = any>(array: T[], { duplicate = false } = {}) {
+    const result = duplicate ? [...array] : array
+    for (let i = 0, max = array.length; i < max; i++) {
+      const index = Math.floor(this.float() * max)
+      const tmp = result[index]
+      result[index] = result[i]
+      result[i] = tmp 
+    }
+    return result
+  }
+
   static item<T = any>(array: T[]) {
     const index = PRNG.integer(0, array.length)
     return array[index]
