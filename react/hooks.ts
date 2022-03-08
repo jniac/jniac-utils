@@ -3,6 +3,8 @@ import { Observable } from '../observables'
 
 export type Destroyable = { destroy: () => void}  | (() => void)
 
+export type ComplexEffectsDependencyList = React.DependencyList | 'always-recalculate'
+
 /**
  * Using generator to allow multiple "on destroy" callbacks.
  * 
@@ -25,7 +27,7 @@ export type Destroyable = { destroy: () => void}  | (() => void)
  */
 export function useComplexEffects<T = void>(
   complexEffects: () => Generator<Destroyable, T>, 
-  deps?: React.DependencyList,
+  deps: ComplexEffectsDependencyList,
   { debug = '', useLayoutEffect = true } = {}
 ) {
 
@@ -57,7 +59,7 @@ export function useComplexEffects<T = void>(
       }
     }
 
-  }, deps)
+  }, deps === 'always-recalculate' ? undefined : deps)
 
   return result
 }
@@ -67,7 +69,7 @@ export function useComplexEffects<T = void>(
  */
 export function useRefComplexEffects<T = HTMLElement>(
   complexEffects: (current: T) => Generator<Destroyable>, 
-  deps?: React.DependencyList,
+  deps: ComplexEffectsDependencyList,
 ) {
   const ref = React.useRef<T>(null)
 

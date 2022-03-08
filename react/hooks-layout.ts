@@ -287,7 +287,7 @@ export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
       }
     })
     
-  }, alwaysRecalculate ? undefined : [target, selectors])
+  }, alwaysRecalculate ? 'always-recalculate' : [target, selectors])
 
   return ref
 }
