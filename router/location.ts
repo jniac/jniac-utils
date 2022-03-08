@@ -48,10 +48,10 @@ export const internalUpdate = (url: string) => {
     href, pathname, search, hash,
   } = safeParseUrl(url)
 
-  const hrefHasChanged = location.href.setValue(href)
-  const pathnameHasChanged = location.pathname.setValue(pathname)
-  const searchHasChanged = location.search.setValue(search)
-  const hashHasChanged = location.hash.setValue(hash)
+  const hrefHasChanged = location.href.setValue(href, { ignoreCallbacks: true })
+  const pathnameHasChanged = location.pathname.setValue(pathname, { ignoreCallbacks: true })
+  const searchHasChanged = location.search.setValue(search, { ignoreCallbacks: true })
+  const hashHasChanged = location.hash.setValue(hash, { ignoreCallbacks: true })
 
   // NOTE: important here to change EVERY parts BEFORE calling the callbacks
   // (since any callbacks should retrieve any parts with new value)
