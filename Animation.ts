@@ -1,4 +1,5 @@
 
+const clamp01 = (x: number) => x < 0 ? 0 : x > 1 ? 1 : x
 const clamp = (x: number, min = 0, max = 1) => x < min ? min : x > max ? max : x
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 const nothing = [][Symbol.iterator]()
@@ -269,13 +270,14 @@ class AnimationInstance {
 
   setTime(value: number) {
     if (value !== this.time) {
+      // NOTE: A clamp is required here.
       updateAnimation(this, value)
     }
     return this
   }
 
   setProgress(value: number) {
-    return this.setTime(value * this.duration)
+    return this.setTime(clamp01(value) * this.duration)
   }
 
   triggerFrameCallbacks() {
