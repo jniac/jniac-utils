@@ -73,23 +73,29 @@ const __send = <M extends Message = any>(
     }
   }
   // TODO: SendModality!
+  return {
+    target,
+    type,
+    props,
+  } as M
 }
 
-export function send<M extends Message = any>(message: M): void
+export function send<M extends Message = any>(message: M): M
 export function send<M extends Message = any>(
   target: M['target'],
   type: M['type'],
   props?: M['props'],
   modality?: SendModality,
-): void
+): M
 export function send(...args: any[]) {
   if (args.length === 1) {
     const message = args[0] as Message
-    __send(message.target, message.type, message.props, message.sendModality)
+    return __send(message.target, message.type, message.props, message.sendModality)
   }
   else if (args.length > 1) {
-    __send(args[0], args[1], args[2], args[3])
+    return __send(args[0], args[1], args[2], args[3])
   }
+  throw new Error('Oops.')
 }
 
 export const on = <M extends Message>(
