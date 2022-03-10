@@ -10,6 +10,8 @@ type DragInfo = {
 type TapInfo = { 
   timeStamp: number
   point: Point
+  downEvent: PointerEvent
+  upEvent: PointerEvent
 }
 
 export type Options = Partial<{
@@ -162,6 +164,8 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
       const tap: TapInfo = { 
         timeStamp: event.timeStamp, 
         point: new Point().copy(event),
+        downEvent: downEvent!,
+        upEvent: event,
       }
       const isMultiple = (
         tapState.taps.length > 0 && 
