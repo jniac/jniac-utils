@@ -23,8 +23,11 @@ export type Options = Partial<{
 
   // TAP
   tapMaxDuration: number
+  tapMaxDistance: number
   multipleTapMaxInterval: number
   onTap: (tap: TapInfo) => void
+  onDoubleTap: (tap: TapInfo) => void
+  onTripleTap: (tap: TapInfo) => void
   onQuadrupleTap: (tap: TapInfo) => void
 
   // DRAG
@@ -50,8 +53,13 @@ const dragHasStart = (downEvent: PointerEvent, moveEvent: PointerEvent, distance
   return (x * x) + (y * y) > distanceThreshold * distanceThreshold
 }
 
-const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: number) => {
-  return upEvent.timeStamp - downEvent.timeStamp < maxDuration * 1e3
+const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: number, maxDistance: number) => {
+  const x = upEvent.x - downEvent.x
+  const y = upEvent.y - downEvent.y
+  return (
+    (x * x) + (y * y) < maxDistance * maxDistance &&
+    upEvent.timeStamp - downEvent.timeStamp < maxDuration * 1e3
+  )
 }
 
 export const handlePointer = (element: HTMLElement, options: Options) => {
@@ -66,8 +74,11 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
 
     // TAP
     tapMaxDuration = 0.3,
+    tapMaxDistance = 10,
     multipleTapMaxInterval = 0.3,
     onTap,
+    onDoubleTap,
+    onTripleTap,
     onQuadrupleTap,
 
     // DRAG
@@ -147,7 +158,7 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     if (dragStart) {
       onDragStop?.(getDragInfo(downEvent!, event!, movePoint, previousMovePoint))
     }
-    if ((onTap || onQuadrupleTap) && isTap(downEvent!, event, tapMaxDuration)) {
+    if ((onTap || onDoubleTap || onTripleTap || onQuadrupleTap) && isTap(downEvent!, event, tapMaxDuration, tapMaxDistance)) {
       const tap: TapInfo = { 
         timeStamp: event.timeStamp, 
         point: new Point().copy(event),
@@ -161,6 +172,12 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
       }
       else {
         tapState.taps = [tap]
+      }
+      if (tapState.taps.length === 2) {
+        onDoubleTap?.(tap)
+      }
+      if (tapState.taps.length === 3) {
+        onTripleTap?.(tap)
       }
       if (tapState.taps.length === 4) {
         onQuadrupleTap?.(tap)
