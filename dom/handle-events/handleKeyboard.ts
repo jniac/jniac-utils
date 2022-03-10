@@ -1,13 +1,17 @@
 
 type Code = 
 | 'ArrowDown' | 'ArrowUp' | 'ArrowLeft' | 'ArrowRight'
+| 'Space' 
+| 'Meta' | 'Control' | 'Shift'
+| 'MetaLeft' | 'ControlLeft' | 'ShiftLeft'
+| 'MetaRight' | 'ControlRight' | 'ShiftRight'
 | 'LetterA' | 'LetterB' | 'LetterC' | 'LetterD' | 'LetterE' | 'LetterF' | 'LetterG' | 'LetterH' | 'LetterI' | 'LetterJ' | 'LetterK' | 'LetterL' | 'LetterM' | 'LetterN' | 'LetterO' | 'LetterP' | 'LetterQ' | 'LetterR' | 'LetterS' | 'LetterT' | 'LetterU' | 'LetterV' | 'LetterW' | 'LetterX' | 'LetterY' | 'LetterZ'
 
 type Mask = '*' | Code | Code[] | RegExp
 
 type Listener = [
   Mask,
-  ((event: KeyboardEvent) => void) | null | undefined,
+  ((info: KeyboardInfo) => void) | null | undefined,
 ]
 
 type Options = Partial<{
@@ -28,6 +32,10 @@ const testMask = (mask: Mask, str: string) => {
   return mask === str
 }
 
+export interface KeyboardInfo {
+  event: KeyboardEvent
+}
+
 export const handleKeyboard = ({
   element = document.body,
   onDown,
@@ -35,6 +43,7 @@ export const handleKeyboard = ({
 
   const onKeyPress = (event: KeyboardEvent): void => {
     const { code, key } = event
+    const info = { event }
     if (onDown) {
       const letter = code.startsWith('Key') ? `Letter${key.toUpperCase()}` : ''
       for (const [mask, callback] of onDown) {
@@ -44,7 +53,7 @@ export const handleKeyboard = ({
           testMask(mask, letter)
         )
         if (match) {
-          callback?.(event)
+          callback?.(info)
         }
       }
     }
