@@ -301,6 +301,11 @@ class AnimationInstance {
     return this
   }
 
+  // alias
+  onProgress(cb?: AnimationCallback) {
+    return this.onFrame(cb)
+  }
+
   onComplete(cb?: AnimationCallback) {
     if (this.destroyed === false && cb) {
       completeCallbacks.add(this, cb)
