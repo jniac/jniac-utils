@@ -15,21 +15,40 @@ type TapInfo = {
 }
 
 export type Options = Partial<{
+  /** **`down`** callback. */
   onDown: (event: PointerEvent, downEvent: PointerEvent) => void
+  /** Hook that allows to ignore some down event (cancelling at the same time all other events that may follow otherwise (tap, drag etc.)). */
   onDownIgnore: (event: PointerEvent) => boolean
+  /** **`up`** callback. */
   onUp: (event: PointerEvent, downEvent: PointerEvent) => void
+  /** **`move`** callback. */
   onMove: (event: PointerEvent, downEvent: PointerEvent | null) => void
+  /** **`over`** callback. */
   onOver: (event: PointerEvent) => void
+  /** **`out`** callback. */
   onOut: (event: PointerEvent) => void
 
 
   // TAP
+  /** Max "*down*" duration for a couple of **`down`** / **`up`** events to be considered as a **`tap`**. 
+   * @default 0.3 seconds */
   tapMaxDuration: number
+  /** Max distance between a couple of **`down`** / **`up`** events to be considered as a **`tap`**. 
+   * @default 10 pixels */
   tapMaxDistance: number
+  /** Max duration between two **`taps`** to be considered as a **`multiple-tap`**
+   * @default 0.3 seconds */
   multipleTapMaxInterval: number
+  /** Should we wait `multipleTapMaxInterval` before resolve tap, in order to cancel previous "n-tap"?
+   * @default true if (onDoubleTap || onTripleTap || onQuadrupleTap) else false */
+  multipleTapCancelPreviousTap: boolean
+  /** Single tap callback. */
   onTap: (tap: TapInfo) => void
+  /** Double tap callback. */
   onDoubleTap: (tap: TapInfo) => void
+  /** Triple tap callback. */
   onTripleTap: (tap: TapInfo) => void
+  /** Quadruple tap callback! It's a lot of taps, isn't it? */
   onQuadrupleTap: (tap: TapInfo) => void
 
   // DRAG
@@ -82,6 +101,7 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     onDoubleTap,
     onTripleTap,
     onQuadrupleTap,
+    multipleTapCancelPreviousTap = !!(onDoubleTap || onTripleTap || onQuadrupleTap),
 
     // DRAG
     dragDistanceThreshold = 10, 
@@ -97,6 +117,7 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
   const previousMovePoint = new Point()
 
   const tapState = {
+    timeoutId: -1,
     tapCount: 0,
     taps: [] as TapInfo[]
   }
@@ -160,33 +181,46 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     if (dragStart) {
       onDragStop?.(getDragInfo(downEvent!, event!, movePoint, previousMovePoint))
     }
-    if ((onTap || onDoubleTap || onTripleTap || onQuadrupleTap) && isTap(downEvent!, event, tapMaxDuration, tapMaxDistance)) {
-      const tap: TapInfo = { 
+    const concernTap = (
+      !!(onTap || onDoubleTap || onTripleTap || onQuadrupleTap)
+      && isTap(downEvent!, event, tapMaxDuration, tapMaxDistance)
+    )
+    if (concernTap) {
+      const currentTap: TapInfo = { 
         timeStamp: event.timeStamp, 
         point: new Point().copy(event),
         downEvent: downEvent!,
         upEvent: event,
       }
+
       const isMultiple = (
-        tapState.taps.length > 0 && 
-        tap.timeStamp - tapState.taps[tapState.taps.length - 1].timeStamp < multipleTapMaxInterval * 1e3
-      )
-      if (isMultiple) {
-        tapState.taps.push(tap)
+        tapState.taps.length > 0
+        && currentTap.timeStamp - tapState.taps[tapState.taps.length - 1].timeStamp < multipleTapMaxInterval * 1e3)
+      tapState.taps = isMultiple ? [...tapState.taps, currentTap] : [currentTap] 
+
+      const resolve = () => {
+        if (tapState.taps.length === 2) {
+          onDoubleTap?.(currentTap)
+        }
+        if (tapState.taps.length === 3) {
+          onTripleTap?.(currentTap)
+        }
+        if (tapState.taps.length === 4) {
+          onQuadrupleTap?.(currentTap)
+        }
+        onTap?.(currentTap)
+      }
+
+      if (multipleTapCancelPreviousTap) {
+        tapState.timeoutId = window.setTimeout(() => {
+          if (tapState.taps[tapState.taps.length - 1] === currentTap) {
+            resolve()
+          }
+        }, multipleTapMaxInterval * 1e3)
       }
       else {
-        tapState.taps = [tap]
+        resolve()
       }
-      if (tapState.taps.length === 2) {
-        onDoubleTap?.(tap)
-      }
-      if (tapState.taps.length === 3) {
-        onTripleTap?.(tap)
-      }
-      if (tapState.taps.length === 4) {
-        onQuadrupleTap?.(tap)
-      }
-      onTap?.(tap)
     }
     isDown = false
     downEvent = null
@@ -204,6 +238,7 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     window.removeEventListener('pointermove', onPointerMove)
     window.removeEventListener('pointerup', onPointerUp)
     window.cancelAnimationFrame(onDownFrameId)
+    window.clearTimeout(tapState.timeoutId)
   }
 
   return { destroy }
