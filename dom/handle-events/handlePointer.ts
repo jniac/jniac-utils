@@ -30,12 +30,15 @@ export type Options = Partial<{
 
 
   // TAP
-  /** Max "*down*" duration for a couple of **`down`** / **`up`** events to be considered as a **`tap`**. 
+  /** Max *"down"* duration for a couple of **`down`** / **`up`** events to be considered as a **`tap`**. 
    * @default 0.3 seconds */
   tapMaxDuration: number
   /** Max distance between a couple of **`down`** / **`up`** events to be considered as a **`tap`**. 
    * @default 10 pixels */
   tapMaxDistance: number
+  /** Min interval after a *"caught"* **`tap`** (with a callback) before start considering any new **`tap`**
+   * @default 0.3 seconds */
+  tapPostCallbackMinInterval: number
   /** Max duration between two **`taps`** to be considered as a **`multiple-tap`**
    * @default 0.3 seconds */
   multipleTapMaxInterval: number
@@ -94,9 +97,10 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     onOut,
 
     // TAP
-    tapMaxDuration = 0.3,
+    tapMaxDuration = .3,
     tapMaxDistance = 10,
-    multipleTapMaxInterval = 0.3,
+    tapPostCallbackMinInterval = 1,
+    multipleTapMaxInterval = .4,
     onTap,
     onDoubleTap,
     onTripleTap,
@@ -119,7 +123,8 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
   const tapState = {
     timeoutId: -1,
     tapCount: 0,
-    taps: [] as TapInfo[]
+    taps: [] as TapInfo[],
+    lastCallbackTimestamp: -1,
   }
 
   const onPointerMove = (event: PointerEvent) => {
@@ -181,10 +186,13 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     if (dragStart) {
       onDragStop?.(getDragInfo(downEvent!, event!, movePoint, previousMovePoint))
     }
+
+    // TAP:
     const concernTap = (
       !!(onTap || onDoubleTap || onTripleTap || onQuadrupleTap)
-      && isTap(downEvent!, event, tapMaxDuration, tapMaxDistance)
-    )
+      && (event.timeStamp - tapState.lastCallbackTimestamp) > tapPostCallbackMinInterval * 1e3
+      && isTap(downEvent!, event, tapMaxDuration, tapMaxDistance))
+
     if (concernTap) {
       const currentTap: TapInfo = { 
         timeStamp: event.timeStamp, 
@@ -199,21 +207,31 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
       tapState.taps = isMultiple ? [...tapState.taps, currentTap] : [currentTap] 
 
       const resolve = () => {
-        if (tapState.taps.length === 2) {
-          onDoubleTap?.(currentTap)
+        const call = (callback: (tap: TapInfo) => void) => {
+          callback(currentTap)
+          tapState.lastCallbackTimestamp = currentTap.timeStamp
         }
-        if (tapState.taps.length === 3) {
-          onTripleTap?.(currentTap)
+        switch (tapState.taps.length) {
+          case 1: onTap && call(onTap); break
+          case 2: onDoubleTap && call(onDoubleTap); break
+          case 3: onTripleTap && call(onTripleTap); break
+          case 4: onQuadrupleTap && call(onQuadrupleTap); break
         }
-        if (tapState.taps.length === 4) {
-          onQuadrupleTap?.(currentTap)
-        }
-        onTap?.(currentTap)
       }
 
-      if (multipleTapCancelPreviousTap) {
+      const higherCallbackExists = (() => {
+        switch (tapState.taps.length) {
+          case 1: return !!(onDoubleTap || onTripleTap || onQuadrupleTap)
+          case 2: return !!(onTripleTap || onQuadrupleTap)
+          case 3: return !!(onQuadrupleTap)
+          default: return false
+        }
+      })()
+
+      if (multipleTapCancelPreviousTap && higherCallbackExists) {
         tapState.timeoutId = window.setTimeout(() => {
-          if (tapState.taps[tapState.taps.length - 1] === currentTap) {
+          const lastTap = tapState.taps[tapState.taps.length - 1]
+          if (lastTap === currentTap) {
             resolve()
           }
         }, multipleTapMaxInterval * 1e3)
