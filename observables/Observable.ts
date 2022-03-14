@@ -18,6 +18,12 @@ class DestroyedObservable {
   onChange() {
     throw new Error(DestroyedObservable.errorMessage)
   }
+  onValue() {
+    throw new Error(DestroyedObservable.errorMessage)
+  }
+  useValue() {
+    throw new Error(DestroyedObservable.errorMessage)
+  }
   onDestroy() {
     throw new Error(DestroyedObservable.errorMessage)
   }
@@ -185,6 +191,13 @@ export class Observable<T> {
     }
     const destroy = () => { this.#onChange.delete(callback) }
     return { destroy }
+  }
+
+  /**
+   * Alias for `onChange(cb, { execute: true })` 
+   */
+  useValue(callback: ObservableCallback<T>) {
+    return this.onChange(callback, { execute: true })
   }
 
   onValue(value: T, callback: ObservableCallback<T>, { execute = false } = {}): Destroyable {
