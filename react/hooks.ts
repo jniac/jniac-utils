@@ -3,6 +3,7 @@ import { Observable } from '../observables'
 
 export type Destroyable = { destroy: () => void}  | (() => void)
 
+export type ComplexEffectsState = { mounted: boolean }
 export type ComplexEffectsDependencyList = React.DependencyList | 'always-recalculate'
 
 /**
@@ -26,7 +27,7 @@ export type ComplexEffectsDependencyList = React.DependencyList | 'always-recalc
  * ```
  */
 export function useComplexEffects<T = void>(
-  complexEffects: () => Generator<Destroyable, T>, 
+  complexEffects: (state: ComplexEffectsState) => Generator<Destroyable, T>, 
   deps: ComplexEffectsDependencyList,
   { debug = '', useLayoutEffect = true } = {}
 ) {
@@ -37,9 +38,11 @@ export function useComplexEffects<T = void>(
 
   use(() => {
     
-    const destroyArray = [] as (() => void)[]
+    let mounted = true
+    const state = Object.freeze({ get mounted() { return mounted } })
+    const destroyArray = [() => mounted = false] as (() => void)[]
 
-    const iterator = complexEffects()
+    const iterator = complexEffects(state)
     let item = iterator.next()
     while (item.done === false) {
       const { value } = item
@@ -68,13 +71,13 @@ export function useComplexEffects<T = void>(
  * Same as `useComplexEffects` but with a ref (short-hand).
  */
 export function useRefComplexEffects<T = HTMLElement>(
-  complexEffects: (current: T) => Generator<Destroyable>, 
+  complexEffects: (current: T, state: ComplexEffectsState) => Generator<Destroyable>, 
   deps: ComplexEffectsDependencyList,
 ) {
   const ref = React.useRef<T>(null)
 
-  useComplexEffects(function* () {
-    yield* complexEffects(ref.current!)
+  useComplexEffects(function* (state) {
+    yield* complexEffects(ref.current!, state)
   }, deps)
 
   return ref
