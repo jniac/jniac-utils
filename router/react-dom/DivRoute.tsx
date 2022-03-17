@@ -8,11 +8,13 @@ import './DivRoute.css'
 interface DivProps {
   overlay?: boolean
   overlayBackgroundColor?: string
+  doNotPreventScrollPositionBecauseIOSIsShit?: boolean
   onBackgroundClick?: () => void
 }
 const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
   overlay,
   overlayBackgroundColor,
+  doNotPreventScrollPositionBecauseIOSIsShit = false,
   onBackgroundClick,
   children,
 
@@ -66,7 +68,9 @@ const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
       // Resize and place the child according to the current scroll and window states.
       yield onFrameOrResize(() => {
         const y = scrollingElement.scrollTop
-        child.style.top = `${y}px`
+        if (doNotPreventScrollPositionBecauseIOSIsShit === false) {
+          child.style.top = `${y}px`
+        }
         child.style.height = `${getScrollingParentElementHeight(child)}px`
       }, { frameCount: 600 })
       yield manageOverlayScroll(child)
