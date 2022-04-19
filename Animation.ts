@@ -403,7 +403,12 @@ const destroyAnimation = (animation: AnimationInstance) => {
 }
 
 let updating = false
-const updateAnimations = () => {
+const update = (_deltaTime: number) => {
+  deltaTime = _deltaTime
+  timeOld = time
+  time = time + deltaTime
+  frame++
+
   updating = true
   for (const animation of animations) {
     if (animation.destroyed === false && animation.paused === false) {
@@ -421,19 +426,27 @@ const updateAnimations = () => {
   updating = false
 }
 
+let autoUpdate = true
+let msOld = 0, msDelta = 0
 const _innerLoop = (ms: number): void => {
-  window.requestAnimationFrame(_innerLoop)
-
-  timeOld = time
-  time = ms / 1e3
-  deltaTime = time - timeOld
-  frame++
-
-  updateAnimations()
+  if (autoUpdate) {
+    window.requestAnimationFrame(_innerLoop)
+  
+    msDelta = ms - msOld
+    msOld = ms
+  
+    update(msDelta / 1e3)
+  }
 }
 
-window.requestAnimationFrame(_innerLoop)
+window.requestAnimationFrame(ms => {
+  msOld = ms
+  _innerLoop(ms)
+})
 
+const breakAutoUpdate = () => {
+  autoUpdate = false
+}
 
 
 // API:
@@ -597,6 +610,9 @@ const info = {
 
 export {
   count,
+  breakAutoUpdate,
+  update,
+
   info,
   BREAK,
   loop,
@@ -617,6 +633,9 @@ export type {
 }
 
 export const Animation = {
+  breakAutoUpdate,
+  update,
+
   info,
   BREAK,
   loop,
