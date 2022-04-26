@@ -1,14 +1,23 @@
 import { Observable } from '../observables'
 
+const cleanPathname = (str: string) => {
+  // remove double slash
+  str = str.replace(/\/\//g, '/') 
+
+  // remove trailing slash
+  if (str.length > 1 && str.endsWith('/'))
+    str = str.slice(0, -1)
+
+  return str
+}
+
 const safeParseUrl = (str: string) => {
 
   let {
     pathname, search, hash, origin,
   } = new URL(str, window.location.href)
 
-  pathname = pathname
-    .replace(/\/\//g, '/') // remove double slash
-    .replace(/\/$/, '') // remove trailing slash
+  pathname = cleanPathname(pathname)
   search = search.substring(1)
   hash = hash.substring(1)
 
