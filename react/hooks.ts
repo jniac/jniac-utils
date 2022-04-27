@@ -157,7 +157,10 @@ export function useAnimationFrame(callback: (ms: number) => void) {
   }, [])
 }
 
-export const usePromise = <T>(getPromise: () => Promise<T>) => {
+export const usePromise = <T>(
+  getPromise: () => Promise<T>, 
+  deps: React.DependencyList = [],
+) => {
   const [data, setData] = React.useState<T | null>(null)
   React.useEffect(() => {
     let mounted = true
@@ -170,6 +173,6 @@ export const usePromise = <T>(getPromise: () => Promise<T>) => {
       mounted = false
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, deps)
   return data
 }
