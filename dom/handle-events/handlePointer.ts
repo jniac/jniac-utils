@@ -21,12 +21,18 @@ export type Options = Partial<{
   onDownIgnore: (event: PointerEvent) => boolean
   /** **`up`** callback. */
   onUp: (event: PointerEvent, downEvent: PointerEvent) => void
-  /** **`move`** callback. */
-  onMove: (event: PointerEvent, downEvent: PointerEvent | null) => void
+  /** **`move when down`** callback. */
+  onMoveDown: (event: PointerEvent, downEvent: PointerEvent | null) => void
+  /** **`move when over`** callback. */
+  onMoveOver: (event: PointerEvent) => void
   /** **`over`** callback. */
   onOver: (event: PointerEvent) => void
   /** **`out`** callback. */
   onOut: (event: PointerEvent) => void
+  /** **`enter`** callback. */
+  onEnter: (event: PointerEvent) => void
+  /** **`leave`** callback. */
+  onLeave: (event: PointerEvent) => void
 
 
   // TAP
@@ -92,9 +98,12 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     onDown,
     onDownIgnore, 
     onUp, 
-    onMove, 
+    onMoveDown,
+    onMoveOver,
     onOver, 
     onOut,
+    onEnter,
+    onLeave,
 
     // TAP
     tapMaxDuration = .3,
@@ -127,9 +136,13 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     lastCallbackTimestamp: -1,
   }
 
-  const onPointerMove = (event: PointerEvent) => {
-    onMove?.(event, downEvent)
+  const onPointerMoveDown = (event: PointerEvent) => {
+    onMoveDown?.(event, downEvent)
     moveEvent = event
+  }
+
+  const onPointerMoveOver = (event: PointerEvent) => {
+    onMoveOver?.(event)
   }
 
   let isDown = false
@@ -162,11 +175,21 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     onOut?.(event)
   }
 
+  const onPointerEnter = (event: PointerEvent) => {
+    window.addEventListener('pointermove', onPointerMoveOver)
+    onEnter?.(event)
+  }
+
+  const onPointerLeave = (event: PointerEvent) => {
+    window.removeEventListener('pointermove', onPointerMoveOver)
+    onLeave?.(event)
+  }
+
   const onPointerDown = (event: PointerEvent) => {
     if (onDownIgnore?.(event)) {
       return
     }
-    window.addEventListener('pointermove', onPointerMove)
+    window.addEventListener('pointermove', onPointerMoveDown)
     window.addEventListener('pointerup', onPointerUp)
     isDown = true
     dragStart = false
@@ -179,7 +202,7 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
   }
 
   const onPointerUp = (event: PointerEvent) => {
-    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointermove', onPointerMoveDown)
     window.removeEventListener('pointerup', onPointerUp)
     window.cancelAnimationFrame(onDownFrameId)
     onUp?.(event, downEvent!)
@@ -247,13 +270,18 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
 
   element.addEventListener('pointerover', onPointerOver)
   element.addEventListener('pointerout', onPointerOut)
+  element.addEventListener('pointerenter', onPointerEnter)
+  element.addEventListener('pointerleave', onPointerLeave)
   element.addEventListener('pointerdown', onPointerDown)
 
   const destroy = () => {
     element.removeEventListener('pointerover', onPointerOver)
     element.removeEventListener('pointerout', onPointerOut)
+    element.removeEventListener('pointerenter', onPointerEnter)
+    element.removeEventListener('pointerleave', onPointerLeave)
     element.removeEventListener('pointerdown', onPointerDown)
-    window.removeEventListener('pointermove', onPointerMove)
+    window.removeEventListener('pointermove', onPointerMoveOver)
+    window.removeEventListener('pointermove', onPointerMoveDown)
     window.removeEventListener('pointerup', onPointerUp)
     window.cancelAnimationFrame(onDownFrameId)
     window.clearTimeout(tapState.timeoutId)
