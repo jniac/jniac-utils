@@ -5,6 +5,12 @@ typescript / react utils
 Collections d'utilitaires dans toutes les directions (utilitaires, expérimentations) 
 qu'un tree-shaker saura dégraisser.
 
+## Installation
+```
+# par exemple :
+git submodule add git@github.com:jniac/some-utils.git src/some-utils
+```
+
 ## tsconfig
 
 Actuellement, pour utiliser "some-utils" en tant que submodule dans un projet 
