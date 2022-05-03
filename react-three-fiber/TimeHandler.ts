@@ -35,7 +35,7 @@ export const Invalidator: React.FC<{
   timeBeforeFade?: number
   fadeDuration?: number
 }> = ({
-  timeBeforeFade = 3,
+  timeBeforeFade = 30,
   fadeDuration = 1,
 }) => {
   const { invalidate } = useThree()
