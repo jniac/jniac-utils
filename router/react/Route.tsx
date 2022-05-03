@@ -55,6 +55,7 @@ export interface RouteProps {
   exact?: boolean
   strict?: boolean
   transitionDuration?: number
+  children?: React.ReactNode
 }
 
 export const Route: React.FC<RouteProps> = ({

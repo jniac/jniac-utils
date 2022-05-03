@@ -6,6 +6,7 @@ export const RouterContext = React.createContext({
 
 export const Router: React.FC<{
   baseUrl?: string
+  children?: React.ReactNode
 }> = ({
   baseUrl = '',
   children,
