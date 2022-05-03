@@ -31,7 +31,7 @@ class TimeHandler {
 export const appTime = new TimeHandler()
 export const time = new TimeHandler()
 
-export const Invalidator: React.FC<{
+export const AnimationFrame: React.FC<{
   timeBeforeFade?: number
   fadeDuration?: number
 }> = ({
