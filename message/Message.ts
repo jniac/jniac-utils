@@ -60,7 +60,10 @@ const __send = <M extends Message = any>(
   props?: M['props'],
   modality?: SendModality,
 ) => {
-  const callbacks = getMatchingCallbacks(target, type)
+  const callbacks = [
+    ...getMatchingCallbacks('*', '*'),
+    ...getMatchingCallbacks(target, type)
+  ]
   if (callbacks) {
     const message: Message & MessageSent = {
       target,
