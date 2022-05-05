@@ -40,15 +40,16 @@ export const manageOverlayScroll = (element: HTMLElement) => {
   }
 
   const onWheel = (event: WheelEvent) => {
-    if (event.deltaY < 0) {
-      if (element.scrollTop === 0) {
-        event.preventDefault()
-      }
-    } else {
-      if (element.scrollTop === element.scrollHeight - element.clientHeight) {
-        event.preventDefault()
-      }
-    }
+    // THE-SCROLL_PROBLEM
+    // if (event.deltaY < 0) {
+    //   if (element.scrollTop === 0) {
+    //     event.preventDefault()
+    //   }
+    // } else {
+    //   if (element.scrollTop === element.scrollHeight - element.clientHeight) {
+    //     event.preventDefault()
+    //   }
+    // }
   }
   
   element.addEventListener('touchstart', onTouchStart)
