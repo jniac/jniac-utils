@@ -10,6 +10,7 @@ const vector3 = new Vector3()
 const euler = new Euler()
 
 export class VertigoCamera extends PerspectiveCamera {
+  
   #perspective = -1
   get perspective() { return this.#perspective }
   set perspective(perspective) { this.setVertigo({ perspective }) }
@@ -56,12 +57,19 @@ export class VertigoCamera extends PerspectiveCamera {
     }
   }
 
-  updateProjection() {
+  updateQuaternion() {
     euler.copy(this.rotation)
     euler.x *= TO_RADIAN
     euler.y *= TO_RADIAN
     euler.z *= TO_RADIAN
     this.quaternion.setFromEuler(euler)
+  }
+
+  updateProjection() {
+
+    // https://github.com/mrdoob/three.js/blob/master/src/cameras
+
+    this.updateQuaternion()
 
     const { perspective, height, distance } = this
     const isPerspective = perspective > EPSILON
@@ -99,5 +107,10 @@ export class VertigoCamera extends PerspectiveCamera {
     this.matrix.compose(vector3, this.quaternion, ONE)
     this.matrixWorld.copy(this.matrix)
     this.matrixWorldInverse.copy(this.matrix).invert()
+  }
+
+  updatePositionRotation() {
+    this.updateQuaternion()
+    this.updateMatrix()
   }
 }
