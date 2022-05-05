@@ -71,7 +71,8 @@ const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
         if (doNotPreventScrollPositionBecauseIOSIsShit === false) {
           child.style.top = `${y}px`
         }
-        child.style.height = `${getScrollingParentElementHeight(child)}px`
+        // THE-SCROLL_PROBLEM
+        // child.style.height = `${getScrollingParentElementHeight(child)}px`
       }, { frameCount: 600 })
       yield manageOverlayScroll(child)
     }
