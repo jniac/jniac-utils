@@ -76,13 +76,18 @@ export const AnimationFrame: React.FC<{
     animationFrameId = window.requestAnimationFrame(firstFrame)
 
     const onInteraction = () => lastRenderRequestTime = appTime.time
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (/key/.test(event.code)) {
+        onInteraction()
+      }
+    }
     window.addEventListener('pointermove', onInteraction, { capture: true })
     window.addEventListener('touchstart', onInteraction, { capture: true })
     window.addEventListener('touchmove', onInteraction, { capture: true })
     window.addEventListener('touchend', onInteraction, { capture: true })
     window.addEventListener('pointerdown', onInteraction, { capture: true })
     window.addEventListener('pointerup', onInteraction, { capture: true })
-    window.addEventListener('keydown', onInteraction, { capture: true })
+    window.addEventListener('keydown', onKeyDown, { capture: true })
     
     return () => {
       window.cancelAnimationFrame(animationFrameId)
@@ -92,7 +97,7 @@ export const AnimationFrame: React.FC<{
       window.removeEventListener('touchend', onInteraction, { capture: true })
       window.removeEventListener('pointerdown', onInteraction, { capture: true })
       window.removeEventListener('pointerup', onInteraction, { capture: true })
-      window.removeEventListener('keydown', onInteraction, { capture: true })
+      window.removeEventListener('keydown', onKeyDown, { capture: true })
     }
     
   // eslint-disable-next-line react-hooks/exhaustive-deps
