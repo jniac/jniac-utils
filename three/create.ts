@@ -17,6 +17,7 @@ export type TransformArg = Partial<{
   scaleZ: number
   scaleScalar: number
   scale: THREE.Vector3
+  visible: boolean
   parent: THREE.Object3D
 }>
 
@@ -35,11 +36,13 @@ export const applyTransform = (target: THREE.Object3D, {
   scaleZ = 1,
   scaleScalar = 1,
   scale = new THREE.Vector3(scaleX * scaleScalar, scaleY * scaleScalar, scaleZ * scaleScalar),
+  visible = true,
   parent,
 }: TransformArg) => {
   target.position.copy(position)
   target.rotation.copy(rotation)
   target.scale.copy(scale)
+  target.visible = visible
   parent?.add(target)
   return target
 }
