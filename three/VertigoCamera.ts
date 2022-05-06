@@ -13,17 +13,21 @@ export class VertigoCamera extends PerspectiveCamera {
 
   useDegree = false
   
-  #perspective = -1
+  #perspective = NaN
   get perspective() { return this.#perspective }
   set perspective(perspective) { this.setVertigo({ perspective }) }
 
   get isPerspective() { return this.#perspective > EPSILON }
 
-  #height = -1
+  #height = NaN
   get height() { return this.#height }
   set height(height) { this.setVertigo({ height }) }
 
-  #distance = 0
+  #range = NaN
+  get range() { return this.#range }
+  set range(range) { this.setVertigo({ range }) }
+
+  #distance = NaN
   get distance() { return this.#distance }
   set distance(distance) { this.setVertigo({ distance }) }
 
@@ -31,7 +35,8 @@ export class VertigoCamera extends PerspectiveCamera {
 
   constructor({ 
     useDegree = false, 
-    height = 10, 
+    height = 10,
+    range = 500,
     distance = 0, 
     perspective = 1, 
     aspect = 1,
@@ -42,13 +47,20 @@ export class VertigoCamera extends PerspectiveCamera {
     this.useDegree = useDegree
     this.rotation.order = rotationOrder
     this.matrixAutoUpdate = false
-    this.setVertigo({ height, perspective, distance })
-  }  
+    this.setVertigo({ height, perspective, range, distance })
+  }
+
+  #updateNearFar(z: number) {
+    const { range } = this
+    this.near = Math.max(.1, z - range)
+    this.far = z + range
+  }
 
   setVertigo({ 
     perspective = this.perspective, 
     height = this.#height,
     distance = this.#distance,
+    range = this.#range,
   }) {
     if (perspective < 0) {
       perspective = 0
@@ -57,12 +69,14 @@ export class VertigoCamera extends PerspectiveCamera {
     const hasChanged = (
       this.#perspective !== perspective
       || this.#height !== height
+      || this.#range !== range
       || this.#distance !== distance
     )
     
     if (hasChanged) {
       this.#perspective = perspective
       this.#height = height
+      this.#range = range
       this.#distance = distance
       this.updateProjection()
     }
@@ -91,12 +105,12 @@ export class VertigoCamera extends PerspectiveCamera {
 
     if (isPerspective) {
       // Projection:
+      const z = height / 2 / perspective
       this.fov = Math.atan(perspective) * 2 * TO_DEGREE
+      this.#updateNearFar(z)
       super.updateProjectionMatrix()
       
       // Position:
-      const z = height / 2 / perspective
-      this.far = z + 1000
       this.#translation
         .set(0, 0, z + distance)
         .applyQuaternion(this.quaternion)
@@ -104,13 +118,15 @@ export class VertigoCamera extends PerspectiveCamera {
 
     else {
       // Projection:
+      const z = height / 2 / EPSILON
+      this.#updateNearFar(z)
       const width = height * this.aspect
       this.projectionMatrix.makeOrthographic(-width / 2, width / 2, height / 2, -height / 2, this.near, this.far)
       this.projectionMatrixInverse.copy(this.projectionMatrix).invert() 
 
       // Position:
       this.#translation
-        .set(0, 0, height)
+        .set(0, 0, z)
         .applyQuaternion(this.quaternion)
     }
 
