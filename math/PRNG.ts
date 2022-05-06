@@ -41,8 +41,8 @@ export class PRNG {
     return this.reset(2147483647 * Math.random())
   }
 
-  static float({ seed = PRNG.#staticSeed } = {}) {
-    PRNG.#staticSeed = next(seed)
+  static float() {
+    PRNG.#staticSeed = next(PRNG.#staticSeed)
     return map(PRNG.#staticSeed)
   }
 
@@ -51,11 +51,11 @@ export class PRNG {
     return map(this.#seed)
   }
 
-  static range(min = 0, max = 1, { seed = PRNG.seedDefault, power = 1 } = {}) {
+  static range(min = 0, max = 1, { power = 1 } = {}) {
     if (power === 1) {
-      return min + (max - min) * PRNG.float({ seed })
+      return min + (max - min) * PRNG.float()
     }
-    return min + (max - min) * (PRNG.float({ seed }) ** power)
+    return min + (max - min) * (PRNG.float() ** power)
   }
 
   range(min = 0, max = 1, { power = 1 } = {}) {
