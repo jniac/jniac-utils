@@ -1,12 +1,26 @@
 import { Observable } from '../observables'
 
-const cleanPathname = (str: string) => {
-  // remove double slash
+export let homepage = '' as string
+
+const processPathname = (str: string) => {
+  
+  // First (and absolutely first), remove double slashes.
   str = str.replace(/\/\//g, '/') 
 
-  // remove trailing slash
-  if (str.length > 1 && str.endsWith('/'))
+  // Handle "homepage".
+  if (homepage && str.startsWith(homepage)) {
+    str = str.slice(homepage.length)
+  }    
+
+  // Remove trailing slash
+  if (str.endsWith('/')) {
     str = str.slice(0, -1)
+  }
+
+  // Ensure the minimal value (as does the browser).
+  if (str === '') {
+    str = '/'
+  }
 
   return str
 }
@@ -15,13 +29,13 @@ const safeParseUrl = (str: string) => {
 
   let {
     pathname, search, hash, origin,
-  } = new URL(str, window.location.href)
+  } = new window.URL(str)
 
-  pathname = cleanPathname(pathname)
+  pathname = processPathname(pathname)
   search = search.substring(1)
   hash = hash.substring(1)
 
-  const href = `${origin}${pathname}?${search}#${hash}`
+  const href = `${origin}${homepage}${pathname}?${search}#${hash}`
     .replace(/\?#/, '#')
     .replace(/[?#=]+$/, '')
 
@@ -49,6 +63,7 @@ export const location = (() => {
 
   return location
 })()
+
 
 export type Location = typeof location
 export const internalUpdate = (url: string) => {
@@ -97,7 +112,7 @@ export const setLocation = ({
   hash = location.hash.value,
   replace = false,
 }) => {
-  setUrl(`${window.location.origin}/${pathname}?${search}#${hash}`, { replace })
+  setUrl(`${window.location.origin}/${homepage}/${pathname}?${search}#${hash}`, { replace })
 }
 
 export const getPathname = () => location.pathname.value
@@ -116,3 +131,27 @@ window.addEventListener('hashchange', () => {
   internalUpdate(window.location.href)
 }, false)
 
+
+
+/**
+ * Same concept that react homepage.
+ * 
+ * If homepage = /foo then /foo/bar is treated as /bar
+ * 
+ * Since this will reset location state, this must be called before everything else.
+ * 
+ * "homepage" Must start with "/"
+ */
+export const setHomepage = (value: string) => {
+  if (value.startsWith('/') === false) {
+    throw new Error('"homepage" Must start with "/"')
+  }
+  if (homepage !== value) {
+    homepage = value
+    location.href.setValue('')
+    location.pathname.setValue('')
+    location.search.setValue('')
+    location.hash.setValue('')
+    setUrl(window.location.href)
+  }
+}
