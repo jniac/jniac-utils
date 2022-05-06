@@ -21,7 +21,7 @@ export type TransformArg = Partial<{
   parent: THREE.Object3D
 }>
 
-export const applyTransform = (target: THREE.Object3D, {
+export const applyTransform = <T extends THREE.Object3D>(target: T, {
   positionX = 0,
   positionY = 0,
   positionZ = 0,
