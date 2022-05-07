@@ -154,8 +154,10 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
   }
 
   const onPointerMoveDown = (event: PointerEvent) => {
-    onMoveDown?.(event, downEvent)
-    moveEvent = event
+    if (downEvent?.pointerId === event.pointerId) {
+      onMoveDown?.(event, downEvent)
+      moveEvent = event
+    }
   }
 
   const onPointerMoveOver = (event: PointerEvent) => {
