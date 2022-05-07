@@ -47,6 +47,10 @@ export const applyTransform = <T extends THREE.Object3D>(target: T, {
   return target
 }
 
+export const createObject3D = (props: TransformArg) => {
+  return applyTransform(new THREE.Object3D(), props)
+}
+
 export type MeshArg = TransformArg & Partial<{
   geometry: THREE.BufferGeometry
   material: THREE.Material
