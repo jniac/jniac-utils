@@ -1,10 +1,12 @@
 import { IPoint, Point } from 'some-utils/geom'
 
+type DragDirection = 'horizontal' | 'vertical'
 type DragInfo = { 
   total: Point
   delta: Point
   moveEvent: PointerEvent
   downEvent: PointerEvent
+  direction: DragDirection
 } 
 
 type TapInfo = { 
@@ -66,21 +68,30 @@ export type Options = Partial<{
   onDragStart: (drag: DragInfo) => void
   onDragStop: (drag: DragInfo) => void
   onDrag: (drag: DragInfo) => void
+  onHorizontalDragStart: (drag: DragInfo) => void
+  onHorizontalDragStop: (drag: DragInfo) => void
+  onHorizontalDrag: (drag: DragInfo) => void
+  onVerticalDragStart: (drag: DragInfo) => void
+  onVerticalDragStop: (drag: DragInfo) => void
+  onVerticalDrag: (drag: DragInfo) => void
 }>
 
-const getDragInfo = (downEvent: PointerEvent, moveEvent: PointerEvent, movePoint: IPoint, previousMovePoint: IPoint) => {
+const getDragInfo = (downEvent: PointerEvent, moveEvent: PointerEvent, movePoint: IPoint, previousMovePoint: IPoint, direction: DragDirection): DragInfo => {
   return {
     delta: new Point().copy(movePoint).subtract(previousMovePoint),
     total: new Point().copy(movePoint).subtract(downEvent),
     moveEvent,
     downEvent,
+    direction,
   }
 }
 
 const dragHasStart = (downEvent: PointerEvent, moveEvent: PointerEvent, distanceThreshold: number) => {
   const x = moveEvent.x - downEvent.x
   const y = moveEvent.y - downEvent.y
-  return (x * x) + (y * y) > distanceThreshold * distanceThreshold
+  const start = (x * x) + (y * y) > distanceThreshold * distanceThreshold
+  const direction = Math.abs(x / y) > 1 ? 'horizontal' : 'vertical'
+  return [start, direction] as [boolean, DragDirection]
 }
 
 const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: number, maxDistance: number) => {
@@ -122,6 +133,12 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     onDrag, 
     onDragStart, 
     onDragStop,
+    onHorizontalDrag,
+    onHorizontalDragStart,
+    onHorizontalDragStop,
+    onVerticalDrag,
+    onVerticalDragStart,
+    onVerticalDragStop,
   } = options
 
   let downEvent: PointerEvent | null = null
@@ -147,22 +164,40 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
 
   let isDown = false
   let onDownFrameId = -1
+  const dragListening = !!(onDrag || onHorizontalDrag || onVerticalDrag 
+    || onDragStart || onHorizontalDragStart || onVerticalDragStart
+    || onDragStop || onHorizontalDragStop || onVerticalDragStop)
   let dragStart = false
+  let dragDirection: DragDirection = 'horizontal'
   const onDownFrame = () => {
-    if (onDrag && isDown) {
+    if (dragListening && isDown) {
       onDownFrameId = window.requestAnimationFrame(onDownFrame)
       if (dragStart === false) {
-        dragStart = dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
+        [dragStart, dragDirection] = dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
         if (dragStart) {
           // Drag Started!
-          onDragStart?.(getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint))
+          const info = getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint, dragDirection)
+          onDragStart?.(info)
+          if (dragDirection === 'horizontal') {
+            onHorizontalDragStart?.(info)
+          }
+          else {
+            onVerticalDragStart?.(info)
+          }
         }
       }
       if (dragStart) {
         previousMovePoint.copy(movePoint)
         movePoint.x += (moveEvent!.x - movePoint.x) * dragDamping
         movePoint.y += (moveEvent!.y - movePoint.y) * dragDamping
-        onDrag(getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint))
+        const info = getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint, dragDirection)
+        onDrag?.(info)
+        if (dragDirection === 'horizontal') {
+          onHorizontalDrag?.(info)
+        }
+        else {
+          onVerticalDrag?.(info)
+        }
       }
     }
   }
@@ -207,7 +242,14 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     window.cancelAnimationFrame(onDownFrameId)
     onUp?.(event, downEvent!)
     if (dragStart) {
-      onDragStop?.(getDragInfo(downEvent!, event!, movePoint, previousMovePoint))
+      const info = getDragInfo(downEvent!, event!, movePoint, previousMovePoint, dragDirection)
+      onDragStop?.(info)
+      if (dragDirection === 'horizontal') {
+        onHorizontalDragStop?.(info)
+      }
+      else {
+        onVerticalDragStop?.(info)
+      }
     }
 
     // TAP:
