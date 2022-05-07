@@ -29,7 +29,7 @@ const safeParseUrl = (str: string) => {
 
   let {
     pathname, search, hash, origin,
-  } = new window.URL(str)
+  } = new window.URL(str, window.location.href)
 
   pathname = processPathname(pathname)
   search = search.substring(1)
