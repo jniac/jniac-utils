@@ -88,6 +88,7 @@ export const AnimationFrame: React.FC<{
     window.addEventListener('pointerdown', onInteraction, { capture: true })
     window.addEventListener('pointerup', onInteraction, { capture: true })
     window.addEventListener('popstate', onInteraction, { capture: true })
+    window.addEventListener('wheel', onInteraction, { capture: true })
     window.addEventListener('keydown', onKeyDown, { capture: true })
     
     return () => {
@@ -99,6 +100,7 @@ export const AnimationFrame: React.FC<{
       window.removeEventListener('pointerdown', onInteraction, { capture: true })
       window.removeEventListener('pointerup', onInteraction, { capture: true })
       window.removeEventListener('popstate', onInteraction, { capture: true })
+      window.removeEventListener('wheel', onInteraction, { capture: true })
       window.removeEventListener('keydown', onKeyDown, { capture: true })
     }
     
