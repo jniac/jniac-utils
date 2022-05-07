@@ -31,13 +31,15 @@ body {
   height: 100%;
 }
 
-.image-contain {
+.image-contain, /* obsolote, to be removed */
+.background-contain {
   background-size: contain;
   background-position: center;
   background-repeat: no-repeat;
 }
 
-.image-cover {
+.image-cover, /* obsolote, to be removed */
+.background-cover {
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
