@@ -1,7 +1,9 @@
 import { setValueWithDelay } from './utils/delay'
 
+export const ONCE = Symbol('ONCE')
+
 export type Destroyable = { destroy: () => void }
-export type ObservableCallback<T> = (value: T, target: Observable<T>) => void
+export type ObservableCallback<T> = (value: T, target: Observable<T>) => (void | any | typeof ONCE)
 export type SetValueOptions = {
   ignoreCallbacks?: boolean
   owner?: any
@@ -146,8 +148,15 @@ export class Observable<T> {
       this.#valueOld = this.#value
       this.#value = value
       if (ignoreCallbacks === false && this.ignoreCallbacks === false) {
+        const toRemoveCallbacks = new Set<ObservableCallback<T>>()
         for (const callback of this.#onChange) {
-          callback(value, this)
+          const returnValue = callback(value, this)
+          if (returnValue === ONCE) {
+            toRemoveCallbacks.add(callback)
+          }
+        }
+        for (const callback of toRemoveCallbacks) {
+          this.#onChange.delete(callback)
         }
       }
     }
@@ -184,7 +193,13 @@ export class Observable<T> {
     setValueWithDelay(this, value, seconds, clearOnChange, clearPrevious)
   }
 
-  onChange(callback: ObservableCallback<T>, { execute = false } = {}): Destroyable {
+  onChange(callback: ObservableCallback<T>, { execute = false, once = false } = {}): Destroyable {
+    if (once) {
+      return this.onChange(value => {
+        callback(value, this)
+        return ONCE
+      }, { execute, once: false })
+    }
     this.#onChange.add(callback)
     if (execute) {
       callback(this.#value, this)
@@ -196,16 +211,27 @@ export class Observable<T> {
   /**
    * Alias for `onChange(cb, { execute: true })` 
    */
-  useValue(callback: ObservableCallback<T>) {
-    return this.onChange(callback, { execute: true })
+  withValue(callback: ObservableCallback<T>, { once = false } = {}) {
+    return this.onChange(callback, { execute: true, once })
   }
 
-  onValue(value: T, callback: ObservableCallback<T>, { execute = false } = {}): Destroyable {
-    return this.onChange(() => {
-      if (this.#value === value) {
-        callback(value, this)
+  withNonNullableValue(callback: ObservableCallback<NonNullable<T>>, { once = false } = {}) {
+    return this.onChange(value => {
+      if (value !== null && value !== undefined) {
+        callback(value!, this as unknown as Observable<NonNullable<T>>)
+        if (once) {
+          return ONCE
+        }
       }
-    }, { execute })
+    }, { execute: true, once: false })
+  }
+
+  onValue(ref: T, callback: ObservableCallback<T>, { execute = false, once = false } = {}): Destroyable {
+    return this.onChange(() => {
+      if (this.#value === ref) {
+        callback(ref, this)
+      }
+    }, { execute, once })
   }
 
   onDestroy(callback: ObservableCallback<T>) {
