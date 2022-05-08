@@ -76,10 +76,12 @@ export const deepClone = <T extends unknown>(source: T) => {
         const value = source[key]
         clone[key] = deepClone(value)
       }
+      return clone
     } 
     catch (e: any) {
       // if object is not clonable return it
       if (/Illegal constructor/i.test(e.message)) {
+        console.warn('Could not be cloned:', source)
         return source
       }
       // otherwise let raise an error
