@@ -46,6 +46,15 @@ export class Point {
   static ensure(x: PointParams) {
     return ensure(x)
   }
+  static add(lhs: PointParams, rhs: PointParams, receiver: IPoint = new Point()) {
+    return add(ensure(lhs), ensure(rhs), ensure(receiver))
+  }
+  static subtract(lhs: PointParams, rhs: PointParams, receiver: IPoint = new Point()) {
+    return subtract(ensure(lhs), ensure(rhs), ensure(receiver))
+  }
+  static distance(p0: PointParams, p1: PointParams) {
+    return Point.subtract(p0, p1, dummy).magnitude
+  }
   x: number
   y: number
   constructor(x = 0, y = 0) {
@@ -96,3 +105,5 @@ export class Point {
   get magnitude() { return magnitude(this) }
   get sqMagnitude() { return sqMagnitude(this) }
 }
+
+const dummy = new Point()
