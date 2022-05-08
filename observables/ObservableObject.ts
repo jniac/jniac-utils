@@ -1,5 +1,5 @@
 
-import { deepClone, deepPartialEquals, deepPartialCopy } from '../object/clone'
+import { deepClone, deepPartialEquals, deepPartialCopy, deepGet } from '../object/clone'
 import { Observable, SetValueOptions } from './Observable'
 
 export class ObservableObject<T> extends Observable<T> {
@@ -37,5 +37,24 @@ export class ObservableObject<T> extends Observable<T> {
    }
 
     return hasChanged
+  }
+
+  getPropValue(path: string | (string | number | symbol)[]) {
+    return deepGet(this.value, path)
+  }
+
+  getPropValueOld(path: string | (string | number | symbol)[]) {
+    return deepGet(this.valueOld, path)
+  }
+
+  onPropChange<V = any>(path: string | (string | number | symbol)[], callback: (value: V, valueOld: V, target: ObservableObject<T>) => void)
+  {
+    return this.onChange(() => {
+      const value = this.getPropValue(path)
+      const valueOld = this.getPropValueOld(path)
+      if (value !== valueOld) {
+        callback(value, valueOld, this)
+      }
+    })
   }
 }

@@ -90,3 +90,21 @@ export const deepClone = <T extends unknown>(source: T) => {
   }
   return source
 }
+
+export const deepGet = (source: any, path: string | (string | symbol | number)[]) => {
+  const keys = Array.isArray(path) ? path : path.split('.')
+  let scope = source
+  for (let i = 0, max = keys.length; i < max; i++) {
+    if (isObject(scope) === false) {
+      return undefined
+    }
+    const key = keys[i]
+    if (key in scope) {
+      scope = scope[key]
+    }
+    else {
+      return undefined
+    }
+  }
+  return scope
+}
