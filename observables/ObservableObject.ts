@@ -50,7 +50,7 @@ export class ObservableObject<T> extends Observable<T> {
     const hasChanged = deepPartialEquals(value, this.value) === false
 
     if (hasChanged) {
-      this._permuteValues()
+      this._setValueOld(deepClone(this.value))
       deepPartialCopy(value, this.value)
       this._setHasChanged(hasChanged)
       if (ignoreCallbacks === false && this.ignoreCallbacks === false) {
