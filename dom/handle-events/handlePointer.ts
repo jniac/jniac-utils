@@ -119,7 +119,7 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     // TAP
     tapMaxDuration = .3,
     tapMaxDistance = 10,
-    tapPostCallbackMinInterval = 1,
+    tapPostCallbackMinInterval = .4,
     multipleTapMaxInterval = .4,
     onTap,
     onDoubleTap,
