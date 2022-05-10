@@ -1,4 +1,4 @@
-import { IPoint, Point } from 'some-utils/geom'
+import { IPoint, Point } from '../../geom'
 
 type DragDirection = 'horizontal' | 'vertical'
 type DragInfo = { 
