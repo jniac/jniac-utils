@@ -5,7 +5,7 @@ export let homepage = '' as string
 const processPathname = (str: string) => {
 
   // First (and absolutely first), remove double slashes.
-  str = str.replace(/\/\//g, '/') 
+  str = str.replace(/[/]{2,}/g, '/') 
   
   // Handle "homepage".
   if (homepage && str.startsWith(homepage)) {
@@ -112,7 +112,7 @@ export const setLocation = ({
   hash = location.hash.value,
   replace = false,
 }) => {
-  setUrl(`${window.location.origin}/${homepage}/${pathname}?${search}#${hash}`, { replace })
+  setUrl(`${window.location.origin}${homepage}/${pathname}?${search}#${hash}`, { replace })
 }
 
 export const getPathname = () => location.pathname.value
