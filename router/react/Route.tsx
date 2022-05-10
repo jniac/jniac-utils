@@ -88,7 +88,7 @@ export const Route: React.FC<RouteProps> = ({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }), [])
 
-  const forceUpdate = useForceUpdate()
+  const forceUpdate = useForceUpdate({ waitNextFrame: true })
 
   useComplexEffects(function* () {
     
@@ -144,10 +144,16 @@ export const Route: React.FC<RouteProps> = ({
     }
 
     yield location.href.onChange(() => {
-      innerState.visible.setValue(isVisible())
+      innerState.visible.setValue(() => {
+        const visible = isVisible()
+        console.log(path, {visible})
+        return visible
+      })
     }, { execute: true })
 
   }, [path, excludePath])
+
+  console.log(innerState.mounted.value)
 
   if (innerState.mounted.value === false) {
     return null
