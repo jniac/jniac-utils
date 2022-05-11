@@ -23,9 +23,29 @@ export const ceil = (x: number, base = 1) => Math.ceil(x / base) * base
 
 export const round = (x: number, base = 1) => Math.round(x / base) * base
 
+/**
+ * Return an always-positive-modulo, eg:
+ * ```
+ * positiveModulo(-10, 360) // -> 350
+ * positiveModulo(370, 360) // -> 10 // of course
+ * ```
+ */
 export const positiveModulo = (x: number, modulo: number) => {
   x %= modulo
   return x < 0 ? x + modulo : x
+}
+
+/**
+ * Return an half-positive-half-negative-modulo, eg:
+ * ```
+ * middleModulo(190, 360) // -> -170
+ * middleModulo(-190, 360) // -> 170
+ * middleModulo(370, 360) // -> 10
+ * ```
+ */
+ export const middleModulo = (x: number, modulo: number) => {
+  x %= modulo
+  return x < -modulo / 2 ? x + modulo : x > modulo / 2 ? x - modulo : x
 }
 
 export const clampModulo = (x: number, min: number, max: number) => {
