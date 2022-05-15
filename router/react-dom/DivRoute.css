@@ -17,7 +17,7 @@ html body .DivRoute.leaving {
 }
 
 html body .DivRoute.overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -34,4 +34,5 @@ html body .DivRoute.overlay > div {
   /* NOTE: No overflow scroll by default, since this triggers scrollbar on windows (even if there's no scroll) */
   /* But, be carefull, a previous case required this to be here. Keep it in mind. If possible. */
   /* overflow: scroll; */
+  min-height: 100%;
 }

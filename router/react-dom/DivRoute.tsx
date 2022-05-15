@@ -58,27 +58,27 @@ const Div: React.FC<DivProps & React.HTMLAttributes<HTMLDivElement>> = ({
       }
     }, { execute: true })
 
-    if (overlay) {
-      if (overlayBackgroundColor) {
-        // overlayBackgroundColor is cool on Safari iOS (avoid to see the body underneath)
-        // but that should only be set when transition is almost done
-        yield state.alpha.onPassAbove(.999, () => divRef.current!.style.backgroundColor = overlayBackgroundColor)
-        yield state.alpha.onPassBelow(.999, () => divRef.current!.style.backgroundColor = '')
-      }
+    // if (overlay) {
+    //   if (overlayBackgroundColor) {
+    //     // overlayBackgroundColor is cool on Safari iOS (avoid to see the body underneath)
+    //     // but that should only be set when transition is almost done
+    //     yield state.alpha.onPassAbove(.999, () => divRef.current!.style.backgroundColor = overlayBackgroundColor)
+    //     yield state.alpha.onPassBelow(.999, () => divRef.current!.style.backgroundColor = '')
+    //   }
 
-      const child = childRef.current!
-      const scrollingElement = getScrollingParentElement(child)
-      // Resize and place the child according to the current scroll and window states.
-      yield onFrameOrResize(() => {
-        const y = scrollingElement.scrollTop
-        if (doNotPreventScrollPositionBecauseIOSIsShit === false) {
-          child.style.top = `${y}px`
-        }
-        // THE-SCROLL_PROBLEM
-        // child.style.height = `${getScrollingParentElementHeight(child)}px`
-      }, { frameCount: 600 })
-      yield manageOverlayScroll(child)
-    }
+    //   const child = childRef.current!
+    //   const scrollingElement = getScrollingParentElement(child)
+    //   // Resize and place the child according to the current scroll and window states.
+    //   yield onFrameOrResize(() => {
+    //     const y = scrollingElement.scrollTop
+    //     if (doNotPreventScrollPositionBecauseIOSIsShit === false) {
+    //       child.style.top = `${y}px`
+    //     }
+    //     // THE-SCROLL_PROBLEM
+    //     // child.style.height = `${getScrollingParentElementHeight(child)}px`
+    //   }, { frameCount: 600 })
+    //   yield manageOverlayScroll(child)
+    // }
 
   }, [overlay])
 
