@@ -6,6 +6,7 @@ const map = (seed: number) => (seed - 1) / 2147483646
 const init = (initialSeed: number) => {
   initialSeed %= 2147483647
   initialSeed += initialSeed < 0 ? 2147483647 : 0
+  initialSeed = initialSeed === 0 ? 1 : initialSeed
   return next(initialSeed)
 } 
 
@@ -23,7 +24,7 @@ export class PRNG {
   }
   
   static reset(seed = PRNG.seedDefault) {
-    PRNG.#staticSeed = next(seed)
+    PRNG.#staticSeed = init(seed)
     return PRNG
   }
 
