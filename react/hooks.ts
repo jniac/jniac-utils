@@ -84,24 +84,38 @@ export function useRefComplexEffects<T = HTMLElement>(
 }
 
 export function useForceUpdate({
-  waitNextFrame = true,
-} = {}) {
+  waitNextFrame,
+}: {
+  waitNextFrame: boolean
+}) {
   // NOTE: `requestAnimationFrame` & `mounted` here avoid some dependency call bug with React.
   // The kind that happens when a distant component is modifying an observable used here.
   // "setImmediate" solve the probleme because the update is delayed to the next frame.
-  const [, forceUpdate] = React.useReducer(x => x + 1, 0)
+  
+  const count = React.useRef(0)
+  const [, setCount] = React.useState(0)
+  const forceUpdate = React.useMemo(() => {
+    return () => {
+      count.current += 1
+      setCount(count.current)
+    }
+  }, [])
+
+  // "mounted" boolean
   const mounted = React.useRef(true)
   React.useEffect(() => {
     return () => {
       mounted.current = false
     }
   }, [])
+
   const forceUpdateNextFrame = () => window.requestAnimationFrame(() => {
     if (mounted.current) {
       // DO NOT trigger `forceUpdate` on unmounted component
       forceUpdate()
     }
   })
+
   return (waitNextFrame
     ? forceUpdateNextFrame
     : forceUpdate
@@ -112,10 +126,15 @@ type UseObservableOption<T, O extends Observable<T>, U> = Partial<{ useValueOld:
 export function useObservable<T>(observable: Observable<T>): T
 export function useObservable<T, O extends Observable<any> = Observable<T>, U = any>(observable: O, options: UseObservableOption<T, O, U>): U
 export function useObservable<T, O extends Observable<any> = Observable<T>, U = any>(observable: O, { useValueOld = false, extract }: UseObservableOption<T, O, U> = {}) {
-  const forceUpdate = useForceUpdate()
-  // "forceUpdate" is different on each render, this should not be used as dep.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  React.useEffect(() => observable.onChange(forceUpdate).destroy, [observable]);
+  const count = React.useRef(0)
+  const [, setCount] = React.useState(0)
+  const forceUpdate = React.useMemo(() => {
+    return () => {
+      count.current += 1
+      setCount(count.current)
+    }
+  }, [])
+  React.useEffect(() => observable.onChange(forceUpdate).destroy, [forceUpdate, observable])
   if (useValueOld) {
     const { value, valueOld } = observable
     return { value, valueOld }

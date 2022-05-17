@@ -17,14 +17,16 @@ html body .DivRoute.leaving {
 }
 
 html body .DivRoute.overlay {
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
+  width: 100vw;
+  /* width: 100%; */
   height: 100%;
   /* THE-SCROLL_PROBLEM */
   overflow: scroll;
   /* -webkit-overflow-scrolling: touch; */
+  overscroll-behavior: contain;
 }
 
 html body .DivRoute:not(.overlay) > div {
@@ -34,4 +36,5 @@ html body .DivRoute.overlay > div {
   /* NOTE: No overflow scroll by default, since this triggers scrollbar on windows (even if there's no scroll) */
   /* But, be carefull, a previous case required this to be here. Keep it in mind. If possible. */
   /* overflow: scroll; */
+  min-height: 100%;
 }

@@ -224,6 +224,7 @@ class AnimationInstance {
   
   get normalizedTime() { return clamp(this.time, 0, this.duration) }
   get progress() { return clamp(this.time / this.duration, 0, 1) }
+  get progressOld() { return clamp(this.timeOld / this.duration, 0, 1) }
   get global() { return info }
   get complete() { return this.time >= this.duration }
   get completeOld() { return this.timeOld >= this.duration }
@@ -241,6 +242,20 @@ class AnimationInstance {
     }
     this.onFrame(cb)
     addAnimation(this)
+  }
+
+  passedThrough(threshold = {} as number | { time?: number, progress?: number, frame?: number }) {
+    const { time, progress = undefined, frame = undefined } = typeof threshold === 'number' ? { time: threshold } : threshold
+    if (time !== undefined) {
+      return this.time >= time && this.timeOld < time
+    }
+    if (progress !== undefined) {
+      return this.progress >= progress && this.progressOld < progress
+    }
+    if (frame !== undefined) {
+      return this.frame === frame
+    }
+    return false
   }
 
   pause() {
@@ -264,6 +279,15 @@ class AnimationInstance {
     if (time !== undefined) {
       this.time = time
     }
+
+    return this
+  }
+
+  playOneFrame() {
+
+    this.play()
+      .waitNextFrame()
+      ?.then(() => this.pause())
 
     return this
   }

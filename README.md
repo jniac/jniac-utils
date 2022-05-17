@@ -35,6 +35,10 @@ Il est alors nécessaire d'exclure les ressources concernées.
     "src"
   ],
   "exclude": [
+    // Exclusion générique
+    "src/some-utils/npm",
+
+    // Exclusion spécifique
     "src/some-utils/npm/three",
     "src/some-utils/npm/@react-three"
   ]

@@ -3,10 +3,10 @@ import { Observable } from '../observables'
 export let homepage = '' as string
 
 const processPathname = (str: string) => {
-  
-  // First (and absolutely first), remove double slashes.
-  str = str.replace(/\/\//g, '/') 
 
+  // First (and absolutely first), remove double slashes.
+  str = str.replace(/[/]{2,}/g, '/') 
+  
   // Handle "homepage".
   if (homepage && str.startsWith(homepage)) {
     str = str.slice(homepage.length)
@@ -36,8 +36,8 @@ const safeParseUrl = (str: string) => {
   hash = hash.substring(1)
 
   const href = `${origin}${homepage}${pathname}?${search}#${hash}`
-    .replace(/\?#/, '#')
-    .replace(/[?#=]+$/, '')
+    .replace(/\?#/, '#')  // remove "?" before "#"
+    .replace(/[?#=]+$/, '') // remove trailing "?", "#" or "="
 
   return {
     pathname,
@@ -112,7 +112,7 @@ export const setLocation = ({
   hash = location.hash.value,
   replace = false,
 }) => {
-  setUrl(`${window.location.origin}/${homepage}/${pathname}?${search}#${hash}`, { replace })
+  setUrl(`${window.location.origin}${homepage}/${pathname}?${search}#${hash}`, { replace })
 }
 
 export const getPathname = () => location.pathname.value
