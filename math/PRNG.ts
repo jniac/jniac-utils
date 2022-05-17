@@ -123,4 +123,57 @@ export class PRNG {
     const index = this.integer(0, array.length)
     return array[index]
   }
+
+  
+
+  static encode(array: string, option?: { seed: number }): string
+  static encode<T = any>(array: T[], option?: { seed: number }): T[]
+  static encode(array: any, { seed = PRNG.seedDefault } = {}) {
+    const previous = PRNG.#staticSeed
+    PRNG.reset(seed)
+    
+    if (typeof array === 'string') {
+      return PRNG.encode([...array]).join('')
+    }
+    const COUNT = Math.min(array.length, 20)
+    const random = Array.from({ length: COUNT }).map(() => PRNG.float())
+    const result = [...array]
+    for (let i = 0, max = array.length; i < max; i++) {
+      const index = Math.floor(random[i % COUNT] * max)
+      const tmp = result[index]
+      result[index] = result[i]
+      result[i] = tmp
+    }
+
+    // Restore previous seed
+    PRNG.reset(previous)
+
+    return result
+  }
+
+  static decode(array: string, option?: { seed: number }): string
+  static decode<T = any>(array: T[], option?: { seed: number }): T[]
+  static decode(array: any, { seed = PRNG.seedDefault } = {}) {
+    const previous = PRNG.#staticSeed
+    PRNG.reset(seed)
+    
+    if (typeof array === 'string') {
+      return PRNG.decode([...array]).join('')
+    }
+    const COUNT = Math.min(array.length, 20)
+    const random = Array.from({ length: COUNT }).map(() => PRNG.float())
+    const result = [...array]
+    for (let max = array.length, i = max - 1; i >= 0; i--) {
+      const index = Math.floor(random[i % COUNT] * max)
+      const tmp = result[index]
+      result[index] = result[i]
+      result[i] = tmp
+    }
+
+    // Restore previous seed
+    PRNG.#staticSeed = previous
+    PRNG.reset(previous)
+
+    return result
+  }
 }
