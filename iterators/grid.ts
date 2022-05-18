@@ -6,3 +6,11 @@ export function* grid(column = 4, row = 4) {
     }
   }
 }
+
+export function* centerGrid(columnHalf = 4, rowHalf = 4) {
+  for (let y = -rowHalf; y < rowHalf + 1; y++) {    
+    for (let x = -columnHalf; x < columnHalf + 1; x++) {
+      yield { x, y }
+    }
+  }
+}
