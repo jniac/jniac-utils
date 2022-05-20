@@ -1,4 +1,5 @@
-import { Observable } from './Observable'
+import { Interval, IntervalParams } from 'some-utils/geom'
+import { Observable, ObservableCallback } from './Observable'
 
 export class ObservableNumber extends Observable<number> {
 
@@ -62,12 +63,28 @@ export class ObservableNumber extends Observable<number> {
 
   onStepChange(step: number, callback:(value: number, target:Observable<number>) => void, { execute = false } = {}) {
     let currentValue = Math.round(this.value / step) * step
-    return this.onChange(() => {
-      let newValue = Math.round(this.value / step) * step
+    return this.onChange((value) => {
+      let newValue = Math.round(value / step) * step
       if (currentValue !== newValue) {
         currentValue = newValue
         callback(currentValue, this)
       }
     }, { execute })
+  }
+
+  onInterval({ interval, ...props }: {
+    interval: IntervalParams
+    onEnter?: ObservableCallback<number>
+    onLeave?: ObservableCallback<number>
+    onInnerChange?: ObservableCallback<number>
+    onOuterChange?: ObservableCallback<number>
+    execute?: boolean
+    once?: boolean
+  }) {
+    const _interval = Interval.ensure(interval)
+    return this.onVerify({
+      verify: value => _interval.containsValue(value),
+      ...props,
+    })
   }
 }

@@ -297,7 +297,38 @@ export class Observable<T> {
     })
   }
 
+  onVerify({ verify, onEnter, onLeave, onInnerChange, onOuterChange, execute, once }: {
+    verify: (value: T) => boolean,
+    onEnter?: ObservableCallback<T>
+    onLeave?: ObservableCallback<T>
+    onInnerChange?: ObservableCallback<T>
+    onOuterChange?: ObservableCallback<T>
+    execute?: boolean
+    once?: boolean
+  }) {
+    let entered = false
+    return this.onChange((value) => {
+      const enteredOld = entered
+      entered = verify(value)
 
+      if (enteredOld !== entered) {
+        if (entered) {
+          onEnter?.(value, this)
+        }
+        if (entered === false) {
+          onLeave?.(value, this)
+        }
+      }
+
+      if (entered) {
+        onInnerChange?.(value, this)
+      }
+      if (entered === false) {
+        onOuterChange?.(value, this)
+      }
+
+    }, { execute, once })
+  }
 
   child<U>(predicate: (v: Observable<T>) => U) {
     const child = new Observable(predicate(this))

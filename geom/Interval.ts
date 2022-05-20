@@ -134,7 +134,7 @@ export class Interval {
     return this.min <= min && this.max >= max
   }
   containsValue(value: number) {
-    return this.min <= value && this.max >= value
+    return this.min <= value && value <= this.max
   }
   union(other: IntervalParams, receiver = new Interval()) { 
     return union(this, ensure(other), receiver)
