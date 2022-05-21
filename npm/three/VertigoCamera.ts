@@ -11,8 +11,6 @@ const euler = new Euler()
 
 export class VertigoCamera extends PerspectiveCamera {
 
-  useDegree = false
-  
   #perspective = NaN
   get perspective() { return this.#perspective }
   set perspective(perspective) { this.setVertigo({ perspective }) }
@@ -33,8 +31,25 @@ export class VertigoCamera extends PerspectiveCamera {
 
   #translation = new Vector3()
 
+  setRotation({
+    useDegree,
+    x = this.rotation.x * (useDegree ? TO_DEGREE : 1), 
+    y = this.rotation.y * (useDegree ? TO_DEGREE : 1), 
+    z = this.rotation.z * (useDegree ? TO_DEGREE : 1), 
+  }: {
+    useDegree: boolean
+    x?: number
+    y?: number
+    z?: number
+  }) {
+    x *= useDegree ? TO_RADIAN : 1
+    y *= useDegree ? TO_RADIAN : 1
+    z *= useDegree ? TO_RADIAN : 1
+    this.rotation.set(x, y, z)
+    return this
+  }
+
   constructor({ 
-    useDegree = false, 
     height = 10,
     range = 500,
     distance = 0, 
@@ -44,7 +59,6 @@ export class VertigoCamera extends PerspectiveCamera {
   } = {}) {
     super()
     this.aspect = aspect
-    this.useDegree = useDegree
     this.rotation.order = rotationOrder
     this.matrixAutoUpdate = false
     this.setVertigo({ height, perspective, range, distance })
@@ -84,12 +98,7 @@ export class VertigoCamera extends PerspectiveCamera {
 
   updateQuaternion() {
     const { x, y, z, order } = this.rotation
-    if (this.useDegree) {
-      euler.set(x * TO_RADIAN, y * TO_RADIAN, z * TO_RADIAN, order)
-    }
-    else {
-      euler.set(x, y, z, order)
-    }
+    euler.set(x, y, z, order)
     this.quaternion.setFromEuler(euler, false) // false -> do not update rotation (euler) from quaternion
     return this
   }
