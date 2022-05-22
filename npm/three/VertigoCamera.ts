@@ -51,7 +51,7 @@ export class VertigoCamera extends PerspectiveCamera {
 
   constructor({ 
     height = 10,
-    range = 500,
+    range = 300,
     distance = 0, 
     perspective = 1, 
     aspect = 1,
