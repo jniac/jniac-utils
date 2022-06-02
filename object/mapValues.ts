@@ -1,3 +1,5 @@
+import { deepClone } from './clone'
+import { isObject } from './isObject'
 
 export const mapValues = <V1, V2>(
   source: Record<string, V1>, 
@@ -7,4 +9,63 @@ export const mapValues = <V1, V2>(
     Object.entries(source)
       .map(([key, value]) => [key, map(value, key)])
   )
+}
+
+type DeepMapValuesMap = (value: any, key: string) => any
+type DeepMapValuesMapper = {
+  string?: DeepMapValuesMap
+  number?: DeepMapValuesMap
+}
+type DeepMapValuesOptions = Partial<{
+  /** should */
+  clone: boolean
+}>
+
+/**
+ * Map the value of an object. Be aware: The object IS NOT cloned unless options.clone === true!
+ * @param target The object to clone.
+ * @param map The map delegate, or object mapper "delegate".
+ * @param options Some options, as "clone".
+ * @param options.clone Should the target be (deep) cloned?.
+ * @returns The object mapped.
+ */
+export const deepMapValues = <T = any>(
+  target: T, 
+  map: DeepMapValuesMap | DeepMapValuesMapper,
+  {
+    clone = false,
+  }: DeepMapValuesOptions = {},
+): T => {
+
+  if (clone === true) {
+    target = deepClone(target)
+  }
+    
+  const toMap = (mapper: DeepMapValuesMapper) => {
+    const { string, number } = mapper
+    return (value: any, key: string) => {
+      const type = typeof value
+      if (type === 'string') {
+        return string ? string(value, key) : value
+      }
+      if (type === 'number') {
+        return number ? number(value, key) : value
+      }
+      return value
+    }
+  }
+
+  const _map = typeof map === 'function' ? map : toMap(map)
+  
+  for (const key in target) {
+    const value = target[key]
+    if (isObject(value)) {
+      target[key] = deepMapValues(value, map, { clone: false })
+    }
+    else {
+      target[key] = _map(value, key)
+    }
+  }
+
+  return target
 }
