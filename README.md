@@ -6,9 +6,11 @@ Collections d'utilitaires dans toutes les directions (utilitaires, expérimentat
 qu'un tree-shaker saura dégraisser.
 
 ## Installation
-```
-# par exemple :
-git submodule add git@github.com:jniac/some-utils.git src/some-utils
+Par exemple :
+```bash
+cd src
+git submodule add https://github.com/jniac/some-utils.git
+cd ..
 ```
 
 ## tsconfig
