@@ -3,6 +3,7 @@ import { useState } from 'react'
 import * as THREE from 'three'
 import { useRefComplexEffects } from 'some-utils/react'
 import { time } from 'some-utils/npm/@react-three/TimeHandler'
+import { radian } from 'some-utils/math'
 
 export const DebugCube = ({ rotate = false }) => {
 
@@ -20,7 +21,8 @@ export const DebugCube = ({ rotate = false }) => {
   return (
     <>
       <ambientLight intensity={.5} />
-      <directionalLight position={[5, 10, 5]} />
+      <directionalLight position={[5, 10, 3]} castShadow />
+
       <mesh ref={ref} 
         castShadow 
         receiveShadow 
@@ -32,9 +34,15 @@ export const DebugCube = ({ rotate = false }) => {
         <boxGeometry />
         <meshPhysicalMaterial color={hovered ? 'cyan' : 'red'} reflectivity={1} roughness={.1}/>
       </mesh>
+
       <mesh>
         <sphereGeometry args={[.1]}/>
         <meshPhysicalMaterial color='cyan' reflectivity={1} roughness={.1}/>
+      </mesh>
+
+      <mesh rotation-x={radian(-90)} receiveShadow>
+        <circleGeometry args={[3]} />
+        <meshPhysicalMaterial color='#fc0'/>
       </mesh>
     </>
   )
