@@ -2,7 +2,7 @@
 import React from 'react'
 // @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
 import { useThree } from '@react-three/fiber'
-import { inout3, inverseLerp } from 'some-utils/math'
+import { inout3, inverseLerp } from '../../math'
 
 class TimeHandler {
   #frame = 0

@@ -1,6 +1,6 @@
 // @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
 import * as THREE from 'three'
-import { radian } from 'some-utils/math'
+import { radian } from '../../math'
 
 export type TransformArg = Partial<{
   positionX: number

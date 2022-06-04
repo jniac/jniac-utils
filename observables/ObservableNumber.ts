@@ -1,4 +1,4 @@
-import { Interval, IntervalParams } from 'some-utils/geom'
+import { Interval, IntervalParams } from '../geom'
 import { Observable, ObservableCallback } from './Observable'
 
 export class ObservableNumber extends Observable<number> {
