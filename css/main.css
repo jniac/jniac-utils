@@ -60,3 +60,11 @@ body {
   background-position: center;
   background-repeat: no-repeat;
 }
+
+.click-through {
+  pointer-events: none;
+}
+.click-through > *:not(.click-through) {
+  pointer-events: all;
+}
+
