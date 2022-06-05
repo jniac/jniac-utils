@@ -1,6 +1,6 @@
 import React from 'react'
-import { setUrl } from '../../../router/location'
-import { RouterContext } from '../router/Router'
+import { setUrl } from '../../../../router/location'
+import { RouterContext } from '../Router'
 
 export const Link = React.forwardRef<HTMLAnchorElement, {
   to: string

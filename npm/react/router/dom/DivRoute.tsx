@@ -1,6 +1,6 @@
 import React from 'react'
-import { useComplexEffects, safeClassName } from '..'
-import { Route, RouteProps, RouteStateContext } from '../router/Route'
+import { useComplexEffects, safeClassName } from '../..'
+import { Route, RouteProps, RouteStateContext } from '..'
 //   // THE-SCROLL_PROBLEM
 // import { getScrollingParentElement, 
 //   // getScrollingParentElementHeight, 
