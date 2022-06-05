@@ -1,6 +1,6 @@
 import React from 'react'
-import * as Animation from '../../Animation'
-import { Observable } from '../../observables'
+import * as Animation from '../../../Animation'
+import { Observable } from '../../../observables'
 import { useComplexEffects } from '../hooks'
 
 export interface SwitchChildProps { 

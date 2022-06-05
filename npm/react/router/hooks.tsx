@@ -1,5 +1,5 @@
 import React from 'react'
-import { location } from '../location'
+import { location } from '../../../router/location'
 
 const useUpdate = (callback: (update: () => void) => ({ destroy: () => void} )) => {
   // Re-render when pathname has changed

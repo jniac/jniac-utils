@@ -1,5 +1,5 @@
 import React from 'react'
-import { Observable } from '../observables'
+import { Observable } from '../../observables'
 
 export type Destroyable = { destroy: () => void}  | (() => void)
 

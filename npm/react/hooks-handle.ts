@@ -1,5 +1,5 @@
 import React from 'react'
-import { Options, handlePointer, getWindowSize, handleWindow } from '../dom/handle-events'
+import { Options, handlePointer, getWindowSize, handleWindow } from '../../dom/handle-events'
 
 export function usePointerHandle(ref: React.RefObject<HTMLElement>, options: Options) {
 
