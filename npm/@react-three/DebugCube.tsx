@@ -1,9 +1,10 @@
 // @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
 import { useState } from 'react'
+// @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
 import * as THREE from 'three'
-import { useRefComplexEffects } from 'some-utils/react'
-import { time } from 'some-utils/npm/@react-three/TimeHandler'
-import { radian } from 'some-utils/math'
+import { useRefComplexEffects } from '../../react'
+import { radian } from '../../math'
+import { time } from '.'
 
 export const DebugCube = ({ rotate = false }) => {
 
