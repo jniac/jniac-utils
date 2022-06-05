@@ -1,2 +1,2 @@
-export { DivRoute } from './DivRoute'
-export { Link } from './Link'
+export * from './DivRoute'
+export * from './Link'
