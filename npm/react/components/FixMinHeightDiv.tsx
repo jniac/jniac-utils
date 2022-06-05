@@ -1,5 +1,5 @@
 import React from 'react'
-import { useParentBounds } from '../hooks-layout'
+import { useParentBounds } from '../hooks'
 
 // NOTE: Not very sure of that component pertinence.
 

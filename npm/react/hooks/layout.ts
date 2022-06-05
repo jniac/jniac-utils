@@ -1,8 +1,8 @@
 import React from 'react'
-import { Rectangle } from '../../geom'
-import { BoundsCallback, BoundsType, onResizeEnd, track, untrack } from '../../dom/bounds'
-import { computeOffsetBounds, computeLocalBounds } from "../../dom/utils"
-import { useComplexEffects } from '.'
+import { Rectangle } from '../../../geom'
+import { BoundsCallback, BoundsType, onResizeEnd, track, untrack } from '../../../dom/bounds'
+import { computeOffsetBounds, computeLocalBounds } from "../../../dom/utils"
+import { useComplexEffects } from '..'
 
 const resolveRef = <T>(target: 'createRef' | React.RefObject<T>) => {
   if (target === 'createRef') {
