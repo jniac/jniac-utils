@@ -1,7 +1,7 @@
 import React from 'react'
 import { Observable } from '../../../observables'
 
-export type Destroyable = { destroy: () => void}  | (() => void)
+export type Destroyable = null | { destroy: () => void}  | (() => void)
 
 export type ComplexEffectsState = { mounted: boolean }
 export type ComplexEffectsDependencyList = React.DependencyList | 'always-recalculate'
@@ -46,7 +46,9 @@ export function useComplexEffects<T = void>(
     let item = iterator.next()
     while (item.done === false) {
       const { value } = item
-      destroyArray.push(typeof value === 'function' ? value : value.destroy)
+      if (value) {
+        destroyArray.push(typeof value === 'function' ? value : value.destroy)
+      }
       item = iterator.next()
     }
 
