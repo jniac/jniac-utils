@@ -6,7 +6,7 @@ import { useRefComplexEffects } from '../react'
 import { radian } from '../../math'
 import { time } from '.'
 
-export const DebugCube = ({ rotate = false }) => {
+export const DebugCube = ({ rotate = true }) => {
 
   const [hovered, setHover] = useState(false)
 
@@ -43,7 +43,7 @@ export const DebugCube = ({ rotate = false }) => {
 
       <mesh rotation-x={radian(-90)} receiveShadow>
         <circleGeometry args={[3]} />
-        <meshPhysicalMaterial color='#fc0'/>
+        <shadowMaterial opacity={.33}/>
       </mesh>
     </>
   )
