@@ -1,4 +1,4 @@
-export const sdf2d = /* glsl */`
+export const glsl_Sdf2d = /* glsl */`
 
   // Inigo Quilez
   // https://iquilezles.org/articles/distfunctions2d/
