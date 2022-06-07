@@ -1,14 +1,14 @@
 import { deepClone } from './clone'
 import { isObject } from './isObject'
 
-export const mapValues = <V1, V2>(
-  source: Record<string, V1>, 
+export const mapRecord = <V1, V2, K extends string>(
+  source: Record<K, V1>, 
   map: (value: V1, key: string) => V2,
-): Record<string, V2> => {
+) => {
   return Object.fromEntries(
     Object.entries(source)
-      .map(([key, value]) => [key, map(value, key)])
-  )
+      .map(([key, value]) => [key, map(value as V1, key)])
+  ) as Record<K, V2>
 }
 
 type DeepMapValuesMap = (value: any, key: string) => any
