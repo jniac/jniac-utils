@@ -46,14 +46,17 @@ export class Point {
   static ensure(x: PointParams) {
     return ensure(x)
   }
-  static add(lhs: PointParams, rhs: PointParams, receiver: IPoint = new Point()) {
-    return add(ensure(lhs), ensure(rhs), ensure(receiver))
+  static add(lhs: PointParams, rhs: PointParams, receiver: Point = new Point()) {
+    return add(ensureIPoint(lhs), ensureIPoint(rhs), ensure(receiver))
   }
-  static subtract(lhs: PointParams, rhs: PointParams, receiver: IPoint = new Point()) {
-    return subtract(ensure(lhs), ensure(rhs), ensure(receiver))
+  static subtract(lhs: PointParams, rhs: PointParams, receiver: Point = new Point()) {
+    return subtract(ensureIPoint(lhs), ensureIPoint(rhs), ensure(receiver))
   }
   static distance(p0: PointParams, p1: PointParams) {
-    return Point.subtract(p0, p1, dummy).magnitude
+    return magnitude(Point.subtract(p0, p1, dummy))
+  }
+  static sqDistance(p0: PointParams, p1: PointParams) {
+    return sqMagnitude(Point.subtract(p0, p1, dummy))
   }
   x: number
   y: number
