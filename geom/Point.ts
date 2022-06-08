@@ -17,7 +17,7 @@ const set = <T extends IPoint>(point: T, x: number, y: number) => {
 
 const ensure = (p: PointParams) => p instanceof Point ? p : new Point().set(p)
 
-const ensureIPoint = (p: PointParams) => ('x' in p && 'y' in p) ? p as IPoint : new Point().set(p)
+const ensureIPoint = (p: PointParams) => (p && typeof p === 'object' && ('x' in p && 'y' in p)) ? p as IPoint : new Point().set(p)
 
 const equals = (a: IPoint, b: IPoint) => (
   a.x === b.x && a.y === b.y
@@ -43,9 +43,10 @@ const sqMagnitude = (p: IPoint) => {
 const magnitude = (p: IPoint) => Math.sqrt(sqMagnitude(p))
 
 export class Point {
-  static ensure(x: PointParams) {
-    return ensure(x)
-  }
+  
+  static ensure = ensure
+  static ensureIPoint = ensureIPoint
+
   static add(lhs: PointParams, rhs: PointParams, receiver: Point = new Point()) {
     return add(ensureIPoint(lhs), ensureIPoint(rhs), ensure(receiver))
   }
