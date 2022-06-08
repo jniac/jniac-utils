@@ -58,13 +58,45 @@ const localCircle = (circle: ICircle, circle2: ICircle, receiver: ICircle): ICir
   return receiver
 }
 
-const intersectsCircleCircle = (circle1: ICircle, circle2: ICircle) => {
+const circleCircleIntersects = (circle1: ICircle, circle2: ICircle) => {
   const dx = circle2.x - circle1.x
   const dy = circle2.y - circle1.y
-  const r2 = circle1.r + circle2.r
-  return r2 * r2 >= dx * dx + dy * dy 
+  const { r: r1 } = circle1
+  const { r: r2 } = circle2
+  const rr = circle1.r + circle2.r
+  const sqDistance = dx * dx + dy * dy
+  if (sqDistance > rr * rr) {
+    return false
+  }
+  const distance = Math.sqrt(sqDistance)
+  if (distance + r2 < r1) {
+    return false
+  }
+  if (distance + r1 < r2) {
+    return false
+  }
+  return true
 }
 
+const circleCircleStatus = (circle1: ICircle, circle2: ICircle) => {
+  const dx = circle2.x - circle1.x
+  const dy = circle2.y - circle1.y
+  const { r: r1 } = circle1
+  const { r: r2 } = circle2
+  const rr = circle1.r + circle2.r
+  const sqDistance = dx * dx + dy * dy
+  if (sqDistance > rr * rr) {
+    return 'APART'
+  }
+  const distance = Math.sqrt(sqDistance)
+  if (distance + r2 < r1) {
+    return 'CIRCLE1_CONTAINS_CIRCLE2'
+  }
+  if (distance + r1 < r2) {
+    return 'CIRCLE2_CONTAINS_CIRCLE1'
+  }
+  return 'TOUCHING'
+}
 
 
 /**
@@ -74,7 +106,7 @@ const intersectsCircleCircle = (circle1: ICircle, circle2: ICircle) => {
  * @param distance 
  * @returns 
  */
-const intersectionUnitCircleCircle = (radius: number, distance: number) => {
+const unitCircleCircleIntersection = (radius: number, distance: number) => {
 
   if (distance > radius + 1) {
     return null
@@ -101,17 +133,30 @@ const intersectionUnitCircleCircle = (radius: number, distance: number) => {
  * @param circle2 
  * @returns 
  */
-const intersectionCircleCircle = (circle1: ICircle, circle2: ICircle) => {
+const circleCircleIntersection = (circle1: ICircle, circle2: ICircle) => {
 
-  const v12 = Point.subtract(circle2, circle1)
-  const distance = v12.magnitude
-  const r2 = circle1.r + circle2.r
+  const { x: x1, y: y1, r: r1 } = circle1
+  const { x: x2, y: y2, r: r2 } = circle2
   
-  if (distance > r2) {
+  const x12 = x2 - x1
+  const y12 = y2 - y1
+  const r12 = r1 + r2
+  const sqDistance = x12 * x12 + y12 * y12
+  const distance = Math.sqrt(sqDistance)
+  
+  if (distance > r12) {
     return []
   }
 
-  if (distance === r2) {
+  if (distance + r1 < r2) {
+    return []
+  }
+
+  if (distance + r2 < r1) {
+    return []
+  }
+
+  if (distance === r12) {
     return [
       new Point(
         (circle1.x + circle2.x) / 2,
@@ -120,14 +165,14 @@ const intersectionCircleCircle = (circle1: ICircle, circle2: ICircle) => {
     ]
   }
 
-  // cf intersectionUnitCircleCircle()
-  const local_d =  distance / circle1.r
-  const local_r = circle2.r / circle1.r
+  // cf unitCircleCircleIntersection()
+  const local_d =  distance / r1
+  const local_r = r2 / r1
   const u = (local_d * local_d - local_r * local_r + 1) / (2 * local_d)
   const v = Math.sqrt(1 - u * u)
 
-  const dx = v12.x / distance * circle1.r
-  const dy = v12.y / distance * circle1.r
+  const dx = x12 / distance * r1
+  const dy = y12 / distance * r1
   const ix = circle1.x + dx * u
   const iy = circle1.y + dy * u
   const vx = -dy * v
@@ -152,12 +197,14 @@ export class Circle {
   static ensure = ensure
   static ensureICircle = ensureICircle
   static isCircleParams = isCircleParams
-  static intersectionUnitCircleCircle = intersectionUnitCircleCircle
+  static unitCircleCircleIntersection = unitCircleCircleIntersection
   
-  static intersectsCircleCircle = (circle1: CircleParams, circle2: CircleParams) => 
-    intersectsCircleCircle(ensureICircle(circle1), ensureICircle(circle2))
-  static intersectionCircleCircle = (circle1: CircleParams, circle2: CircleParams) =>
-    intersectionCircleCircle(ensureICircle(circle1), ensureICircle(circle2))
+  static circleCircleIntersects = (circle1: CircleParams, circle2: CircleParams) => 
+    circleCircleIntersects(ensureICircle(circle1), ensureICircle(circle2))
+  static circleCircleStatus = (circle1: CircleParams, circle2: CircleParams) =>
+    circleCircleStatus(ensureICircle(circle1), ensureICircle(circle2))
+  static circleCircleIntersection = (circle1: CircleParams, circle2: CircleParams) =>
+    circleCircleIntersection(ensureICircle(circle1), ensureICircle(circle2))
 
   x!: number
   y!: number
@@ -208,12 +255,12 @@ export class Circle {
     return localCircle(this, ensureICircle(circle), receiver) as Circle
   }
 
-  intersectsCircle(circle: CircleParams) {
-    return intersectsCircleCircle(this, ensureICircle(circle))
+  circleIntersects(circle: CircleParams) {
+    return circleCircleIntersects(this, ensureICircle(circle))
   }
 
-  intersectionCircle(circle: CircleParams) {
-    return intersectionCircleCircle(this, ensureICircle(circle))
+  circleIntersection(circle: CircleParams) {
+    return circleCircleIntersection(this, ensureICircle(circle))
   }
 }
 
