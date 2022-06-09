@@ -17,7 +17,7 @@ const set = <T extends IPoint>(point: T, x: number, y: number) => {
 
 const ensure = (p: PointParams) => p instanceof Point ? p : new Point().set(p)
 
-const ensureIPoint = (p: PointParams) => ('x' in p && 'y' in p) ? p as IPoint : new Point().set(p)
+const ensureIPoint = (p: PointParams) => (p && typeof p === 'object' && ('x' in p && 'y' in p)) ? p as IPoint : new Point().set(p)
 
 const equals = (a: IPoint, b: IPoint) => (
   a.x === b.x && a.y === b.y
@@ -43,17 +43,23 @@ const sqMagnitude = (p: IPoint) => {
 const magnitude = (p: IPoint) => Math.sqrt(sqMagnitude(p))
 
 export class Point {
-  static ensure(x: PointParams) {
-    return ensure(x)
+  
+  static get dummy() { return dummy }
+  
+  static ensure = ensure
+  static ensureIPoint = ensureIPoint
+
+  static add(lhs: PointParams, rhs: PointParams, receiver: Point = new Point()) {
+    return add(ensureIPoint(lhs), ensureIPoint(rhs), ensure(receiver))
   }
-  static add(lhs: PointParams, rhs: PointParams, receiver: IPoint = new Point()) {
-    return add(ensure(lhs), ensure(rhs), ensure(receiver))
-  }
-  static subtract(lhs: PointParams, rhs: PointParams, receiver: IPoint = new Point()) {
-    return subtract(ensure(lhs), ensure(rhs), ensure(receiver))
+  static subtract(lhs: PointParams, rhs: PointParams, receiver: Point = new Point()) {
+    return subtract(ensureIPoint(lhs), ensureIPoint(rhs), ensure(receiver))
   }
   static distance(p0: PointParams, p1: PointParams) {
-    return Point.subtract(p0, p1, dummy).magnitude
+    return magnitude(Point.subtract(p0, p1, dummy))
+  }
+  static sqDistance(p0: PointParams, p1: PointParams) {
+    return sqMagnitude(Point.subtract(p0, p1, dummy))
   }
   x: number
   y: number
