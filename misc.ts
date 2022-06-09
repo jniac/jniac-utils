@@ -24,6 +24,9 @@ export function radian(arr: [number, number]): [number, number]
 export function radian(arr: [number, number, number]): [number, number, number]
 export function radian(arr: number[]): number[]
 export function radian(x: any): any {
+  if (typeof x === 'number') {
+    return x * Math.PI / 180
+  }
   return deepMapValues(x, {
     number: x => x * Math.PI / 180,
   }, { clone: true })
@@ -34,6 +37,9 @@ export function degree(arr: [number, number]): [number, number]
 export function degree(arr: [number, number, number]): [number, number, number]
 export function degree(arr: number[]): number[]
 export function degree(x: any): any {
+  if (typeof x === 'number') {
+    return x * 180 / Math.PI
+  }
   return deepMapValues(x, {
     number: x => x * 180 / Math.PI,
   }, { clone: true })
