@@ -51,11 +51,23 @@ const localPoint = (circle: ICircle, point: IPoint, receiver: IPoint): IPoint =>
   return receiver
 }
 
+const globalPoint = (circle: ICircle, localPoint: IPoint, receiver: IPoint): IPoint => {
+  receiver.x = circle.x + localPoint.x * circle.r
+  receiver.y = circle.y + localPoint.y * circle.r
+  return receiver
+}
+
 const localCircle = (circle: ICircle, circle2: ICircle, receiver: ICircle): ICircle => {
   receiver.x = (circle2.x - circle.x) / circle.r
   receiver.y = (circle2.y - circle.y) / circle.r
   receiver.r = circle2.r / circle.r
   return receiver
+}
+
+const containsPoint = (circle: ICircle, point: IPoint) => {
+  const x = circle.x - point.x
+  const y = circle.y - point.y
+  return x * x + y * y <= circle.r * circle.r
 }
 
 const circleCircleIntersects = (circle1: ICircle, circle2: ICircle) => {
@@ -124,6 +136,7 @@ const unitCircleCircleIntersection = (radius: number, distance: number) => {
 
 
 
+
 /**
  * Returns the intersections (array) of two circles.
  * Result may contain 0, 1 or 2 intersection points.
@@ -138,13 +151,12 @@ const circleCircleIntersection = (circle1: ICircle, circle2: ICircle) => {
   const { x: x1, y: y1, r: r1 } = circle1
   const { x: x2, y: y2, r: r2 } = circle2
   
-  const x12 = x2 - x1
-  const y12 = y2 - y1
-  const r12 = r1 + r2
-  const sqDistance = x12 * x12 + y12 * y12
-  const distance = Math.sqrt(sqDistance)
+  const dx = x2 - x1
+  const dy = y2 - y1
+  const rt = r1 + r2
+  const distance = Math.sqrt(dx * dx + dy * dy)
   
-  if (distance > r12) {
+  if (distance > rt) {
     return []
   }
 
@@ -156,7 +168,7 @@ const circleCircleIntersection = (circle1: ICircle, circle2: ICircle) => {
     return []
   }
 
-  if (distance === r12) {
+  if (distance === rt) {
     return [
       new Point(
         (circle1.x + circle2.x) / 2,
@@ -171,12 +183,106 @@ const circleCircleIntersection = (circle1: ICircle, circle2: ICircle) => {
   const u = (local_d * local_d - local_r * local_r + 1) / (2 * local_d)
   const v = Math.sqrt(1 - u * u)
 
-  const dx = x12 / distance * r1
-  const dy = y12 / distance * r1
-  const ix = circle1.x + dx * u
-  const iy = circle1.y + dy * u
-  const vx = -dy * v
-  const vy = dx * v
+  const cx = dx / distance * r1
+  const cy = dy / distance * r1
+  const ix = circle1.x + cx * u
+  const iy = circle1.y + cy * u
+  const vx = -cy * v
+  const vy = cx * v
+
+  return [
+    new Point(
+      ix + vx,
+      iy + vy,
+    ),
+    new Point(
+      ix - vx,
+      iy - vy,
+    ),
+  ]
+}
+
+
+
+/**
+ * Minimalist solution, which inspires the other following.
+ * https://www.desmos.com/calculator/gfzf3tpana
+ * @param distance 
+ * @returns 
+ */
+const unitCircleTangentX = (distance: number) => {
+
+  if (distance < 1) {
+    return null
+  }
+
+  const u = 1 / distance
+  const v = Math.sqrt(1 - u * u)
+
+  return { u, v }
+}
+
+const unitCircleTangentPoint = (point: IPoint) => {
+
+  const { x, y } = point
+  const distance = Math.sqrt(x * x + y * y)
+
+  if (distance < 1) {
+    return []
+  }
+
+  if (distance === 1) {
+    return [new Point(x, y)]
+  }
+
+  const u = 1 / distance
+  const v = Math.sqrt(1 - u * u)
+  const cx = x / distance
+  const cy = y / distance
+  // Colinear:
+  const ux = u * cx
+  const uy = u * cy
+  // Normal:
+  const vx = -v * cy
+  const vy = v * cx
+
+  return [
+    new Point(
+      ux + vx,
+      uy + vy,
+    ),
+    new Point(
+      ux - vx,
+      uy - vy,
+    ),
+  ]
+}
+
+const circleTangentPoint = (circle: ICircle, point: IPoint) => {
+  
+  const dx = point.x - circle.x
+  const dy = point.y - circle.y
+  const r = circle.r
+  const distance = Math.sqrt(dx * dx + dy * dy)
+
+  if (distance < r) {
+    return []
+  }
+  if (distance === r) {
+    return [new Point(point.x, point.y)]
+  }
+
+  const u = 1 / (distance / r)
+  const v = Math.sqrt(1 - u * u)
+
+  const cx = dx / distance * r
+  const cy = dy / distance * r
+  // Center + Colinear:
+  const ix = circle.x + cx * u
+  const iy = circle.y + cy * u
+  // Normal:
+  const vx = -cy * v
+  const vy = cx * v
 
   return [
     new Point(
@@ -198,6 +304,8 @@ export class Circle {
   static ensureICircle = ensureICircle
   static isCircleParams = isCircleParams
   static unitCircleCircleIntersection = unitCircleCircleIntersection
+  static unitCircleTangentX = unitCircleTangentX
+  static unitCircleTangentPoint = unitCircleTangentPoint
   
   static circleCircleIntersects = (circle1: CircleParams, circle2: CircleParams) => 
     circleCircleIntersects(ensureICircle(circle1), ensureICircle(circle2))
@@ -205,6 +313,8 @@ export class Circle {
     circleCircleStatus(ensureICircle(circle1), ensureICircle(circle2))
   static circleCircleIntersection = (circle1: CircleParams, circle2: CircleParams) =>
     circleCircleIntersection(ensureICircle(circle1), ensureICircle(circle2))
+  static circleTangentPoint = (circle: CircleParams, point: PointParams) => 
+    circleTangentPoint(ensureICircle(circle), Point.ensureIPoint(point))
 
   x!: number
   y!: number
@@ -241,14 +351,15 @@ export class Circle {
   }
 
   containsPoint(p: PointParams) {
-    let { x, y } = Point.ensureIPoint(p)
-    x -= this.x
-    y -= this.y
-    return (x * x) + (y * y) <= this.r * this.r
+    return containsPoint(this, Point.ensureIPoint(p))
   }
 
   localPoint(p: PointParams) {
     return localPoint(this, Point.ensureIPoint(p), new Point()) as Point
+  }
+
+  globalPoint(p: PointParams) {
+    return globalPoint(this, Point.ensureIPoint(p), new Point()) as Point
   }
 
   localCircle(circle: CircleParams, receiver: Circle = new Circle()) {
@@ -261,6 +372,20 @@ export class Circle {
 
   circleIntersection(circle: CircleParams) {
     return circleCircleIntersection(this, ensureICircle(circle))
+  }
+
+  tangentPoint(point: PointParams) {
+    return circleTangentPoint(this, Point.ensureIPoint(point))
+  }
+
+  /**
+   * Returns the tangent point angles as simple points: Point(cos, sin).
+   * Useful for trigonometry operations on angles.
+   * @param point 
+   * @returns 
+   */
+  tangentAnglePoint(point: PointParams) {
+    return unitCircleTangentPoint(localPoint(this, Point.ensureIPoint(point), Point.dummy))
   }
 }
 

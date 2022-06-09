@@ -44,6 +44,8 @@ const magnitude = (p: IPoint) => Math.sqrt(sqMagnitude(p))
 
 export class Point {
   
+  static get dummy() { return dummy }
+  
   static ensure = ensure
   static ensureIPoint = ensureIPoint
 
