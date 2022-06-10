@@ -11,6 +11,10 @@ body {
   /* min-height: 100vh; */
 }
 
+body {
+  min-height: 100vh;
+}
+
 .flex-row {
   display: flex;
   flex-direction: row;
@@ -66,5 +70,14 @@ body {
 }
 .click-through > *:not(.click-through) {
   pointer-events: all;
+}
+
+.button {
+  cursor: pointer;
+  user-select: none;
+}
+.button.disabled {
+  pointer-events: none;
+  opacity: .5;
 }
 
