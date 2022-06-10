@@ -39,3 +39,8 @@
 .flex.gutter-16 > * {
   --gutter: 16px;
 }
+
+.flex > .spacer {
+  flex: 1;
+  align-self: stretch;
+}
