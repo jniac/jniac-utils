@@ -106,6 +106,15 @@ export function useForceUpdate({
   // "mounted" boolean
   const mounted = React.useRef(true)
   React.useEffect(() => {
+    mounted.current = true
+    // Wait!? 
+    // This is absurd right?
+    // "mounted.current" is already set to true right?
+    // Yep, but you may ignore that <React.StrictMode> could render twice the SAME
+    // component, so the "decomission" function may have been called, and mounted.current
+    // could already be set to "false".
+    // Really?
+    // Really. 
     return () => {
       mounted.current = false
     }
