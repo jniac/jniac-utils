@@ -206,3 +206,27 @@ export const usePromise = <T>(
   }, deps)
   return data
 }
+
+/**
+ * You know it. Sometimes you're not still there when a response arrive. So
+ * useSafeState does not anything if the component is already unmounted.
+ * @param initialValue The... initial value!
+ * @returns 
+ */
+export const useSafeState = <T>(initialValue: T): [T, (value: T) => void] => {
+  const mounted = React.useRef(true)
+  React.useEffect(() => {
+    mounted.current = true // Keep that line since <React.StrictMode/> can trigger the effect twice (within the SAME component).
+    return () => { mounted.current = false }
+  }, [])
+  const [value, setValue] = React.useState(initialValue)
+  const safeSetValue = React.useMemo(() => {
+    return (value: T) => {
+      // Safe guard: do not call if unmounted
+      if (mounted.current) {
+        setValue(value)
+      }
+    }
+  }, [])
+  return [value, safeSetValue]
+}
