@@ -94,17 +94,28 @@ export function useForceUpdate({
   // The kind that happens when a distant component is modifying an observable used here.
   // "setImmediate" solve the probleme because the update is delayed to the next frame.
   
-  const count = React.useRef(0)
   const [, setCount] = React.useState(0)
-  const forceUpdate = React.useMemo(() => {
-    return () => {
-      count.current += 1
-      setCount(count.current)
+  const mounted = React.useRef(true)
+  const [forceUpdate, forceUpdateNextFrame] = React.useMemo(() => {
+    
+    let count = 0
+    
+    const forceUpdate = () => {
+      count++
+      setCount(count)
     }
+
+    const forceUpdateNextFrame = () => window.requestAnimationFrame(() => {
+      if (mounted.current) {
+        // DO NOT trigger `forceUpdate` on unmounted component
+        forceUpdate()
+      }
+    })
+
+    return [forceUpdate, forceUpdateNextFrame]
+
   }, [])
 
-  // "mounted" boolean
-  const mounted = React.useRef(true)
   React.useEffect(() => {
     mounted.current = true
     // Wait!? 
@@ -120,12 +131,6 @@ export function useForceUpdate({
     }
   }, [])
 
-  const forceUpdateNextFrame = () => window.requestAnimationFrame(() => {
-    if (mounted.current) {
-      // DO NOT trigger `forceUpdate` on unmounted component
-      forceUpdate()
-    }
-  })
 
   return (waitNextFrame
     ? forceUpdateNextFrame
