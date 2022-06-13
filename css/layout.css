@@ -8,8 +8,17 @@
   height: 100vh;
 }
 
+.padding-4 {
+  padding: 4px;
+}
+.padding-8 {
+  padding: 8px;
+}
 .padding-16 {
   padding: 16px;
+}
+.padding-32 {
+  padding: 32px;
 }
 
 .text-center {
@@ -38,6 +47,10 @@
 .flex.center {
   align-items: center;
   justify-content: center;
+}
+
+.flex.align-center {
+  align-items: center;
 }
 
 .flex.gutter-4 > * {

@@ -66,6 +66,10 @@ body {
   background-repeat: no-repeat;
 }
 
+.no-click {
+  pointer-events: none;
+}
+
 .click-through {
   pointer-events: none;
 }
