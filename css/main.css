@@ -77,6 +77,10 @@ body {
   cursor: pointer;
   user-select: none;
 }
+/* No click for children, but for the button only. */
+.button > *:not(.button) {
+  pointer-events: none;
+}
 .button.disabled {
   pointer-events: none;
   opacity: .5;
