@@ -2,14 +2,9 @@
 /**
  * Returns the cubic interpolation.
  * https://en.wikipedia.org/wiki/B%C3%A9zier_curve#Cubic_B%C3%A9zier_curves
- * @param {number} x1 
- * @param {number} x2 
- * @param {number} x3 
- * @param {number} x4 
- * @param {number} t 
  * @returns 
  */
-export const cubic = (x1, x2, x3, x4, t) => {
+export const cubic = (x1: number, x2: number, x3: number, x4: number, t: number) => {
   const ti = 1 - t
   const ti2 = ti * ti
   const t2 = t * t
@@ -24,13 +19,8 @@ export const cubic = (x1, x2, x3, x4, t) => {
 /**
  * Returns the cubic derivative.
  * https://en.wikipedia.org/wiki/B%C3%A9zier_curve#Cubic_B%C3%A9zier_curves
- * @param {number} x1 
- * @param {number} x2 
- * @param {number} x3 
- * @param {number} x4 
- * @param {number} t 
  */
-export const cubicDerivative = (x1, x2, x3, x4, t) => {
+export const cubicDerivative = (x1: number, x2: number, x3: number, x4: number, t: number) => {
   const ti = 1 - t
   return (
     3 * ti * ti * (x2 - x1) + 6 * ti * t * (x3 - x2) + 3 * t * t * (x4 - x3)
@@ -40,14 +30,9 @@ export const cubicDerivative = (x1, x2, x3, x4, t) => {
 /**
  * Returns the cubic second derivative.
  * https://en.wikipedia.org/wiki/B%C3%A9zier_curve#Cubic_B%C3%A9zier_curves
- * @param {number} x1 
- * @param {number} x2 
- * @param {number} x3 
- * @param {number} x4 
- * @param {number} t 
  * @returns 
  */
-export const cubicDerivativeSecond = (x1, x2, x3, x4, t) => {
+export const cubicDerivativeSecond = (x1: number, x2: number, x3: number, x4: number, t: number) => {
   return (
     6 * (1 - t) * (x3 - 2 * x2 + x1) + 6 * t * (x4 - 2 * x3 + x2)
   )
@@ -55,11 +40,8 @@ export const cubicDerivativeSecond = (x1, x2, x3, x4, t) => {
 
 /**
  * Assuming x1 = 0, x4 = 1.
- * @param {number} x2
- * @param {number} x3 
- * @param {number} t 
  */
-export const cubic01 = (x2, x3, t) => {
+export const cubic01 = (x2: number, x3: number, t: number) => {
   const ti = 1 - t
   const t2 = t * t
   return (
@@ -71,11 +53,8 @@ export const cubic01 = (x2, x3, t) => {
 
 /**
  * Assuming x1 = 0, x4 = 1.
- * @param {number} x2
- * @param {number} x3 
- * @param {number} t 
  */
- export const cubic01Derivative = (x2, x3, t) => {
+ export const cubic01Derivative = (x2: number, x3: number, t: number) => {
   const ti = 1 - t
   return (
     3 * ti * ti * (x2) + 6 * ti * t * (x3 - x2) + 3 * t * t * (1 - x3)
@@ -84,11 +63,8 @@ export const cubic01 = (x2, x3, t) => {
 
 /**
  * Assuming x1 = 0, x4 = 1.
- * @param {number} x2
- * @param {number} x3 
- * @param {number} t 
  */
- export const cubic01DerivativeSecond = (x2, x3, t) => {
+ export const cubic01DerivativeSecond = (x2: number, x3: number, t: number) => {
   return (
     6 * (1 - t) * (x3 - 2 * x2) + 6 * t * (1 - 2 * x3 + x2)
   )
@@ -100,16 +76,11 @@ export const cubic01 = (x2, x3, t) => {
  * 6 iterations is enough to produce a smooth interpolation 1000px wide. 
  * 
  * Assuming x1 = 0, x4 = 1
- * @param {number} x2 
- * @param {number} x3 
- * @param {number} x 
- * @param {number} iterations 
- * @param {number} precision 
  */
 export const cubic01SearchT = (
-  x2,
-  x3,
-  x,
+  x2: number,
+  x3: number,
+  x: number,
   iterations = 6,
   precision = 0.0001,
   lowerT = 0,
@@ -146,17 +117,9 @@ export const cubic01SearchT = (
 }
 
 /**
- * Solve "y"
- * @param {number} x1 
- * @param {number} y1 
- * @param {number} x2 
- * @param {number} y2 
- * @param {number} x 
- * @param {number} iterations
- * @param {number} precision
- * @returns 
+ * Solve "y" for a given "x" according to the hande (x1, y1) & (x2, y2)
  */
-export const solveCubicEasing = (x1, y1, x2, y2, x, iterations = undefined, precision = undefined) => {
+export const solveCubicEasing = (x1: number, y1: number, x2: number, y2: number, x: number, iterations?: number, precision?: number) => {
   const t = cubic01SearchT(x1, x2, x, iterations, precision)
   const y = cubic01(y1, y2, t)
   return y
