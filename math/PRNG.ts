@@ -8,7 +8,15 @@ const init = (initialSeed: number) => {
   initialSeed += initialSeed < 0 ? 2147483647 : 0
   initialSeed = initialSeed === 0 ? 1 : initialSeed
   return next(initialSeed)
-} 
+}
+
+const stringToSeed = (str: string) => {
+  let seed = init(PRNG.seedDefault)
+  for (let i = 0, max = str.length; i < max; i++) {
+    seed = seed * str.charCodeAt(i) % 2147483647
+  }
+  return seed
+}
 
 export class PRNG {
   static seedMax = 2147483647
@@ -31,6 +39,16 @@ export class PRNG {
   reset(seed = this.#initialSeed) {
     this.#initialSeed = seed
     this.#seed = init(seed)
+    return this
+  }
+
+  static stringReset(str: string) {
+    PRNG.#staticSeed = stringToSeed(str)
+    return PRNG
+  }
+
+  stringReset(str: string) {
+    this.#seed = stringToSeed(str)
     return this
   }
 
@@ -114,17 +132,27 @@ export class PRNG {
     return result
   }
 
-  static item<T = any>(array: T[]) {
-    const index = PRNG.integer(0, array.length)
-    return array[index]
+  static item(str: string): string
+  static item<T = any>(array: T[]): T
+  static item(stringOrArray: any) {
+    const index = PRNG.integer(0, stringOrArray.length)
+    return stringOrArray[index]
   }
 
-  item<T = any>(array: T[]) {
-    const index = this.integer(0, array.length)
-    return array[index]
+  item(str: string): string
+  item<T = any>(array: T[]): T
+  item(stringOrArray: any) {
+    const index = this.integer(0, stringOrArray.length)
+    return stringOrArray[index]
   }
 
-  
+  static hash(length = 16, alphabet = '0123456789abcedf') {
+    return Array.from({ length }).map(() => PRNG.item(alphabet)).join('')
+  }
+
+  hash(length = 16, alphabet = '0123456789abcedf') {
+    return Array.from({ length }).map(() => this.item(alphabet)).join('')
+  }
 
   static encode(array: string, option?: { seed: number }): string
   static encode<T = any>(array: T[], option?: { seed: number }): T[]
