@@ -6,7 +6,6 @@ const TO_RADIAN = Math.PI / 180
 const TO_DEGREE = 180 / Math.PI
 
 const ONE = new Vector3(1, 1, 1)
-const vector3 = new Vector3()
 const euler = new Euler()
 
 export class VertigoCamera extends PerspectiveCamera {
@@ -30,6 +29,8 @@ export class VertigoCamera extends PerspectiveCamera {
   set distance(distance) { this.setVertigo({ distance }) }
 
   #translation = new Vector3()
+
+  focalPoint = new Vector3()
 
   setRotation({
     useDegree,
@@ -143,8 +144,8 @@ export class VertigoCamera extends PerspectiveCamera {
   }
 
   updateMatrix() {
-    vector3.addVectors(this.position, this.#translation)
-    this.matrix.compose(vector3, this.quaternion, ONE)
+    this.focalPoint.addVectors(this.position, this.#translation)
+    this.matrix.compose(this.focalPoint, this.quaternion, ONE)
     this.matrixWorld.copy(this.matrix)
     this.matrixWorldInverse.copy(this.matrix).invert()
   }
