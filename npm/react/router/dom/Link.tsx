@@ -1,5 +1,5 @@
 import React from 'react'
-import { setUrl } from '../../../../router/location'
+import { setPathname } from '../../../../router/location'
 import { RouterContext } from '../Router'
 
 export const Link = React.forwardRef<HTMLAnchorElement, {
@@ -14,9 +14,9 @@ export const Link = React.forwardRef<HTMLAnchorElement, {
     e.preventDefault()
     if (baseUrl && to.startsWith('/')) {
       // baseUrl injection
-      setUrl(`/${baseUrl}${to}`)
+      setPathname(`/${baseUrl}${to}`)
     } else {
-      setUrl(to)
+      setPathname(to)
     }
   }
   return (

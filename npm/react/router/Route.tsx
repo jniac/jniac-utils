@@ -42,7 +42,7 @@ export const Route: React.FC<RouteProps> = ({
   children,
 }) => {
 
-  const { baseUrl } = React.useContext(RouterContext)
+  const { getPathname } = React.useContext(RouterContext)
 
   const innerState = React.useMemo(() => ({
     visible: new ObservableBoolean(false),
@@ -100,12 +100,6 @@ export const Route: React.FC<RouteProps> = ({
       }
     })
 
-    const baseUrlRe = new RegExp(baseUrl ? `^/${baseUrl}` : '') // remove baseUrl from the current pathname
-    const getPathname = () => {
-      let str = location.pathname.value.replace(baseUrlRe, '')
-      str = strict ? str : str.replace(/\/$/, '')
-      return str || '/' // pathname must at least contain '/'
-    }
     const isVisible = () => {
       const pathname = getPathname()
       const exclude = excludePath && compareString(pathname, excludePath, exact)
