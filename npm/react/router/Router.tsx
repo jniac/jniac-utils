@@ -17,7 +17,7 @@ export const Router: React.FC<{
   const context = {
     baseUrl,
     getPathname: () => {
-      return getPathname().replace(baseUrl, '')
+      return getPathname().replace(baseUrl, '') || '/'
     },
   }
 
