@@ -1,5 +1,12 @@
 export const glsl_utils = /* glsl */`
 
+  const vec3 black = vec3(0.0);
+  const vec3 white = vec3(1.0);
+
+  vec2 scaleAround(vec2 p, vec2 c, float s) {
+    return c + (p - c) / s;
+  }
+
   vec2 rotate(vec2 p, float a) {
     float c = cos(a);
     float s = sin(a);
