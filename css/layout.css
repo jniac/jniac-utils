@@ -42,14 +42,14 @@
   flex-direction: row;
 }
 /* https://developer.mozilla.org/en-US/docs/Web/CSS/Attribute_selectors */
-.flex[class^="gutter"].row > * + * {
+.flex[class*="gutter"].row > * + * {
   margin-left: var(--gutter);
 }
 
 .flex.column {
   flex-direction: column;
 }
-.flex[class^="gutter"].column > * + * {
+.flex.column[class*="gutter"] > * + * {
   margin-top: var(--gutter);
 }
 
