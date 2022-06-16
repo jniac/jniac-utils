@@ -77,6 +77,11 @@ body {
   pointer-events: all;
 }
 
+
+
+
+
+
 .button {
   cursor: pointer;
   user-select: none;
@@ -88,21 +93,5 @@ body {
 .button.disabled {
   pointer-events: none;
   opacity: .5;
-}
-
-.button.button-link {
-  appearance: none;
-  padding: 0;
-  border: none;
-  outline: none;
-  font-family: inherit;
-  font: inherit;
-  background-color: transparent;
-}
-.button.button-link.button.disabled {
-  font-style: italic;
-}
-.button.button-link:hover {
-  text-decoration: underline;
 }
 

@@ -1,0 +1,44 @@
+
+input {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background-color: transparent;
+  border: solid 1px currentColor;
+  border-radius: 2px;
+  padding: .3em .6em;
+}
+input::placeholder {
+  color: inherit;
+  opacity: .5;
+  font-style: italic;
+}
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  background-color: transparent;
+  border: solid 1px currentColor;
+  border-radius: 2px;
+  padding: .3em .6em;
+  cursor: pointer;
+  user-select: none;
+}
+button.button-link {
+  appearance: none;
+  padding: 0;
+  border: none;
+  outline: none;
+  font-family: inherit;
+  font: inherit;
+  color: inherit;
+  background-color: transparent;
+}
+button.button-link.disabled {
+  font-style: italic;
+}
+button.button-link:hover {
+  text-decoration: underline;
+}
+
