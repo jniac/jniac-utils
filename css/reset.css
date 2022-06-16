@@ -1,19 +1,5 @@
 
-input {
-  font-family: inherit;
-  font-size: inherit;
-  color: inherit;
-  background-color: transparent;
-  border: solid 1px currentColor;
-  border-radius: 2px;
-  padding: .3em .6em;
-}
-input::placeholder {
-  color: inherit;
-  opacity: .5;
-  font-style: italic;
-}
-
+input,
 button {
   font-family: inherit;
   font-size: inherit;
@@ -22,19 +8,42 @@ button {
   border: solid 1px currentColor;
   border-radius: 2px;
   padding: .3em .6em;
+}
+
+input.border-bottom,
+button.border-bottom {
+  border-top: unset;
+  border-left: unset;
+  border-right: unset;
+  border-radius: 0;
+}
+
+input::placeholder {
+  color: inherit;
+  opacity: .5;
+  font-style: italic;
+}
+
+button {
   cursor: pointer;
   user-select: none;
 }
+
+button.disabled {
+  font-style: italic;
+}
+
 button.button-link {
   appearance: none;
   padding: 0;
   border: none;
   outline: none;
 }
-button.button-link.disabled {
-  font-style: italic;
-}
 button.button-link:hover {
   text-decoration: underline;
+}
+
+button.button-blank {
+  border: unset;
 }
 
