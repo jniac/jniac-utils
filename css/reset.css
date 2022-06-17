@@ -34,24 +34,24 @@ button {
   user-select: none;
 }
 
-button.disabled {
+button:not(.blank).disabled {
   font-style: italic;
   opacity: .5;
   pointer-events: none;
 }
 
-button.link {
+button:not(.blank).link {
   appearance: none;
   padding: 0;
   border: none;
   outline: none;
 }
-button.link:focus,
-button.link:hover {
+button:not(.blank).link:focus,
+button:not(.blank).link:hover {
   text-decoration: underline;
 }
 
-button.button-blank {
+button.blank {
   border: unset;
 }
 
