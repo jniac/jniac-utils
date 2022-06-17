@@ -36,8 +36,7 @@ const echoSpawn = (...spawnArgs) => new Promise((resolve, reject) => {
 const main = async () => {
   if (os.type() === 'Darwin') {
     // Ok you're right, it's a weird option, it allows me to run a Google Chrome instance dedicated to development.
-    const userDir = await echoSpawn('echo', [`~`])
-    if ((await trySpawn('/Applications/Google Chrome Yahaaa!.app/Contents/MacOS/Google Chrome', [`--user-data-dir=${userDir}/chrome-yahaa`, url])).ok) {
+    if ((await trySpawn('/Applications/Google Chrome Yahaaa!.app/Contents/MacOS/Google Chrome', [`--user-data-dir=${os.homedir()}/chrome-yahaa`, url])).ok) {
       return
     }
     if ((await trySpawn('/Applications/Google Chrome Dev.app/Contents/MacOS/Google Chrome Dev', [url])).ok) {
