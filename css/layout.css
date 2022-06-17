@@ -72,6 +72,10 @@
   --gutter: 16px;
 }
 
+.flex > .stretch {
+  align-self: stretch;
+}
+
 .flex > .expand {
   flex: 1;
   align-self: stretch;
