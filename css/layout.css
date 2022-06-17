@@ -81,6 +81,10 @@
   align-self: stretch;
 }
 
+.flex.expand-content > * {
+  flex: 1;
+}
+
 .flex > .space-1em {
   flex: 0 0 1em;
   align-self: stretch;
