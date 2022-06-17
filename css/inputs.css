@@ -46,9 +46,12 @@ button:not(.blank).link {
   border: none;
   outline: none;
 }
-button:not(.blank).link:focus,
-button:not(.blank).link:hover {
-  text-decoration: underline;
+
+@media (hover) {
+  button:not(.blank).link:focus,
+  button:not(.blank).link:hover {
+    text-decoration: underline;
+  }
 }
 
 button.blank {
