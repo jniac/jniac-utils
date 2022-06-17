@@ -21,18 +21,6 @@ const trySpawn = (...spawnArgs) => new Promise(resolve => {
   child.on('error', () => resolve({ ok: false, child }))
 })
 
-const echoSpawn = (...spawnArgs) => new Promise((resolve, reject) => {
-  const child = spawn(...spawnArgs)
-  const result = []
-  child.stdout.on('data', data => {
-    result.push(data)
-  })
-  child.on('close', () => {
-      resolve(result.join(''))
-  })
-  child.on('error', error => reject(error))
-})
-
 const main = async () => {
   if (os.type() === 'Darwin') {
     // Ok you're right, it's a weird option, it allows me to run a Google Chrome instance dedicated to development.
