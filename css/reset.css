@@ -35,13 +35,13 @@ button.disabled {
   pointer-events: none;
 }
 
-button.button-link {
+button.link {
   appearance: none;
   padding: 0;
   border: none;
   outline: none;
 }
-button.button-link:hover {
+button.link:hover {
   text-decoration: underline;
 }
 
