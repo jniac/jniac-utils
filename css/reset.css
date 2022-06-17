@@ -24,6 +24,11 @@ input::placeholder {
   font-style: italic;
 }
 
+input:focus,
+button:focus {
+  outline: none;
+}
+
 button {
   cursor: pointer;
   user-select: none;
@@ -41,6 +46,7 @@ button.link {
   border: none;
   outline: none;
 }
+button.link:focus,
 button.link:hover {
   text-decoration: underline;
 }
