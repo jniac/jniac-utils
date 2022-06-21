@@ -28,6 +28,12 @@
 .padding-32 {
   padding: 32px;
 }
+.padding-64 {
+  padding: 64px;
+}
+.padding-96 {
+  padding: 96px;
+}
 
 .text-center {
   text-align: center;
