@@ -44,3 +44,9 @@ export function degree(x: any): any {
     number: x => x * 180 / Math.PI,
   }, { clone: true })
 }
+
+export function waitNextFrame(): Promise<void>
+export function waitNextFrame<T>(value: T): Promise<T>
+export function waitNextFrame(value?: any) {
+  return new Promise<any>(resolve => requestAnimationFrame(() => resolve(value)))
+}

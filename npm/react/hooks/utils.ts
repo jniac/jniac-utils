@@ -193,13 +193,14 @@ export function useAnimationFrame(callback: (ms: number) => void) {
 }
 
 export const usePromise = <T>(
-  getPromise: () => Promise<T>, 
+  getPromise: Promise<T> | (() => Promise<T>), 
   deps: React.DependencyList = [],
 ) => {
   const [data, setData] = React.useState<T | null>(null)
   React.useEffect(() => {
     let mounted = true
-    getPromise().then(data => {
+    const promise = typeof getPromise === 'function' ? getPromise() : getPromise
+    promise.then(data => {
       if (mounted) {
         setData(data)
       }
