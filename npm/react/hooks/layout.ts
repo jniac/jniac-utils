@@ -222,9 +222,9 @@ export function useIntersectionBounds(
         resolveBounds(element2, bounds2, boundsType)
         Rectangle.intersection(bounds1, bounds2, intersection)
         if (intersection.equals(intersectionOld) === false) {
-          const area = intersection.area()
-          const areaRatio1 = area / bounds1.area()
-          const areaRatio2 = area / bounds2.area()
+          const area = intersection.area
+          const areaRatio1 = area / bounds1.area
+          const areaRatio2 = area / bounds2.area
           callback(intersection, { element1, element2, bounds1, bounds2, areaRatio1, areaRatio2 })
           intersectionOld.copy(intersection)
         }

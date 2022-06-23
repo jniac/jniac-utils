@@ -373,6 +373,8 @@ export class Rectangle {
   set yMax(value) { this.setYMax(value) }
   get centerX() { return this.x + this.width / 2 }
   get centerY() { return this.y + this.height / 2 }
+  get area() { return this.width * this.height }
+  get aspect() { return this.width / this.height }
 
   equals(other: IRectangle) {
     return equals(this, other)
@@ -480,10 +482,6 @@ export class Rectangle {
     receiver?: T
   }) {
     return signedGreatestDistance(this, ensure(other), receiver)
-  }
-
-  area() {
-    return this.width * this.height
   }
 
   topLeft<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }) {
