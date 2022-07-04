@@ -41,11 +41,20 @@ export const computeOffsetBounds = (element: HTMLElement, receiver: Rectangle = 
 
 
 
+
+/**
+ * Returns true if the first argument is a parent/ancestor of the second argument.
+ * Arguments may be null, undefined or valid Node (DOM) reference.
+ * Arguments are typed any for convenience with react dom event (target).
+ */
 export const isParentOf = (parent: any, child: any, {
   includeSelf = false,
 } = {}) => {
-  if (!parent) {
+  if (!parent || !child) {
     return false
+  }
+  if (parent instanceof Node === false || child instanceof Node === false) {
+    throw new Error(`Invalid args!`)
   }
   if (includeSelf === false) {
     child = child.parentElement
