@@ -1,17 +1,30 @@
 
 input,
-button {
+button,
+.button {
   font-family: inherit;
   font-size: inherit;
+  letter-spacing: inherit;
   color: inherit;
   background-color: transparent;
+}
+
+input,
+button:not(.blank),
+.button:not(.blank) {
   border: solid 1px currentColor;
   border-radius: 2px;
   padding: .3em .6em;
 }
 
+button.blank,
+.button.blank {
+  padding: 0;
+}
+
 input.border-bottom,
-button.border-bottom {
+button.border-bottom,
+.button.border-bottom {
   border-top: unset;
   border-left: unset;
   border-right: unset;
@@ -25,22 +38,26 @@ input::placeholder {
 }
 
 input:focus,
-button:focus {
+button:focus,
+.button:focus {
   outline: none;
 }
 
-button {
+button,
+.button {
   cursor: pointer;
   user-select: none;
 }
 
-button:not(.blank).disabled {
+button:not(.blank).disabled,
+.button:not(.blank).disabled {
   font-style: italic;
   opacity: .5;
   pointer-events: none;
 }
 
-button:not(.blank).link {
+button:not(.blank).link,
+.button:not(.blank).link {
   appearance: none;
   padding: 0;
   border: none;
@@ -49,12 +66,15 @@ button:not(.blank).link {
 
 @media (hover) {
   button:not(.blank).link:focus,
-  button:not(.blank).link:hover {
+  .button:not(.blank).link:focus,
+  button:not(.blank).link:hover,
+  .button:not(.blank).link:hover {
     text-decoration: underline;
   }
 }
 
-button.blank {
+button.blank,
+.button.blank {
   border: unset;
 }
 
