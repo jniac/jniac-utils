@@ -2,6 +2,7 @@
 type Code = 
 | 'ArrowDown' | 'ArrowUp' | 'ArrowLeft' | 'ArrowRight'
 | 'Space' 
+| 'Escape' | 'Enter'
 | 'Meta' | 'Control' | 'Shift'
 | 'MetaLeft' | 'ControlLeft' | 'ShiftLeft'
 | 'MetaRight' | 'ControlRight' | 'ShiftRight'
