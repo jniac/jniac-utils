@@ -76,6 +76,10 @@
   align-items: center;
 }
 
+.flex.align-stretch {
+  align-items: stretch;
+}
+
 .flex.gutter-4 > * {
   --gutter: 4px;
 }
@@ -84,6 +88,15 @@
 }
 .flex.gutter-16 > * {
   --gutter: 16px;
+}
+.flex.gutter-32 > * {
+  --gutter: 32px;
+}
+.flex.gutter-48 > * {
+  --gutter: 48px;
+}
+.flex.gutter-64 > * {
+  --gutter: 64px;
 }
 
 .flex > .stretch {
