@@ -8,9 +8,13 @@ qu'un tree-shaker saura dégraisser.
 ## Installation
 Par exemple :
 ```bash
-cd src
-git submodule add https://github.com/jniac/some-utils.git
-cd ..
+git submodule add https://github.com/jniac/some-utils.git src/some-utils
+
+# setup the tsconfig
+src/some-utils/scripts/misc/install-some-utils.mjs
+
+# clean react-app from test
+src/some-utils/scripts/misc/cra-clean-app.mjs
 ```
 
 ## tsconfig
