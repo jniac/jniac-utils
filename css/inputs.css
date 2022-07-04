@@ -10,8 +10,8 @@ button,
 }
 
 input,
-button:not(.blank),
-.button:not(.blank) {
+button.border,
+.button.border {
   border: solid 1px currentColor;
   border-radius: 2px;
   padding: .3em .6em;
@@ -49,15 +49,15 @@ button,
   user-select: none;
 }
 
-button:not(.blank).disabled,
-.button:not(.blank).disabled {
+button.border.disabled,
+.button.border.disabled {
   font-style: italic;
   opacity: .5;
   pointer-events: none;
 }
 
-button:not(.blank).link,
-.button:not(.blank).link {
+button.border.link,
+.button.border.link {
   appearance: none;
   padding: 0;
   border: none;
@@ -65,10 +65,10 @@ button:not(.blank).link,
 }
 
 @media (hover) {
-  button:not(.blank).link:focus,
-  .button:not(.blank).link:focus,
-  button:not(.blank).link:hover,
-  .button:not(.blank).link:hover {
+  button.border.link:focus,
+  .button.border.link:focus,
+  button.border.link:hover,
+  .button.border.link:hover {
     text-decoration: underline;
   }
 }
