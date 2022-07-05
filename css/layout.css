@@ -134,6 +134,21 @@
   align-self: stretch;
 }
 
+.flex > .space-48 {
+  flex: 0 0 48px;
+  align-self: stretch;
+}
+
+.flex > .space-64 {
+  flex: 0 0 64px;
+  align-self: stretch;
+}
+
+.flex > .space-96 {
+  flex: 0 0 96px;
+  align-self: stretch;
+}
+
 
 
 .flex > .space-1em {
