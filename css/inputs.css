@@ -56,8 +56,8 @@ button.border.disabled,
   pointer-events: none;
 }
 
-button.border.link,
-.button.border.link {
+button.link,
+.button.link {
   appearance: none;
   padding: 0;
   border: none;
@@ -65,10 +65,10 @@ button.border.link,
 }
 
 @media (hover) {
-  button.border.link:focus,
-  .button.border.link:focus,
-  button.border.link:hover,
-  .button.border.link:hover {
+  button.link:focus,
+  .button.link:focus,
+  button.link:hover,
+  .button.link:hover {
     text-decoration: underline;
   }
 }
