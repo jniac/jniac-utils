@@ -147,7 +147,9 @@ export function useObservable<T, O extends Observable<any> = Observable<T>, U = 
   const forceUpdate = React.useMemo(() => {
     return () => {
       count.current += 1
-      setCount(count.current)
+      setTimeout(() => {
+        setCount(count.current)
+      }, 0)
     }
   }, [])
   React.useEffect(() => observable.onChange(forceUpdate).destroy, [forceUpdate, observable])
