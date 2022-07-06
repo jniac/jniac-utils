@@ -17,12 +17,20 @@ type TapInfo = {
 }
 
 export type Options = Partial<{
+
+  /** Should we use capture phase? */
+  capture: boolean
+  /** Are passive listeners wanted? */
+  passive: boolean
+
   /** **`down`** callback. */
   onDown: (event: PointerEvent, downEvent: PointerEvent) => void
   /** Hook that allows to ignore some down event (cancelling at the same time all other events that may follow otherwise (tap, drag etc.)). */
   onDownIgnore: (event: PointerEvent) => boolean
   /** **`up`** callback. */
   onUp: (event: PointerEvent, downEvent: PointerEvent) => void
+  /** **`move when down`** callback. */
+  onMove: (event: PointerEvent) => void
   /** **`move when down`** callback. */
   onMoveDown: (event: PointerEvent, downEvent: PointerEvent | null) => void
   /** **`move when over`** callback. */
@@ -106,9 +114,13 @@ const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: numb
 export const handlePointer = (element: HTMLElement, options: Options) => {
 
   const {
+    capture = false,
+    passive = true,
+
     onDown,
     onDownIgnore, 
-    onUp, 
+    onUp,
+    onMove,
     onMoveDown,
     onMoveOver,
     onOver, 
@@ -213,12 +225,12 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
   }
 
   const onPointerEnter = (event: PointerEvent) => {
-    window.addEventListener('pointermove', onPointerMoveOver)
+    window.addEventListener('pointermove', onPointerMoveOver, { capture, passive })
     onEnter?.(event)
   }
 
   const onPointerLeave = (event: PointerEvent) => {
-    window.removeEventListener('pointermove', onPointerMoveOver)
+    window.removeEventListener('pointermove', onPointerMoveOver, { capture })
     onLeave?.(event)
   }
 
@@ -226,8 +238,8 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     if (onDownIgnore?.(event)) {
       return
     }
-    window.addEventListener('pointermove', onPointerMoveDown)
-    window.addEventListener('pointerup', onPointerUp)
+    window.addEventListener('pointermove', onPointerMoveDown, { capture, passive })
+    window.addEventListener('pointerup', onPointerUp, { capture, passive })
     isDown = true
     dragStart = false
     downEvent = event
@@ -238,9 +250,13 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     onDownFrame()
   }
 
+  const onPointerMove = (event: PointerEvent) => {
+    onMove?.(event)
+  }
+
   const onPointerUp = (event: PointerEvent) => {
-    window.removeEventListener('pointermove', onPointerMoveDown)
-    window.removeEventListener('pointerup', onPointerUp)
+    window.removeEventListener('pointermove', onPointerMoveDown, { capture })
+    window.removeEventListener('pointerup', onPointerUp, { capture })
     window.cancelAnimationFrame(onDownFrameId)
     onUp?.(event, downEvent!)
     if (dragStart) {
@@ -312,21 +328,23 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     dragStart = false
   }
 
-  element.addEventListener('pointerover', onPointerOver)
-  element.addEventListener('pointerout', onPointerOut)
-  element.addEventListener('pointerenter', onPointerEnter)
-  element.addEventListener('pointerleave', onPointerLeave)
-  element.addEventListener('pointerdown', onPointerDown)
+  element.addEventListener('pointerover', onPointerOver, { capture, passive })
+  element.addEventListener('pointerout', onPointerOut, { capture, passive })
+  element.addEventListener('pointerenter', onPointerEnter, { capture, passive })
+  element.addEventListener('pointerleave', onPointerLeave, { capture, passive })
+  element.addEventListener('pointerdown', onPointerDown, { capture, passive })
+  element.addEventListener('pointermove', onPointerMove, { capture, passive })
 
   const destroy = () => {
-    element.removeEventListener('pointerover', onPointerOver)
-    element.removeEventListener('pointerout', onPointerOut)
-    element.removeEventListener('pointerenter', onPointerEnter)
-    element.removeEventListener('pointerleave', onPointerLeave)
-    element.removeEventListener('pointerdown', onPointerDown)
-    window.removeEventListener('pointermove', onPointerMoveOver)
-    window.removeEventListener('pointermove', onPointerMoveDown)
-    window.removeEventListener('pointerup', onPointerUp)
+    element.removeEventListener('pointerover', onPointerOver, { capture })
+    element.removeEventListener('pointerout', onPointerOut, { capture })
+    element.removeEventListener('pointerenter', onPointerEnter, { capture })
+    element.removeEventListener('pointerleave', onPointerLeave, { capture })
+    element.removeEventListener('pointerdown', onPointerDown, { capture })
+    element.removeEventListener('pointermove', onPointerMove, { capture })
+    window.removeEventListener('pointermove', onPointerMoveOver, { capture })
+    window.removeEventListener('pointermove', onPointerMoveDown, { capture })
+    window.removeEventListener('pointerup', onPointerUp, { capture })
     window.cancelAnimationFrame(onDownFrameId)
     window.clearTimeout(tapState.timeoutId)
   }
