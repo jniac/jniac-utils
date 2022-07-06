@@ -44,7 +44,7 @@ export const computeOffsetBounds = (element: HTMLElement, receiver: Rectangle = 
 
 /**
  * Returns true if the first argument is a parent/ancestor of the second argument.
- * Arguments may be null, undefined or valid Node (DOM) reference.
+ * Arguments may be null, undefined, string (querySelector!) or valid Node (DOM) reference.
  * Arguments are typed any for convenience with react dom event (target).
  */
 export const isParentOf = (parent: any, child: any, {
@@ -52,6 +52,12 @@ export const isParentOf = (parent: any, child: any, {
 } = {}) => {
   if (!parent || !child) {
     return false
+  }
+  if (typeof parent === 'string') {
+    parent = document.querySelector(parent)
+  }
+  if (typeof child === 'string') {
+    child = document.querySelector(child)
   }
   if (parent instanceof Node === false || child instanceof Node === false) {
     throw new Error(`Invalid args!`)
