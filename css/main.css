@@ -96,6 +96,7 @@ body {
 }
 .button.disabled {
   pointer-events: none;
-  opacity: .5;
+  /* no opacity plz, this is too much style specific */
+  /* opacity: .5; */
 }
 
