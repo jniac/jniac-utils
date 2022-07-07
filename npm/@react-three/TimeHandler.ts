@@ -1,8 +1,21 @@
 // @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
-import React from 'react'
+import { useEffect } from 'react'
 // @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
 import { useThree } from '@react-three/fiber'
 import { inout3, inverseLerp } from '../../math'
+
+
+
+const requestContinuousAnimationSet = new Set<number>()
+let requestContinuousAnimationCount = 0
+export const requestContinuousAnimation = () => {
+  const id = requestContinuousAnimationCount++
+  requestContinuousAnimationSet.add(id)
+  return id
+}
+export const cancelContinuousAnimation = (id: number) => {
+  return requestContinuousAnimationSet.delete(id)
+}
 
 class TimeHandler {
   #frame = 0
@@ -37,16 +50,18 @@ class TimeHandler {
 export const appTime = new TimeHandler()
 export const time = new TimeHandler()
 
-export const AnimationFrame: React.FC<{
+type AnimationFrameProps = {
   timeBeforeFade?: number
   fadeDuration?: number
-}> = ({
+}
+
+export const AnimationFrame = ({
   timeBeforeFade = 30,
   fadeDuration = 1,
-}) => {
+}: AnimationFrameProps) => {
   const { invalidate } = useThree()
 
-  React.useEffect(() => {
+  useEffect(() => {
 
     let lastRenderRequestTime = 0
 
@@ -56,6 +71,10 @@ export const AnimationFrame: React.FC<{
       const deltaTime = (ms - msOld) / 1e3
       msOld = ms
       appTime.update(deltaTime)
+
+      if (requestContinuousAnimationSet.size > 0) {
+        lastRenderRequestTime = appTime.time
+      }
 
       const elapsed = appTime.time - lastRenderRequestTime
       const timeScale = inout3(1 - inverseLerp(timeBeforeFade, timeBeforeFade + fadeDuration, elapsed))
@@ -76,11 +95,7 @@ export const AnimationFrame: React.FC<{
     animationFrameId = window.requestAnimationFrame(firstFrame)
 
     const onInteraction = () => lastRenderRequestTime = appTime.time
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (/key/.test(event.code)) {
-        onInteraction()
-      }
-    }
+    
     window.addEventListener('pointermove', onInteraction, { capture: true })
     window.addEventListener('touchstart', onInteraction, { capture: true })
     window.addEventListener('touchmove', onInteraction, { capture: true })
@@ -89,7 +104,7 @@ export const AnimationFrame: React.FC<{
     window.addEventListener('pointerup', onInteraction, { capture: true })
     window.addEventListener('popstate', onInteraction, { capture: true })
     window.addEventListener('wheel', onInteraction, { capture: true })
-    window.addEventListener('keydown', onKeyDown, { capture: true })
+    window.addEventListener('keydown', onInteraction, { capture: true })
     
     return () => {
       window.cancelAnimationFrame(animationFrameId)
@@ -101,7 +116,7 @@ export const AnimationFrame: React.FC<{
       window.removeEventListener('pointerup', onInteraction, { capture: true })
       window.removeEventListener('popstate', onInteraction, { capture: true })
       window.removeEventListener('wheel', onInteraction, { capture: true })
-      window.removeEventListener('keydown', onKeyDown, { capture: true })
+      window.removeEventListener('keydown', onInteraction, { capture: true })
     }
     
   // eslint-disable-next-line react-hooks/exhaustive-deps
