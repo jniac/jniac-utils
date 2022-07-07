@@ -43,6 +43,8 @@ export type Options = Partial<{
   onEnter: (event: PointerEvent) => void
   /** **`leave`** callback. */
   onLeave: (event: PointerEvent) => void
+  /** Context menu? The right click! */
+  onContextMenu: (event: PointerEvent) => void
 
 
   // TAP
@@ -127,6 +129,7 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     onOut,
     onEnter,
     onLeave,
+    onContextMenu,
 
     // TAP
     tapMaxDuration = .3,
@@ -328,13 +331,18 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     dragStart = false
   }
 
+  const _onContextMenu = (event: any) => {
+    onContextMenu?.(event)
+  }
+
   element.addEventListener('pointerover', onPointerOver, { capture, passive })
   element.addEventListener('pointerout', onPointerOut, { capture, passive })
   element.addEventListener('pointerenter', onPointerEnter, { capture, passive })
   element.addEventListener('pointerleave', onPointerLeave, { capture, passive })
   element.addEventListener('pointerdown', onPointerDown, { capture, passive })
   element.addEventListener('pointermove', onPointerMove, { capture, passive })
-
+  element.addEventListener('contextmenu', _onContextMenu, { capture, passive })
+  
   const destroy = () => {
     element.removeEventListener('pointerover', onPointerOver, { capture })
     element.removeEventListener('pointerout', onPointerOut, { capture })
@@ -342,6 +350,7 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     element.removeEventListener('pointerleave', onPointerLeave, { capture })
     element.removeEventListener('pointerdown', onPointerDown, { capture })
     element.removeEventListener('pointermove', onPointerMove, { capture })
+    element.removeEventListener('contextmenu', _onContextMenu, { capture })
     window.removeEventListener('pointermove', onPointerMoveOver, { capture })
     window.removeEventListener('pointermove', onPointerMoveDown, { capture })
     window.removeEventListener('pointerup', onPointerUp, { capture })
