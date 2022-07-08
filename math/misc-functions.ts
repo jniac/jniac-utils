@@ -6,6 +6,15 @@ export const sin01 = (x: number) => Math.sin(x * Math.PI * 2)
 export const radian = (degree: number) => degree * Math.PI / 180
 export const degree = (radian: number) => radian / Math.PI * 180
 
+export const signed = (fn: (x: number) => number, x: number) => x < 0 ? -fn(-x) : fn(x)
+
+// https://www.desmos.com/calculator/zq9kbt3xww?lang=fr
+export const limitE = (x: number, max: number) => {
+  x /= max
+  const e = Math.exp(2 * x)
+  return max * (2 * e / (e + 1) - 1)
+}
+
 // https://www.desmos.com/calculator/jrkunm5kdn?lang=fr
 export const lateCosinus = (x: number, t = 0.5) => Math.cos(((1 + t) * x - t) * Math.PI / 2)
 
