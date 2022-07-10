@@ -64,7 +64,7 @@ export const AnimationFrame = ({
   useEffect(() => {
 
     let lastRenderRequestTime = 0
-    let innerContinuousRequestCount = 0
+    const innerContinuousRequestSet = new Set<string>()
 
     let animationFrameId = -1, msOld = -1
     const animationFrame = (ms: number) => {
@@ -73,7 +73,8 @@ export const AnimationFrame = ({
       msOld = ms
       appTime.update(deltaTime)
 
-      if (requestContinuousAnimationSet.size > 0 || innerContinuousRequestCount > 0) {
+      // Prevent auto pause if any continuous request
+      if (requestContinuousAnimationSet.size > 0 || innerContinuousRequestSet.size > 0) {
         lastRenderRequestTime = appTime.time
       }
 
@@ -96,8 +97,6 @@ export const AnimationFrame = ({
     animationFrameId = window.requestAnimationFrame(firstFrame)
 
     const onInteraction = () => lastRenderRequestTime = appTime.time
-    const requestContinuousRendering = () => innerContinuousRequestCount++
-    const releaseContinuousRendering = () => innerContinuousRequestCount--
     
     window.addEventListener('pointermove', onInteraction, { capture: true })
     window.addEventListener('touchstart', onInteraction, { capture: true })
@@ -110,12 +109,14 @@ export const AnimationFrame = ({
     window.addEventListener('keydown', onInteraction, { capture: true })
 
     // continuous request / release
-    window.addEventListener('keypress', requestContinuousRendering, { capture: true })
-    window.addEventListener('keyup', releaseContinuousRendering, { capture: true })
-    window.addEventListener('pointerdown', requestContinuousRendering, { capture: true })
-    window.addEventListener('pointerup', releaseContinuousRendering, { capture: true })
-    window.addEventListener('touchstart', requestContinuousRendering, { capture: true })
-    window.addEventListener('touchend', releaseContinuousRendering, { capture: true })
+    const onKeyDown = (event: KeyboardEvent) => innerContinuousRequestSet.add(event.code)
+    const onKeyUp = (event: KeyboardEvent) => innerContinuousRequestSet.delete(event.code)
+    const onPointerDown = (event: PointerEvent) => innerContinuousRequestSet.add(`${event.pointerType}-${event.pointerId}`)
+    const onPointerUp = (event: PointerEvent) => innerContinuousRequestSet.delete(`${event.pointerType}-${event.pointerId}`)
+    window.addEventListener('keydown', onKeyDown, { capture: true })
+    window.addEventListener('keyup', onKeyUp, { capture: true })
+    window.addEventListener('pointerdown', onPointerDown, { capture: true })
+    window.addEventListener('pointerup', onPointerUp, { capture: true })
     
     return () => {
       window.cancelAnimationFrame(animationFrameId)
@@ -130,13 +131,11 @@ export const AnimationFrame = ({
       window.removeEventListener('keydown', onInteraction, { capture: true })
 
       // continuous request / release
-      window.removeEventListener('keypress', requestContinuousRendering, { capture: true })
-      window.removeEventListener('keyup', releaseContinuousRendering, { capture: true })
-      window.removeEventListener('pointerdown', requestContinuousRendering, { capture: true })
-      window.removeEventListener('pointerup', releaseContinuousRendering, { capture: true })
-      window.removeEventListener('touchstart', requestContinuousRendering, { capture: true })
-      window.removeEventListener('touchend', releaseContinuousRendering, { capture: true })
-    }
+      window.removeEventListener('keypress', onKeyDown, { capture: true })
+      window.removeEventListener('keyup', onKeyUp, { capture: true })
+      window.removeEventListener('pointerdown', onPointerDown, { capture: true })
+      window.removeEventListener('pointerup', onPointerUp, { capture: true })
+      }
     
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [timeBeforeFade, fadeDuration])
