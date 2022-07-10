@@ -64,6 +64,7 @@ export const AnimationFrame = ({
   useEffect(() => {
 
     let lastRenderRequestTime = 0
+    let innerContinuousRequestCount = 0
 
     let animationFrameId = -1, msOld = -1
     const animationFrame = (ms: number) => {
@@ -72,7 +73,7 @@ export const AnimationFrame = ({
       msOld = ms
       appTime.update(deltaTime)
 
-      if (requestContinuousAnimationSet.size > 0) {
+      if (requestContinuousAnimationSet.size > 0 || innerContinuousRequestCount > 0) {
         lastRenderRequestTime = appTime.time
       }
 
@@ -95,6 +96,8 @@ export const AnimationFrame = ({
     animationFrameId = window.requestAnimationFrame(firstFrame)
 
     const onInteraction = () => lastRenderRequestTime = appTime.time
+    const requestContinuousRendering = () => innerContinuousRequestCount++
+    const releaseContinuousRendering = () => innerContinuousRequestCount--
     
     window.addEventListener('pointermove', onInteraction, { capture: true })
     window.addEventListener('touchstart', onInteraction, { capture: true })
@@ -105,6 +108,14 @@ export const AnimationFrame = ({
     window.addEventListener('popstate', onInteraction, { capture: true })
     window.addEventListener('wheel', onInteraction, { capture: true })
     window.addEventListener('keydown', onInteraction, { capture: true })
+
+    // continuous request / release
+    window.addEventListener('keypress', requestContinuousRendering, { capture: true })
+    window.addEventListener('keyup', releaseContinuousRendering, { capture: true })
+    window.addEventListener('pointerdown', requestContinuousRendering, { capture: true })
+    window.addEventListener('pointerup', releaseContinuousRendering, { capture: true })
+    window.addEventListener('touchstart', requestContinuousRendering, { capture: true })
+    window.addEventListener('touchend', releaseContinuousRendering, { capture: true })
     
     return () => {
       window.cancelAnimationFrame(animationFrameId)
@@ -117,6 +128,14 @@ export const AnimationFrame = ({
       window.removeEventListener('popstate', onInteraction, { capture: true })
       window.removeEventListener('wheel', onInteraction, { capture: true })
       window.removeEventListener('keydown', onInteraction, { capture: true })
+
+      // continuous request / release
+      window.removeEventListener('keypress', requestContinuousRendering, { capture: true })
+      window.removeEventListener('keyup', releaseContinuousRendering, { capture: true })
+      window.removeEventListener('pointerdown', requestContinuousRendering, { capture: true })
+      window.removeEventListener('pointerup', releaseContinuousRendering, { capture: true })
+      window.removeEventListener('touchstart', requestContinuousRendering, { capture: true })
+      window.removeEventListener('touchend', releaseContinuousRendering, { capture: true })
     }
     
   // eslint-disable-next-line react-hooks/exhaustive-deps
