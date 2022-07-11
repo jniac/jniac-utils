@@ -31,6 +31,10 @@ export const glsl_utils = /* glsl */`
     return (x - a) / (b - a);
   }
 
+  float inverseLerpClamped(float a, float b, float x) {
+    return clamp01((x - a) / (b - a));
+  }
+
   float sin01(float x) {
     return 0.5 + 0.5 * sin(x * 6.283185307179586);
   }
