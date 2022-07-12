@@ -1,3 +1,4 @@
+export * from './color-adjust'
 export * from './easings'
 export * from './iq-noise'
 export * from './sdf-2d'
