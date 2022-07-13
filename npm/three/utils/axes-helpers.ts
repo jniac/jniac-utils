@@ -1,5 +1,6 @@
-import { BufferAttribute, BufferGeometry, Color, ConeGeometry, CylinderGeometry, Euler, Matrix4, Quaternion, RawShaderMaterial, Vector3 } from 'three'
+import { BufferAttribute, BufferGeometry, Color, ConeGeometry, CylinderGeometry, RawShaderMaterial } from 'three'
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils'
+import { getGeometryTransformer } from './transform-geometry'
 
 /**
  * Create axes geometry: 3 arrow X, Y, Z with vertex colors.
@@ -11,41 +12,7 @@ export const createAxesGeometry = ({
   radius = .005,
 } = {}) => {
 
-  const { transform } = (() => {
-
-    // internal, intermediate values
-    const e = new Euler()
-    const p = new Vector3()
-    const r = new Quaternion()
-    const s = new Vector3(1, 1, 1)
-    const m = new Matrix4()
-
-    const setMatrix = (x: number, y: number, z: number, rx: number, ry: number, rz: number) => {
-      r.setFromEuler(e.set(rx, ry, rz))
-      p.set(x, y, z)
-      m.identity().compose(p, r, s)
-    }
-
-    const applyMatrix = (attribute: BufferAttribute) => {
-      const max = attribute.count
-      for (let i = 0; i < max; i++) {
-        p.set(
-          attribute.getX(i),
-          attribute.getY(i),
-          attribute.getZ(i)
-        )
-        p.applyMatrix4(m)
-        attribute.setXYZ(i, p.x, p.y, p.z)
-      }
-    }
-
-    const transform = (geometry: BufferGeometry, x: number, y: number, z: number, rx: number, ry: number, rz: number) => {
-      setMatrix(x, y, z, rx, ry, rz)
-      applyMatrix(geometry.attributes.position as BufferAttribute)
-    }
-
-    return { transform }
-  })()
+  const { transform } = getGeometryTransformer()
 
   const setColor = (geometry: BufferGeometry, { r, g, b }: Color) => {
     const count = geometry.attributes.position.count
@@ -67,19 +34,18 @@ export const createAxesGeometry = ({
   const cone3 = cone1.clone()
   const cyl3 = cyl1.clone()
 
-  const p4 = Math.PI / 2
-  transform(cone1, 1, 0, 0, 0, 0, -p4)
-  transform(cyl1, .5, 0, 0, 0, 0, -p4)
+  transform(cone1, { x: 1, rz: -90 })
+  transform(cyl1, { x: .5, rz: -90 })
   setColor(cone1, r)
   setColor(cyl1, r)
 
-  transform(cone2, 0, 1, 0, 0, 0, 0)
-  transform(cyl2, 0, .5, 0, 0, 0, 0)
+  transform(cone2, { y: 1 })
+  transform(cyl2, { y: .5 })
   setColor(cone2, g)
   setColor(cyl2, g)
 
-  transform(cone3, 0, 0, 1, p4, 0, 0)
-  transform(cyl3, 0, 0, .5, p4, 0, 0)
+  transform(cone3, { z: 1, rx: 90 })
+  transform(cyl3, { z: .5, rx: 90 })
   setColor(cone3, b)
   setColor(cyl3, b)
 
