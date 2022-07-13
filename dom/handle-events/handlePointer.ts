@@ -113,7 +113,7 @@ const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: numb
   )
 }
 
-export const handlePointer = (element: HTMLElement, options: Options) => {
+export const handlePointer = (element: HTMLElement | Window, options: Options) => {
 
   const {
     capture = false,
@@ -335,22 +335,23 @@ export const handlePointer = (element: HTMLElement, options: Options) => {
     onContextMenu?.(event)
   }
 
-  element.addEventListener('pointerover', onPointerOver, { capture, passive })
-  element.addEventListener('pointerout', onPointerOut, { capture, passive })
-  element.addEventListener('pointerenter', onPointerEnter, { capture, passive })
-  element.addEventListener('pointerleave', onPointerLeave, { capture, passive })
-  element.addEventListener('pointerdown', onPointerDown, { capture, passive })
-  element.addEventListener('pointermove', onPointerMove, { capture, passive })
-  element.addEventListener('contextmenu', _onContextMenu, { capture, passive })
+  const target = element as HTMLElement // Fooling typescript.
+  target.addEventListener('pointerover', onPointerOver, { capture, passive })
+  target.addEventListener('pointerout', onPointerOut, { capture, passive })
+  target.addEventListener('pointerenter', onPointerEnter, { capture, passive })
+  target.addEventListener('pointerleave', onPointerLeave, { capture, passive })
+  target.addEventListener('pointerdown', onPointerDown, { capture, passive })
+  target.addEventListener('pointermove', onPointerMove, { capture, passive })
+  target.addEventListener('contextmenu', _onContextMenu, { capture, passive })
   
   const destroy = () => {
-    element.removeEventListener('pointerover', onPointerOver, { capture })
-    element.removeEventListener('pointerout', onPointerOut, { capture })
-    element.removeEventListener('pointerenter', onPointerEnter, { capture })
-    element.removeEventListener('pointerleave', onPointerLeave, { capture })
-    element.removeEventListener('pointerdown', onPointerDown, { capture })
-    element.removeEventListener('pointermove', onPointerMove, { capture })
-    element.removeEventListener('contextmenu', _onContextMenu, { capture })
+    target.removeEventListener('pointerover', onPointerOver, { capture })
+    target.removeEventListener('pointerout', onPointerOut, { capture })
+    target.removeEventListener('pointerenter', onPointerEnter, { capture })
+    target.removeEventListener('pointerleave', onPointerLeave, { capture })
+    target.removeEventListener('pointerdown', onPointerDown, { capture })
+    target.removeEventListener('pointermove', onPointerMove, { capture })
+    target.removeEventListener('contextmenu', _onContextMenu, { capture })
     window.removeEventListener('pointermove', onPointerMoveOver, { capture })
     window.removeEventListener('pointermove', onPointerMoveDown, { capture })
     window.removeEventListener('pointerup', onPointerUp, { capture })
