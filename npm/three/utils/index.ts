@@ -1,2 +1,2 @@
-export * from './axes-helpers'
+export * from './axes-helper'
 export * from './transform-geometry'

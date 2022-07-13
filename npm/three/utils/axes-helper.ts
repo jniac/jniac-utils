@@ -1,31 +1,27 @@
-import { BufferAttribute, BufferGeometry, Color, ConeGeometry, CylinderGeometry, RawShaderMaterial } from 'three'
+import { ConeGeometry, CylinderGeometry, RawShaderMaterial } from 'three'
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils'
+import { ColorArg, helperConfig, getColor } from './helper-config'
+import { setVertexColor } from './vertex-color'
 import { getGeometryTransformer } from './transform-geometry'
 
 /**
  * Create axes geometry: 3 arrow X, Y, Z with vertex colors.
  */
 export const createAxesGeometry = ({
-  red = '#f33',
-  green = '#3c6',
-  blue = '#36f',
-  radius = .005,
+  colorX = 'axis-x' as ColorArg,
+  colorY = 'axis-y' as ColorArg,
+  colorZ = 'axis-z' as ColorArg,
+  radius = helperConfig['axis-radius'],
+  radiusScale = 1,
 } = {}) => {
+
+  radius *= radiusScale
 
   const { transform } = getGeometryTransformer()
 
-  const setColor = (geometry: BufferGeometry, { r, g, b }: Color) => {
-    const count = geometry.attributes.position.count
-    const color = new BufferAttribute(new Float32Array(count * 3), 3)
-    for (let i = 0; i < count; i++) {
-      color.setXYZ(i, r, g, b)
-    }
-    geometry.setAttribute('color', color)
-  }
-
-  const r = new Color(red)
-  const g = new Color(green)
-  const b = new Color(blue)
+  const _colorX = getColor(colorX)
+  const _colorY = getColor(colorY)
+  const _colorZ = getColor(colorZ)
 
   const cone1 = new ConeGeometry(radius * 3, radius * 8)
   const cyl1 = new CylinderGeometry(radius, radius, 1)
@@ -36,25 +32,26 @@ export const createAxesGeometry = ({
 
   transform(cone1, { x: 1, rz: -90 })
   transform(cyl1, { x: .5, rz: -90 })
-  setColor(cone1, r)
-  setColor(cyl1, r)
+  setVertexColor(cone1, _colorX)
+  setVertexColor(cyl1, _colorX)
 
   transform(cone2, { y: 1 })
   transform(cyl2, { y: .5 })
-  setColor(cone2, g)
-  setColor(cyl2, g)
+  setVertexColor(cone2, _colorY)
+  setVertexColor(cyl2, _colorY)
 
   transform(cone3, { z: 1, rx: 90 })
   transform(cyl3, { z: .5, rx: 90 })
-  setColor(cone3, b)
-  setColor(cyl3, b)
+  setVertexColor(cone3, _colorZ)
+  setVertexColor(cyl3, _colorZ)
 
   return mergeBufferGeometries([
-    cone1, cyl1,
-    cone2, cyl2,
-    cone3, cyl3,
+    cyl1, cone1,
+    cyl2, cone2,
+    cyl3, cone3,
   ], false)
 }
+
 
 
 // heavily inspired by https://github.com/oframe/ogl/blob/master/examples/base-primitives.html

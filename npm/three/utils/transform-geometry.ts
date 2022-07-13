@@ -7,6 +7,8 @@ export type TransformParams = Partial<{
   rx: number
   ry: number
   rz: number
+  /** Specify directly the quaternion (instead of using euler rotation). */
+  q: Quaternion
   rotationOrder: string
   useDegree: boolean
   sx: number
@@ -35,12 +37,17 @@ export const getGeometryTransformer = ({
     rz = 0,
     rotationOrder = defaultRotationOrder,
     useDegree = defaultUseDegree,
+    q = undefined,
     sx = 1,
     sy = 1,
     sz = 1,
   }: TransformParams) => {
     const a = useDegree ? Math.PI / 180 : 1
-    r.setFromEuler(e.set(rx * a, ry * a, rz * a, rotationOrder))
+    if (q) {
+      r.copy(q)
+    } else {
+      r.setFromEuler(e.set(rx * a, ry * a, rz * a, rotationOrder))
+    }
     p.set(x, y, z)
     s.set(sx, sy, sz)
     m.identity().compose(p, r, s)
