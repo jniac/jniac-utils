@@ -23,25 +23,28 @@ export const createAxesGeometry = ({
   const _colorY = getColor(colorY)
   const _colorZ = getColor(colorZ)
 
-  const cone1 = new ConeGeometry(radius * 3, radius * 8)
+  const coneHeight = radius * 8
+  const cone1 = new ConeGeometry(radius * 3, coneHeight)
   const cyl1 = new CylinderGeometry(radius, radius, 1)
   const cone2 = cone1.clone()
   const cyl2 = cyl1.clone()
   const cone3 = cone1.clone()
   const cyl3 = cyl1.clone()
 
-  transform(cone1, { x: 1, rz: -90 })
-  transform(cyl1, { x: .5, rz: -90 })
+  const coneDistance = 1 - coneHeight * .5
+  const cylLength = 1 - coneHeight
+  transform(cone1, { x: coneDistance, rz: -90 })
+  transform(cyl1, { x: cylLength * .5, sy: cylLength, rz: -90 })
   setVertexColor(cone1, _colorX)
   setVertexColor(cyl1, _colorX)
 
-  transform(cone2, { y: 1 })
-  transform(cyl2, { y: .5 })
+  transform(cone2, { y: coneDistance })
+  transform(cyl2, { y: cylLength * .5, sy: cylLength })
   setVertexColor(cone2, _colorY)
   setVertexColor(cyl2, _colorY)
 
-  transform(cone3, { z: 1, rx: 90 })
-  transform(cyl3, { z: .5, rx: 90 })
+  transform(cone3, { z: coneDistance, rx: 90 })
+  transform(cyl3, { z: cylLength * .5, sy: cylLength, rx: 90 })
   setVertexColor(cone3, _colorZ)
   setVertexColor(cyl3, _colorZ)
 

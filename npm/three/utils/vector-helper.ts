@@ -12,8 +12,9 @@ export const getVectorHelper = ({
   radius *= radiusScale
 
   const { transform } = getGeometryTransformer()
+  const coneHeight = radius * 8
   const sources = {
-    cone: new ConeGeometry(radius * 3, radius * 8),
+    cone: new ConeGeometry(radius * 3, coneHeight),
     cyl: new CylinderGeometry(radius, radius, 1),
   }
   
@@ -28,19 +29,21 @@ export const getVectorHelper = ({
     const { x, y, z } = origin
     const { x: vx, y: vy, z: vz } = vector
     const vectorLength = vector.length()
+    const coneScale = (vectorLength - coneHeight * .5) / vectorLength
+    const cylScale = (vectorLength - coneHeight) / vectorLength
     const vectorNormalized = vector.clone().divideScalar(vectorLength)
     q.setFromUnitVectors(v.set(0, 1, 0), vectorNormalized)
     const cone = transform(sources.cone.clone(), { 
-      x: x + vx, 
-      y: y + vy, 
-      z: z + vz,
+      x: x + vx * coneScale, 
+      y: y + vy * coneScale, 
+      z: z + vz * coneScale,
       q,
     })
     const cyl = transform(sources.cyl.clone(), {
-      x: x + vx * .5, 
-      y: y + vy * .5, 
-      z: z + vz * .5,
-      sy: vectorLength,
+      x: x + vx * cylScale * .5, 
+      y: y + vy * cylScale * .5, 
+      z: z + vz * cylScale * .5,
+      sy: vectorLength * cylScale,
       q,
     })
     const rgb = getColor(color)
