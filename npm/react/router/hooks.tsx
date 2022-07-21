@@ -24,3 +24,8 @@ export const useSearch = () => {
   useUpdate(update => location.search.onChange(update))
   return location.search.value
 }
+
+export const useHash = () => {
+  useUpdate(update => location.hash.onChange(update))
+  return location.hash.value
+}
