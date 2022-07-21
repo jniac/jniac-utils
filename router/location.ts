@@ -120,8 +120,10 @@ export const getPathnameOld = () => location.pathname.valueOld
 export const setPathname = (pathname: string, { replace = false } = {}) => setLocation({ pathname, replace })
 export const getSearch = () => location.search.value
 export const setSearch = (search: string, { replace = false } = {}) => setLocation({ search, replace })
+export const clearSearch = ({ replace = false } = {}) => setLocation({ search: '', replace })
 export const getHash = () => location.hash.value
 export const setHash = (hash: string, { replace = false } = {}) => setLocation({ hash, replace })
+export const clearHash = ({ replace = false } = {}) => setLocation({ hash: '', replace })
 
 window.addEventListener('popstate', () => {
   internalUpdate(window.location.href)
