@@ -9,7 +9,11 @@ button,
   background-color: transparent;
 }
 
-input,
+input {
+  border: unset;
+}
+
+input.border,
 button.border,
 .button.border {
   border: solid 1px currentColor;
