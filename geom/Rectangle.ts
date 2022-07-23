@@ -8,7 +8,7 @@ export type IRectangle = {
   height: number
 }
 
-type RectangleParams = 
+export type RectangleParams = 
   | Partial<IRectangle> 
   | [number, number, number, number]
   | [number, number]
