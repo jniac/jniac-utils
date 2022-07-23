@@ -8,6 +8,14 @@
   height: 100vh;
 }
 
+/* remove first and last margins over a text (that should be wrapped by any element) */
+.fit-line-height > *:first-child {
+  margin-top: -.25em;
+}
+.fit-line-height > *:last-child {
+  margin-bottom: -.25em;
+}
+
 .padding-1em {
   padding: 1em;
 }
