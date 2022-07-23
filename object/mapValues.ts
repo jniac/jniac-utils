@@ -11,7 +11,7 @@ export const mapRecord = <V1, V2, K extends string>(
   ) as Record<K, V2>
 }
 
-type DeepMapValuesMap = (value: any, key: string) => any
+type DeepMapValuesMap = (value: any, key: string, path: string) => any
 type DeepMapValuesMapper = {
   string?: DeepMapValuesMap
   number?: DeepMapValuesMap
@@ -19,6 +19,7 @@ type DeepMapValuesMapper = {
 type DeepMapValuesOptions = Partial<{
   /** should */
   clone: boolean
+  path: string
 }>
 
 /**
@@ -34,6 +35,7 @@ export const deepMapValues = <T = any>(
   map: DeepMapValuesMap | DeepMapValuesMapper,
   {
     clone = false,
+    path = '',
   }: DeepMapValuesOptions = {},
 ): T => {
 
@@ -43,13 +45,13 @@ export const deepMapValues = <T = any>(
     
   const toMap = (mapper: DeepMapValuesMapper) => {
     const { string, number } = mapper
-    return (value: any, key: string) => {
+    return (value: any, key: string, path: string) => {
       const type = typeof value
       if (type === 'string') {
-        return string ? string(value, key) : value
+        return string ? string(value, key, path) : value
       }
       if (type === 'number') {
-        return number ? number(value, key) : value
+        return number ? number(value, key, path) : value
       }
       return value
     }
@@ -59,11 +61,12 @@ export const deepMapValues = <T = any>(
   
   for (const key in target) {
     const value = target[key]
+    const childPath = path.length > 0 ? `${path}.${key}` : key
     if (isObject(value)) {
-      target[key] = deepMapValues(value, map, { clone: false })
+      target[key] = deepMapValues(value, map, { clone: false, path: childPath })
     }
     else {
-      target[key] = _map(value, key)
+      target[key] = _map(value, key, childPath)
     }
   }
 
