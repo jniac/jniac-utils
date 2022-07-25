@@ -156,46 +156,46 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
     onVerticalDragStop,
   } = options
 
-  let downEvent: PointerEvent | null = null
-  let moveEvent: PointerEvent | null = null
-  const movePoint = new Point()
-  const previousMovePoint = new Point()
+  let _downEvent: PointerEvent | null = null
+  let _moveEvent: PointerEvent | null = null
+  const _movePoint = new Point()
+  const _previousMovePoint = new Point()
 
-  const tapState = {
+  const _tapState = {
     timeoutId: -1,
     tapCount: 0,
     taps: [] as TapInfo[],
     lastCallbackTimestamp: -1,
   }
 
-  const onPointerMoveDown = (event: PointerEvent) => {
-    if (downEvent?.pointerId === event.pointerId) {
-      onMoveDown?.(event, downEvent)
-      moveEvent = event
+  const _onPointerMoveDown = (event: PointerEvent) => {
+    if (_downEvent?.pointerId === event.pointerId) {
+      onMoveDown?.(event, _downEvent)
+      _moveEvent = event
     }
   }
 
-  const onPointerMoveOver = (event: PointerEvent) => {
+  const _onPointerMoveOver = (event: PointerEvent) => {
     onMoveOver?.(event)
   }
 
-  let isDown = false
-  let onDownFrameId = -1
-  const dragListening = !!(onDrag || onHorizontalDrag || onVerticalDrag 
+  let _isDown = false
+  let _onDownFrameId = -1
+  const _dragListening = !!(onDrag || onHorizontalDrag || onVerticalDrag 
     || onDragStart || onHorizontalDragStart || onVerticalDragStart
     || onDragStop || onHorizontalDragStop || onVerticalDragStop)
-  let dragStart = false
-  let dragDirection: DragDirection = 'horizontal'
+  let _dragStart = false
+  let _dragDirection: DragDirection = 'horizontal'
   const onDownFrame = () => {
-    if (dragListening && isDown) {
-      onDownFrameId = window.requestAnimationFrame(onDownFrame)
-      if (dragStart === false) {
-        [dragStart, dragDirection] = dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
-        if (dragStart) {
+    if (_dragListening && _isDown) {
+      _onDownFrameId = window.requestAnimationFrame(onDownFrame)
+      if (_dragStart === false) {
+        [_dragStart, _dragDirection] = dragHasStart(_downEvent!, _moveEvent!, dragDistanceThreshold)
+        if (_dragStart) {
           // Drag Started!
-          const info = getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint, dragDirection)
+          const info = getDragInfo(_downEvent!, _moveEvent!, _movePoint, _previousMovePoint, _dragDirection)
           onDragStart?.(info)
-          if (dragDirection === 'horizontal') {
+          if (_dragDirection === 'horizontal') {
             onHorizontalDragStart?.(info)
           }
           else {
@@ -203,13 +203,13 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
           }
         }
       }
-      if (dragStart) {
-        previousMovePoint.copy(movePoint)
-        movePoint.x += (moveEvent!.x - movePoint.x) * dragDamping
-        movePoint.y += (moveEvent!.y - movePoint.y) * dragDamping
-        const info = getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint, dragDirection)
+      if (_dragStart) {
+        _previousMovePoint.copy(_movePoint)
+        _movePoint.x += (_moveEvent!.x - _movePoint.x) * dragDamping
+        _movePoint.y += (_moveEvent!.y - _movePoint.y) * dragDamping
+        const info = getDragInfo(_downEvent!, _moveEvent!, _movePoint, _previousMovePoint, _dragDirection)
         onDrag?.(info)
-        if (dragDirection === 'horizontal') {
+        if (_dragDirection === 'horizontal') {
           onHorizontalDrag?.(info)
         }
         else {
@@ -219,53 +219,53 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
     }
   }
 
-  const onPointerOver = (event: PointerEvent) => {
+  const _onPointerOver = (event: PointerEvent) => {
     onOver?.(event)
   }
 
-  const onPointerOut = (event: PointerEvent) => {
+  const _onPointerOut = (event: PointerEvent) => {
     onOut?.(event)
   }
 
-  const onPointerEnter = (event: PointerEvent) => {
-    window.addEventListener('pointermove', onPointerMoveOver, { capture, passive })
+  const _onPointerEnter = (event: PointerEvent) => {
+    window.addEventListener('pointermove', _onPointerMoveOver, { capture, passive })
     onEnter?.(event)
   }
 
-  const onPointerLeave = (event: PointerEvent) => {
-    window.removeEventListener('pointermove', onPointerMoveOver, { capture })
+  const _onPointerLeave = (event: PointerEvent) => {
+    window.removeEventListener('pointermove', _onPointerMoveOver, { capture })
     onLeave?.(event)
   }
 
-  const onPointerDown = (event: PointerEvent) => {
+  const _onPointerDown = (event: PointerEvent) => {
     if (onDownIgnore?.(event)) {
       return
     }
-    window.addEventListener('pointermove', onPointerMoveDown, { capture, passive })
+    window.addEventListener('pointermove', _onPointerMoveDown, { capture, passive })
     window.addEventListener('pointerup', onPointerUp, { capture, passive })
-    isDown = true
-    dragStart = false
-    downEvent = event
-    moveEvent = event
-    movePoint.copy(event)
-    previousMovePoint.copy(event)
-    onDown?.(event, downEvent)
+    _isDown = true
+    _dragStart = false
+    _downEvent = event
+    _moveEvent = event
+    _movePoint.copy(event)
+    _previousMovePoint.copy(event)
+    onDown?.(event, _downEvent)
     onDownFrame()
   }
 
-  const onPointerMove = (event: PointerEvent) => {
+  const _onPointerMove = (event: PointerEvent) => {
     onMove?.(event)
   }
 
   const onPointerUp = (event: PointerEvent) => {
-    window.removeEventListener('pointermove', onPointerMoveDown, { capture })
+    window.removeEventListener('pointermove', _onPointerMoveDown, { capture })
     window.removeEventListener('pointerup', onPointerUp, { capture })
-    window.cancelAnimationFrame(onDownFrameId)
-    onUp?.(event, downEvent!)
-    if (dragStart) {
-      const info = getDragInfo(downEvent!, event!, movePoint, previousMovePoint, dragDirection)
+    window.cancelAnimationFrame(_onDownFrameId)
+    onUp?.(event, _downEvent!)
+    if (_dragStart) {
+      const info = getDragInfo(_downEvent!, event!, _movePoint, _previousMovePoint, _dragDirection)
       onDragStop?.(info)
-      if (dragDirection === 'horizontal') {
+      if (_dragDirection === 'horizontal') {
         onHorizontalDragStop?.(info)
       }
       else {
@@ -276,28 +276,28 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
     // TAP:
     const concernTap = (
       !!(onTap || onDoubleTap || onTripleTap || onQuadrupleTap)
-      && (event.timeStamp - tapState.lastCallbackTimestamp) > tapPostCallbackMinInterval * 1e3
-      && isTap(downEvent!, event, tapMaxDuration, tapMaxDistance))
+      && (event.timeStamp - _tapState.lastCallbackTimestamp) > tapPostCallbackMinInterval * 1e3
+      && isTap(_downEvent!, event, tapMaxDuration, tapMaxDistance))
 
     if (concernTap) {
       const currentTap: TapInfo = { 
         timeStamp: event.timeStamp, 
         point: new Point().copy(event),
-        downEvent: downEvent!,
+        downEvent: _downEvent!,
         upEvent: event,
       }
 
       const isMultiple = (
-        tapState.taps.length > 0
-        && currentTap.timeStamp - tapState.taps[tapState.taps.length - 1].timeStamp < multipleTapMaxInterval * 1e3)
-      tapState.taps = isMultiple ? [...tapState.taps, currentTap] : [currentTap] 
+        _tapState.taps.length > 0
+        && currentTap.timeStamp - _tapState.taps[_tapState.taps.length - 1].timeStamp < multipleTapMaxInterval * 1e3)
+      _tapState.taps = isMultiple ? [..._tapState.taps, currentTap] : [currentTap] 
 
       const resolve = () => {
         const call = (callback: (tap: TapInfo) => void) => {
           callback(currentTap)
-          tapState.lastCallbackTimestamp = currentTap.timeStamp
+          _tapState.lastCallbackTimestamp = currentTap.timeStamp
         }
-        switch (tapState.taps.length) {
+        switch (_tapState.taps.length) {
           case 1: onTap && call(onTap); break
           case 2: onDoubleTap && call(onDoubleTap); break
           case 3: onTripleTap && call(onTripleTap); break
@@ -306,7 +306,7 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
       }
 
       const higherCallbackExists = (() => {
-        switch (tapState.taps.length) {
+        switch (_tapState.taps.length) {
           case 1: return !!(onDoubleTap || onTripleTap || onQuadrupleTap)
           case 2: return !!(onTripleTap || onQuadrupleTap)
           case 3: return !!(onQuadrupleTap)
@@ -315,8 +315,8 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
       })()
 
       if (multipleTapCancelPreviousTap && higherCallbackExists) {
-        tapState.timeoutId = window.setTimeout(() => {
-          const lastTap = tapState.taps[tapState.taps.length - 1]
+        _tapState.timeoutId = window.setTimeout(() => {
+          const lastTap = _tapState.taps[_tapState.taps.length - 1]
           if (lastTap === currentTap) {
             resolve()
           }
@@ -326,9 +326,9 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
         resolve()
       }
     }
-    isDown = false
-    downEvent = null
-    dragStart = false
+    _isDown = false
+    _downEvent = null
+    _dragStart = false
   }
 
   const _onContextMenu = (event: any) => {
@@ -336,27 +336,27 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
   }
 
   const target = element as HTMLElement // Fooling typescript.
-  target.addEventListener('pointerover', onPointerOver, { capture, passive })
-  target.addEventListener('pointerout', onPointerOut, { capture, passive })
-  target.addEventListener('pointerenter', onPointerEnter, { capture, passive })
-  target.addEventListener('pointerleave', onPointerLeave, { capture, passive })
-  target.addEventListener('pointerdown', onPointerDown, { capture, passive })
-  target.addEventListener('pointermove', onPointerMove, { capture, passive })
+  target.addEventListener('pointerover', _onPointerOver, { capture, passive })
+  target.addEventListener('pointerout', _onPointerOut, { capture, passive })
+  target.addEventListener('pointerenter', _onPointerEnter, { capture, passive })
+  target.addEventListener('pointerleave', _onPointerLeave, { capture, passive })
+  target.addEventListener('pointerdown', _onPointerDown, { capture, passive })
+  target.addEventListener('pointermove', _onPointerMove, { capture, passive })
   target.addEventListener('contextmenu', _onContextMenu, { capture, passive })
   
   const destroy = () => {
-    target.removeEventListener('pointerover', onPointerOver, { capture })
-    target.removeEventListener('pointerout', onPointerOut, { capture })
-    target.removeEventListener('pointerenter', onPointerEnter, { capture })
-    target.removeEventListener('pointerleave', onPointerLeave, { capture })
-    target.removeEventListener('pointerdown', onPointerDown, { capture })
-    target.removeEventListener('pointermove', onPointerMove, { capture })
+    target.removeEventListener('pointerover', _onPointerOver, { capture })
+    target.removeEventListener('pointerout', _onPointerOut, { capture })
+    target.removeEventListener('pointerenter', _onPointerEnter, { capture })
+    target.removeEventListener('pointerleave', _onPointerLeave, { capture })
+    target.removeEventListener('pointerdown', _onPointerDown, { capture })
+    target.removeEventListener('pointermove', _onPointerMove, { capture })
     target.removeEventListener('contextmenu', _onContextMenu, { capture })
-    window.removeEventListener('pointermove', onPointerMoveOver, { capture })
-    window.removeEventListener('pointermove', onPointerMoveDown, { capture })
+    window.removeEventListener('pointermove', _onPointerMoveOver, { capture })
+    window.removeEventListener('pointermove', _onPointerMoveDown, { capture })
     window.removeEventListener('pointerup', onPointerUp, { capture })
-    window.cancelAnimationFrame(onDownFrameId)
-    window.clearTimeout(tapState.timeoutId)
+    window.cancelAnimationFrame(_onDownFrameId)
+    window.clearTimeout(_tapState.timeoutId)
   }
 
   return { destroy }
