@@ -624,6 +624,9 @@ const tween = <T>(target: T, timing: AnimationParam, {
   return anim
 }
 
+// syntax sugar / short hand
+const cancelTween = duringCancelTarget
+
 const info = {
   get time() { return time },
   get timeOld() { return timeOld },
@@ -648,6 +651,7 @@ export {
   wait,
   waitFrames,
   tween,
+  cancelTween,
   getEase,
   getMemoizedEase,
 }
@@ -671,6 +675,7 @@ export const Animation = {
   wait,
   waitFrames,
   tween,
+  cancelTween,
   getEase,
   getMemoizedEase,
   AnimationInstance,
