@@ -1,5 +1,6 @@
+import { Variable } from './types'
 
-export class FloatVariable {
+export class FloatVariable implements Variable<number> {
   
   #derivative: FloatVariable | null = null
 
@@ -26,13 +27,23 @@ export class FloatVariable {
 
   constructor(initialValue: number, {
     size = 16,
-    floatSize = 32 as (32 | 64),
+    floatSize = 64 as (32 | 64),
     derivativeCount = 0,
   } = {}) {
     this.#array = floatSize === 32 ? new Float32Array(size) : new Float64Array(size)
     this.fill(initialValue)
     if (derivativeCount > 0) {
       this.#derivative = new FloatVariable(0, { size, floatSize, derivativeCount: derivativeCount - 1 })
+    }
+  }
+
+  *values() {
+    const array = this.#array
+    const index = this.#index
+    const size = array.length
+    for (let i = 0; i < size; i++) {
+      const valueIndex = (index - i + size) % size
+      yield array[valueIndex]
     }
   }
 
@@ -94,3 +105,4 @@ export class FloatVariable {
     )
   }
 }
+
