@@ -1,16 +1,17 @@
-import { IPoint, Point } from '../../geom'
-import { handlePointerWheel, isWheelListening, WheelOptions } from './handlePointerWheel'
+import { Point } from '../../../geom'
+import { handlePointerDrag, isDragListening } from './drag'
+import { handlePointerWheel, isWheelListening, WheelOptions } from './wheel'
 
 type DragDirection = 'horizontal' | 'vertical'
-type DragInfo = { 
+type DragInfo = {
   total: Point
   delta: Point
-  moveEvent: PointerEvent
+  moveEvent: PointerEvent | TouchEvent
   downEvent: PointerEvent
   direction: DragDirection
-} 
+}
 
-type TapInfo = { 
+type TapInfo = {
   timeStamp: number
   point: Point
   downEvent: PointerEvent
@@ -87,24 +88,6 @@ export type Options = Partial<{
   onVerticalDrag: (drag: DragInfo) => void
 }>
 
-const getDragInfo = (downEvent: PointerEvent, moveEvent: PointerEvent, movePoint: IPoint, previousMovePoint: IPoint, direction: DragDirection): DragInfo => {
-  return {
-    delta: new Point().copy(movePoint).subtract(previousMovePoint),
-    total: new Point().copy(movePoint).subtract(downEvent),
-    moveEvent,
-    downEvent,
-    direction,
-  }
-}
-
-const dragHasStart = (downEvent: PointerEvent, moveEvent: PointerEvent, distanceThreshold: number) => {
-  const x = moveEvent.x - downEvent.x
-  const y = moveEvent.y - downEvent.y
-  const start = (x * x) + (y * y) > distanceThreshold * distanceThreshold
-  const direction = Math.abs(x / y) > 1 ? 'horizontal' : 'vertical'
-  return [start, direction] as [boolean, DragDirection]
-}
-
 const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: number, maxDistance: number) => {
   const x = upEvent.x - downEvent.x
   const y = upEvent.y - downEvent.y
@@ -121,12 +104,12 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
     passive = true,
 
     onDown,
-    onDownIgnore, 
+    onDownIgnore,
     onUp,
     onMove,
     onMoveDown,
     onMoveOver,
-    onOver, 
+    onOver,
     onOut,
     onEnter,
     onLeave,
@@ -142,25 +125,9 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
     onTripleTap,
     onQuadrupleTap,
     multipleTapCancelPreviousTap = !!(onDoubleTap || onTripleTap || onQuadrupleTap),
-
-    // DRAG
-    dragDistanceThreshold = 10, 
-    dragDamping = .4, 
-    onDrag, 
-    onDragStart, 
-    onDragStop,
-    onHorizontalDrag,
-    onHorizontalDragStart,
-    onHorizontalDragStop,
-    onVerticalDrag,
-    onVerticalDragStart,
-    onVerticalDragStop,
-
-    ...rest
   } = options
 
   let _downEvent: PointerEvent | null = null
-  let _moveEvent: PointerEvent | null = null
   const _movePoint = new Point()
   const _previousMovePoint = new Point()
 
@@ -174,52 +141,11 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
   const _onPointerMoveDown = (event: PointerEvent) => {
     if (_downEvent?.pointerId === event.pointerId) {
       onMoveDown?.(event, _downEvent)
-      _moveEvent = event
     }
   }
 
   const _onPointerMoveOver = (event: PointerEvent) => {
     onMoveOver?.(event)
-  }
-
-  let _isDown = false
-  let _onDownFrameId = -1
-  const _dragListening = !!(onDrag || onHorizontalDrag || onVerticalDrag 
-    || onDragStart || onHorizontalDragStart || onVerticalDragStart
-    || onDragStop || onHorizontalDragStop || onVerticalDragStop)
-  let _dragStart = false
-  let _dragDirection: DragDirection = 'horizontal'
-  const onDownFrame = () => {
-    if (_dragListening && _isDown) {
-      _onDownFrameId = window.requestAnimationFrame(onDownFrame)
-      if (_dragStart === false) {
-        [_dragStart, _dragDirection] = dragHasStart(_downEvent!, _moveEvent!, dragDistanceThreshold)
-        if (_dragStart) {
-          // Drag Started!
-          const info = getDragInfo(_downEvent!, _moveEvent!, _movePoint, _previousMovePoint, _dragDirection)
-          onDragStart?.(info)
-          if (_dragDirection === 'horizontal') {
-            onHorizontalDragStart?.(info)
-          }
-          else {
-            onVerticalDragStart?.(info)
-          }
-        }
-      }
-      if (_dragStart) {
-        _previousMovePoint.copy(_movePoint)
-        _movePoint.x += (_moveEvent!.x - _movePoint.x) * dragDamping
-        _movePoint.y += (_moveEvent!.y - _movePoint.y) * dragDamping
-        const info = getDragInfo(_downEvent!, _moveEvent!, _movePoint, _previousMovePoint, _dragDirection)
-        onDrag?.(info)
-        if (_dragDirection === 'horizontal') {
-          onHorizontalDrag?.(info)
-        }
-        else {
-          onVerticalDrag?.(info)
-        }
-      }
-    }
   }
 
   const _onPointerOver = (event: PointerEvent) => {
@@ -244,37 +170,24 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
     if (onDownIgnore?.(event)) {
       return
     }
-    window.addEventListener('pointermove', _onPointerMoveDown, { capture, passive })
-    window.addEventListener('pointerup', onPointerUp, { capture, passive })
-    _isDown = true
-    _dragStart = false
     _downEvent = event
-    _moveEvent = event
     _movePoint.copy(event)
     _previousMovePoint.copy(event)
+
+    window.addEventListener('pointermove', _onPointerMoveDown, { capture, passive })
+    window.addEventListener('pointerup', _onPointerUp, { capture, passive })
+
     onDown?.(event, _downEvent)
-    onDownFrame()
   }
 
   const _onPointerMove = (event: PointerEvent) => {
     onMove?.(event)
   }
 
-  const onPointerUp = (event: PointerEvent) => {
+  const _onPointerUp = (event: PointerEvent) => {
     window.removeEventListener('pointermove', _onPointerMoveDown, { capture })
-    window.removeEventListener('pointerup', onPointerUp, { capture })
-    window.cancelAnimationFrame(_onDownFrameId)
+    window.removeEventListener('pointerup', _onPointerUp, { capture })
     onUp?.(event, _downEvent!)
-    if (_dragStart) {
-      const info = getDragInfo(_downEvent!, event!, _movePoint, _previousMovePoint, _dragDirection)
-      onDragStop?.(info)
-      if (_dragDirection === 'horizontal') {
-        onHorizontalDragStop?.(info)
-      }
-      else {
-        onVerticalDragStop?.(info)
-      }
-    }
 
     // TAP:
     const concernTap = (
@@ -283,8 +196,8 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
       && isTap(_downEvent!, event, tapMaxDuration, tapMaxDistance))
 
     if (concernTap) {
-      const currentTap: TapInfo = { 
-        timeStamp: event.timeStamp, 
+      const currentTap: TapInfo = {
+        timeStamp: event.timeStamp,
         point: new Point().copy(event),
         downEvent: _downEvent!,
         upEvent: event,
@@ -293,7 +206,7 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
       const isMultiple = (
         _tapState.taps.length > 0
         && currentTap.timeStamp - _tapState.taps[_tapState.taps.length - 1].timeStamp < multipleTapMaxInterval * 1e3)
-      _tapState.taps = isMultiple ? [..._tapState.taps, currentTap] : [currentTap] 
+      _tapState.taps = isMultiple ? [..._tapState.taps, currentTap] : [currentTap]
 
       const resolve = () => {
         const call = (callback: (tap: TapInfo) => void) => {
@@ -329,9 +242,7 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
         resolve()
       }
     }
-    _isDown = false
     _downEvent = null
-    _dragStart = false
   }
 
   const _onContextMenu = (event: any) => {
@@ -347,8 +258,9 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
   target.addEventListener('pointermove', _onPointerMove, { capture, passive })
   target.addEventListener('contextmenu', _onContextMenu, { capture, passive })
 
-  const wheelListener = isWheelListening(rest) ? handlePointerWheel(element, { ...rest, capture, passive }) : null
-  
+  const wheelListener = isWheelListening(options) ? handlePointerWheel(element, options) : null
+  const dragListener = isDragListening(options) ? handlePointerDrag(element, options) : null
+
   const destroy = () => {
     target.removeEventListener('pointerover', _onPointerOver, { capture })
     target.removeEventListener('pointerout', _onPointerOut, { capture })
@@ -359,11 +271,11 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
     target.removeEventListener('contextmenu', _onContextMenu, { capture })
     window.removeEventListener('pointermove', _onPointerMoveOver, { capture })
     window.removeEventListener('pointermove', _onPointerMoveDown, { capture })
-    window.removeEventListener('pointerup', onPointerUp, { capture })
-    window.cancelAnimationFrame(_onDownFrameId)
+    window.removeEventListener('pointerup', _onPointerUp, { capture })
     window.clearTimeout(_tapState.timeoutId)
 
     wheelListener?.destroy()
+    dragListener?.destroy()
   }
 
   return { destroy }
