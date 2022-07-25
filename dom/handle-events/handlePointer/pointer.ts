@@ -1,5 +1,5 @@
 import { Point } from '../../../geom'
-import { handlePointerDrag, isDragListening } from './drag'
+import { DragOptions, handlePointerDrag, isDragListening } from './drag'
 import { handlePointerWheel, isWheelListening, WheelOptions } from './wheel'
 
 type DragDirection = 'horizontal' | 'vertical'
@@ -97,7 +97,7 @@ const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: numb
   )
 }
 
-export const handlePointer = (element: HTMLElement | Window, options: Options & WheelOptions) => {
+export const handlePointer = (element: HTMLElement | Window, options: Options & WheelOptions & DragOptions) => {
 
   const {
     capture = false,
