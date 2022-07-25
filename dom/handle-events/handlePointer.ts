@@ -1,4 +1,5 @@
 import { IPoint, Point } from '../../geom'
+import { handlePointerWheel, isWheelListening, WheelOptions } from './handlePointerWheel'
 
 type DragDirection = 'horizontal' | 'vertical'
 type DragInfo = { 
@@ -113,7 +114,7 @@ const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: numb
   )
 }
 
-export const handlePointer = (element: HTMLElement | Window, options: Options) => {
+export const handlePointer = (element: HTMLElement | Window, options: Options & WheelOptions) => {
 
   const {
     capture = false,
@@ -154,6 +155,8 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
     onVerticalDrag,
     onVerticalDragStart,
     onVerticalDragStop,
+
+    ...rest
   } = options
 
   let _downEvent: PointerEvent | null = null
@@ -343,6 +346,8 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
   target.addEventListener('pointerdown', _onPointerDown, { capture, passive })
   target.addEventListener('pointermove', _onPointerMove, { capture, passive })
   target.addEventListener('contextmenu', _onContextMenu, { capture, passive })
+
+  const wheelListener = isWheelListening(rest) ? handlePointerWheel(element, { ...rest, capture, passive }) : null
   
   const destroy = () => {
     target.removeEventListener('pointerover', _onPointerOver, { capture })
@@ -357,6 +362,8 @@ export const handlePointer = (element: HTMLElement | Window, options: Options) =
     window.removeEventListener('pointerup', onPointerUp, { capture })
     window.cancelAnimationFrame(_onDownFrameId)
     window.clearTimeout(_tapState.timeoutId)
+
+    wheelListener?.destroy()
   }
 
   return { destroy }
