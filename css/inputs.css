@@ -9,6 +9,10 @@ button,
   background-color: transparent;
 }
 
+button {
+  border: none;
+}
+
 input {
   border: unset;
 }
