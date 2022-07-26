@@ -89,7 +89,7 @@ export const handlePointerDrag = (element: HTMLElement | Window, options: DragOp
     onDownIgnore,
 
     dragDistanceThreshold = 10,
-    dragDamping = .4,
+    dragDamping = .7,
     onDrag,
     onDragStart,
     onDragStop,
