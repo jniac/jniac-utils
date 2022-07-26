@@ -42,6 +42,15 @@ const sqMagnitude = (p: IPoint) => {
 
 const magnitude = (p: IPoint) => Math.sqrt(sqMagnitude(p))
 
+/**
+ * If invalid min / max values, note that min has the last word.
+ */
+const clamp = <T extends IPoint>(p: IPoint, min: IPoint, max: IPoint, receiver: T) => {
+  receiver.x = p.x > max.x ? max.x : p.x < min.x ? min.x : p.x
+  receiver.y = p.y > max.y ? max.y : p.y < min.y ? min.y : p.y
+  return receiver
+}
+
 export class Point {
   
   static get dummy() { return dummy }
@@ -60,6 +69,9 @@ export class Point {
   }
   static sqDistance(p0: PointParams, p1: PointParams) {
     return sqMagnitude(Point.subtract(p0, p1, dummy))
+  }
+  static clamp(p:PointParams, min: PointParams, max: PointParams, receiver: Point = new Point()) {
+    return clamp(ensureIPoint(p), ensureIPoint(min), ensureIPoint(max), ensure(receiver))
   }
   x: number
   y: number
@@ -89,23 +101,26 @@ export class Point {
     }
     throw new Error(`invalid args: ${args}`)
   }
+  equals(other: Point) {
+    return equals(this, other)
+  }
+  equivalent(other: PointParams) {
+    return equals(this, ensureIPoint(other))
+  }
   copy(other: IPoint) {
     return set(this, other.x, other.y)
   }
   clone() {
     return new Point(this.x, this.y)
   }
-  add(other: PointParams, receiver = new Point()) {
+  add(other: PointParams, receiver = this) {
     return add(this, ensureIPoint(other), receiver)
   }
-  subtract(other: PointParams, receiver = new Point()) {
+  subtract(other: PointParams, receiver = this) {
     return subtract(this, ensureIPoint(other), receiver)
   }
-  equals(other: Point) {
-    return equals(this, other)
-  }
-  equivalent(other: PointParams) {
-    return equals(this, ensureIPoint(other))
+  clamp(min: PointParams, max: PointParams, receiver = this) {
+    return clamp(this, ensureIPoint(min), ensureIPoint(max), receiver)
   }
 
   get magnitude() { return magnitude(this) }
