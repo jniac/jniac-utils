@@ -63,7 +63,12 @@ export const deepMapValues = <T = any>(
     const value = target[key]
     const childPath = path.length > 0 ? `${path}.${key}` : key
     if (isObject(value)) {
-      target[key] = deepMapValues(value, map, { clone: false, path: childPath })
+      // Quite tricky:
+      // - First, try to map the value
+      // - Then compare, if has changed keep the new value, otherwise deep map the value
+      const newValue = _map(value, key, childPath)
+      const hasChanged = newValue !== value
+      target[key] = hasChanged ? newValue : deepMapValues(value, map, { clone: false, path: childPath })
     }
     else {
       target[key] = _map(value, key, childPath)
