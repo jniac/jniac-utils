@@ -73,19 +73,6 @@ export type Options = Partial<{
   onTripleTap: (tap: TapInfo) => void
   /** Quadruple tap callback! It's a lot of taps, isn't it? */
   onQuadrupleTap: (tap: TapInfo) => void
-
-  // DRAG
-  dragDistanceThreshold: number
-  dragDamping: number
-  onDragStart: (drag: DragInfo) => void
-  onDragStop: (drag: DragInfo) => void
-  onDrag: (drag: DragInfo) => void
-  onHorizontalDragStart: (drag: DragInfo) => void
-  onHorizontalDragStop: (drag: DragInfo) => void
-  onHorizontalDrag: (drag: DragInfo) => void
-  onVerticalDragStart: (drag: DragInfo) => void
-  onVerticalDragStop: (drag: DragInfo) => void
-  onVerticalDrag: (drag: DragInfo) => void
 }>
 
 const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: number, maxDistance: number) => {
