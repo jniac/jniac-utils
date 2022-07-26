@@ -2,15 +2,6 @@ import { Point } from '../../../geom'
 import { DragOptions, handlePointerDrag, isDragListening } from './drag'
 import { handlePointerWheel, isWheelListening, WheelOptions } from './wheel'
 
-type DragDirection = 'horizontal' | 'vertical'
-type DragInfo = {
-  total: Point
-  delta: Point
-  moveEvent: PointerEvent | TouchEvent
-  downEvent: PointerEvent
-  direction: DragDirection
-}
-
 type TapInfo = {
   timeStamp: number
   point: Point
