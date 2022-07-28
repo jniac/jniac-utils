@@ -3,7 +3,7 @@ import { setValueWithDelay } from './utils/delay'
 export const ONCE = Symbol('ONCE')
 
 export type Destroyable = { destroy: () => void }
-export type ObservableCallback<T> = (value: T, target: Observable<T>) => (void | any | typeof ONCE)
+export type ObservableCallback<T, O extends Observable<T> = Observable<T>> = (value: T, target: O) => (void | any | typeof ONCE)
 export type SetValueOptions = {
   ignoreCallbacks?: boolean
   owner?: any
@@ -45,18 +45,18 @@ export type WhenOptionA<T> = {
 export type WhenOptionB<T> = (target: Observable<T>) => { destroy: () => void }
 
 export class Observable<T> {
-  
-  private static count:number = 0
+
+  private static count: number = 0
   readonly id = Observable.count++
 
   #onChange = new Set() as Set<ObservableCallback<T>>
   #onDestroy = new Set() as Set<ObservableCallback<T>>
 
-  #value:T
+  #value: T
   get value() { return this.#value }
-  set value(value:T) { this.setValue(value) }
+  set value(value: T) { this.setValue(value) }
 
-  #valueOld:T
+  #valueOld: T
   get valueOld() { return this.#valueOld }
 
   #hasChanged = false
@@ -75,7 +75,7 @@ export class Observable<T> {
   destroy: () => void
 
   ignoreCallbacks = false
-  
+
   constructor(initialValue: T) {
     this.#valueOld = initialValue
     this.#value = initialValue
@@ -255,7 +255,7 @@ export class Observable<T> {
    * obs.when(v => v >= 1 && v < 2, () => someOtherObs.onChange(doSomething)))
    * ```
    */
-  when(predicate: (value: T) => boolean, option: WhenOptionA<T> | WhenOptionB<T> ): Destroyable {
+  when(predicate: (value: T) => boolean, option: WhenOptionA<T> | WhenOptionB<T>): Destroyable {
 
     if (typeof option === 'function') {
       let destroyable = null as Destroyable | null

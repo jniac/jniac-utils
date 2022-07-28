@@ -12,56 +12,56 @@ export class ObservableNumber extends Observable<number> {
     this.#max = max
   }
 
-  setValue(value: number | ((v: number) => number), { 
+  setValue(value: number | ((v: number) => number), {
     ignoreCallbacks = false,
     owner = null as any,
   } = {}): boolean {
-      if (typeof value === 'function') {
-        value = value(this.value)
-      }
-      value = value < this.#min ? this.#min : value > this.#max ? this.#max : value
-      return super.setValue(value, { ignoreCallbacks, owner })
+    if (typeof value === 'function') {
+      value = value(this.value)
+    }
+    value = value < this.#min ? this.#min : value > this.#max ? this.#max : value
+    return super.setValue(value, { ignoreCallbacks, owner })
   }
 
   get delta() { return this.value - this.valueOld }
-  
-  passedAbove(threshold: number ) {
+
+  passedAbove(threshold: number) {
     return this.valueOld < threshold && this.value >= threshold
   }
-  
-  passedBelow(threshold: number ) {
+
+  passedBelow(threshold: number) {
     return this.valueOld > threshold && this.value <= threshold
   }
 
   passedThrough(threshold: number) {
     return this.passedBelow(threshold) || this.passedAbove(threshold)
   }
-  
-  onPassAbove(threshold: number, callback: (target: ObservableNumber) => void) {
+
+  onPassAbove(threshold: number, callback: ObservableCallback<number, ObservableNumber>) {
     return this.onChange(() => {
       if (this.passedAbove(threshold)) {
-        callback(this)
+        callback(this.value, this)
       }
     })
   }
-  
-  onPassBelow(threshold: number, callback: (target: ObservableNumber) => void) {
+
+  onPassBelow(threshold: number, callback: ObservableCallback<number, ObservableNumber>) {
     return this.onChange(() => {
       if (this.passedBelow(threshold)) {
-        callback(this)
+        callback(this.value, this)
       }
     })
   }
 
-  onPassThrough(threshold: number, callback: (target: ObservableNumber) => void) {
+  onPassThrough(threshold: number, callback: ObservableCallback<number, ObservableNumber>) {
     return this.onChange(() => {
       if (this.passedThrough(threshold)) {
-        callback(this)
+        callback(this.value, this)
       }
     })
   }
 
-  onStepChange(step: number, callback:(value: number, target:Observable<number>) => void, { execute = false } = {}) {
+  onStepChange(step: number, callback: ObservableCallback<number, ObservableNumber>, { execute = false, once = false } = {}) {
     let currentValue = Math.round(this.value / step) * step
     return this.onChange((value) => {
       let newValue = Math.round(value / step) * step
@@ -69,7 +69,14 @@ export class ObservableNumber extends Observable<number> {
         currentValue = newValue
         callback(currentValue, this)
       }
-    }, { execute })
+    }, { execute, once })
+  }
+
+  /**
+   * Alias for `onStepChange(cb, { execute: true })` 
+   */
+  withStepValue(step: number, callback: ObservableCallback<number, ObservableNumber>, { once = false } = {}) {
+    return this.onStepChange(step, callback, { execute: true, once })
   }
 
   onInterval({ interval, ...props }: {
