@@ -4,7 +4,9 @@ import { BoundsCallback, BoundsType, onResizeEnd, track, untrack } from '../../.
 import { computeOffsetBounds, computeLocalBounds } from "../../../dom/utils"
 import { useComplexEffects } from '..'
 
-const resolveRef = <T>(target: 'createRef' | React.RefObject<T>) => {
+type Target<T> = 'createRef' | React.RefObject<T>
+
+const resolveRef = <T>(target: Target<T>) => {
   if (target === 'createRef') {
     // that condition should never change during program execution, so we can perform a test here
     // eslint-disable-next-line react-hooks/rules-of-hooks
@@ -13,14 +15,31 @@ const resolveRef = <T>(target: 'createRef' | React.RefObject<T>) => {
   return target
 }
 
-export function useBounds<T extends HTMLElement = HTMLElement>(
-  target: 'createRef' | React.RefObject<T>,
-  callback: BoundsCallback, 
-  {
+type BoundsOptions = Partial<{
+  /** Should recalculate on any render? */
+  alwaysRecalculate: boolean
+  boundsType: BoundsType
+}>
+
+const resolveUseBoundsArgs = <T>(args: any[]): [Target<T>, BoundsCallback, BoundsOptions?] => {
+  const hasTarget= typeof args[0] !== 'function'
+  if (hasTarget) {
+    return [args[0], args[1], args[2]]
+  } else {
+    return ['createRef', args[0], args[1]]
+  }
+}
+
+export function useBounds<T extends HTMLElement = HTMLElement>(callback: BoundsCallback<T>, options?: BoundsOptions): React.RefObject<T>
+export function useBounds<T extends HTMLElement = HTMLElement>(target: Target<T>, callback: BoundsCallback<T>, options?: BoundsOptions): React.RefObject<T> 
+export function useBounds<T extends HTMLElement = HTMLElement>(...args: any[]) {
+
+  const [target, callback, options] = resolveUseBoundsArgs<T>(args)
+  const {
     alwaysRecalculate = false, // should recalculate on any render?
     boundsType = 'offset' as BoundsType,
-  } = {},
-) {
+  } = options ?? {}
+
   const ref = resolveRef(target)
 
   React.useEffect(() => {

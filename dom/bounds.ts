@@ -2,7 +2,7 @@ import { Register } from '../collections'
 import { Rectangle } from '../geom'
 import { computeOffsetBounds, computeLocalBounds } from './utils'
 
-export type BoundsCallback = (bounds: Rectangle, element: HTMLElement) => void
+export type BoundsCallback<T extends HTMLElement = HTMLElement> = (bounds: Rectangle, element: T) => void
 export type BoundsType = 'local' | 'client' | 'offset'
 interface BoundsOptions {
   boundsType?: BoundsType
