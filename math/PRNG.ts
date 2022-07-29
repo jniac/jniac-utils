@@ -30,7 +30,7 @@ export class PRNG {
     this.#initialSeed = seed
     this.#seed = init(seed)
   }
-  
+
   static reset(seed = PRNG.seedDefault) {
     PRNG.#staticSeed = init(seed)
     return PRNG
@@ -87,7 +87,7 @@ export class PRNG {
   static integer(min = 0, max = 100) {
     return Math.floor(min + (max - min) * PRNG.float())
   }
-  
+
   integer(min = 0, max = 100) {
     return Math.floor(min + (max - min) * this.float())
   }
@@ -102,12 +102,12 @@ export class PRNG {
 
   static around({ from = 0, deviation = 1, power = 2 } = {}) {
     const value = PRNG.float()
-    return from + (value ** power) * deviation * (value * 100 % 2 > 1 ? 1 : -1) 
+    return from + (value ** power) * deviation * (value * 100 % 2 > 1 ? 1 : -1)
   }
 
   around({ from = 0, deviation = 1, power = 2 } = {}) {
     const value = this.float()
-    return from + (value ** power) * deviation * (value * 100 % 2 > 1 ? 1 : -1) 
+    return from + (value ** power) * deviation * (value * 100 % 2 > 1 ? 1 : -1)
   }
 
   static shuffle<T = any>(array: T[], { duplicate = false } = {}) {
@@ -116,7 +116,7 @@ export class PRNG {
       const index = Math.floor(PRNG.float() * max)
       const tmp = result[index]
       result[index] = result[i]
-      result[i] = tmp 
+      result[i] = tmp
     }
     return result
   }
@@ -127,7 +127,7 @@ export class PRNG {
       const index = Math.floor(this.float() * max)
       const tmp = result[index]
       result[index] = result[i]
-      result[i] = tmp 
+      result[i] = tmp
     }
     return result
   }
@@ -159,7 +159,7 @@ export class PRNG {
   static encode(array: any, { seed = PRNG.seedDefault } = {}) {
     const previous = PRNG.#staticSeed
     PRNG.reset(seed)
-    
+
     if (typeof array === 'string') {
       return PRNG.encode([...array]).join('')
     }
@@ -184,7 +184,7 @@ export class PRNG {
   static decode(array: any, { seed = PRNG.seedDefault } = {}) {
     const previous = PRNG.#staticSeed
     PRNG.reset(seed)
-    
+
     if (typeof array === 'string') {
       return PRNG.decode([...array]).join('')
     }

@@ -26,7 +26,7 @@ export const out5 = (x: number) => 1 - (x = 1 - x) * x * x * x * x
 export const out6 = (x: number) => 1 - (x = 1 - x) * x * x * x * x * x
 
 // https://www.desmos.com/calculator/chosfesws4
-export const inout = (x:number, p: number = 3, i: number = 0.5) => {
+export const inout = (x: number, p: number = 3, i: number = 0.5) => {
   return (x < 0 ? 0 : x > 1 ? 1 : x < i
     ? 1 / Math.pow(i, p - 1) * Math.pow(x, p)
     : 1 - 1 / Math.pow(1 - i, p - 1) * Math.pow(1 - x, p)
@@ -88,7 +88,7 @@ export {
   signedPow3 as signedIn3,
   signedPow4 as signedIn4,
   signedPow5 as signedIn5,
-  signedPow6 as signedIn6,  
+  signedPow6 as signedIn6,
 }
 
 export const signedOut2 = (x: number) => x < 0 ? -out2(-x) : out2(x)
@@ -97,7 +97,7 @@ export const signedOut4 = (x: number) => x < 0 ? -out4(-x) : out4(x)
 export const signedOut5 = (x: number) => x < 0 ? -out5(-x) : out5(x)
 export const signedOut6 = (x: number) => x < 0 ? -out6(-x) : out6(x)
 
-export const signedInout = (x:number, p: number = 3, i: number = 0.5) => x < 0 ? -inout(-x, p, i) : inout(x, p, i)
+export const signedInout = (x: number, p: number = 3, i: number = 0.5) => x < 0 ? -inout(-x, p, i) : inout(x, p, i)
 
 export const signedInout2 = (x: number) => x < 0 ? -inout2(-x) : inout2(x)
 export const signedInout3 = (x: number) => x < 0 ? -inout3(-x) : inout3(x)

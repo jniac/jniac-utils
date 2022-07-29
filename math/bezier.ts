@@ -10,7 +10,7 @@ export const cubic = (x1: number, x2: number, x3: number, x4: number, t: number)
   const t2 = t * t
   return (
     ti2 * ti * x1
-    + 3 * ti2  * t * x2
+    + 3 * ti2 * t * x2
     + 3 * ti * t2 * x3
     + t2 * t * x4
   )
@@ -45,7 +45,7 @@ export const cubic01 = (x2: number, x3: number, t: number) => {
   const ti = 1 - t
   const t2 = t * t
   return (
-    + 3 * ti * ti  * t * x2
+    + 3 * ti * ti * t * x2
     + 3 * ti * t2 * x3
     + t2 * t
   )
@@ -54,7 +54,7 @@ export const cubic01 = (x2: number, x3: number, t: number) => {
 /**
  * Assuming x1 = 0, x4 = 1.
  */
- export const cubic01Derivative = (x2: number, x3: number, t: number) => {
+export const cubic01Derivative = (x2: number, x3: number, t: number) => {
   const ti = 1 - t
   return (
     3 * ti * ti * (x2) + 6 * ti * t * (x3 - x2) + 3 * t * t * (1 - x3)
@@ -64,7 +64,7 @@ export const cubic01 = (x2: number, x3: number, t: number) => {
 /**
  * Assuming x1 = 0, x4 = 1.
  */
- export const cubic01DerivativeSecond = (x2: number, x3: number, t: number) => {
+export const cubic01DerivativeSecond = (x2: number, x3: number, t: number) => {
   return (
     6 * (1 - t) * (x3 - 2 * x2) + 6 * t * (1 - 2 * x3 + x2)
   )

@@ -11,10 +11,10 @@ export const inverseLerp = (a: number, b: number, t: number) => clamp01((t - a) 
 
 export const inverseLerpUnclamped = (a: number, b: number, t: number) => (t - a) / (b - a)
 
-export const remap = (inMin: number, inMax: number, outMin: number, outMax: number, x: number) => 
+export const remap = (inMin: number, inMax: number, outMin: number, outMax: number, x: number) =>
   lerp(outMin, outMax, inverseLerp(inMin, inMax, x))
 
-export const remapUnclamped = (inMin: number, inMax: number, outMin: number, outMax: number, x: number) => 
+export const remapUnclamped = (inMin: number, inMax: number, outMin: number, outMax: number, x: number) =>
   lerpUnclamped(outMin, outMax, inverseLerpUnclamped(inMin, inMax, x))
 
 export const floor = (x: number, base = 1) => Math.floor(x / base) * base
@@ -43,7 +43,7 @@ export const positiveModulo = (x: number, modulo: number) => {
  * middleModulo(370, 360) // -> 10
  * ```
  */
- export const middleModulo = (x: number, modulo: number) => {
+export const middleModulo = (x: number, modulo: number) => {
   x %= modulo
   return x < -modulo / 2 ? x + modulo : x > modulo / 2 ? x - modulo : x
 }

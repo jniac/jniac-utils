@@ -9,7 +9,7 @@ export const encodeInt64 = (n: number, length?: number) => {
     if (n >= bounds) {
       throw new Error(`Int (${n}) is greater than or equal to max bound (${bounds}) for encoded string length (${length})`)
     }
-  } 
+  }
   else {
     let log = Math.log2(n)
     if (Math.pow(2, Math.round(log)) === n) {
@@ -34,7 +34,7 @@ export const decode64ToInt = (string: string) => {
   let i = 0
   let n = 0
   do {
-    n = n * BASE + reverseAlphabet.get(string[i])! 
+    n = n * BASE + reverseAlphabet.get(string[i])!
     i++
   } while (i < string.length)
   return n
