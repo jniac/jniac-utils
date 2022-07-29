@@ -50,6 +50,6 @@ export const middleModulo = (x: number, modulo: number) => {
 
 export const clampModulo = (x: number, min: number, max: number) => {
   const delta = max - min
-  return min + positiveModulo(x - min, delta)
+  return delta === 0 ? 0 : min + positiveModulo(x - min, delta)
 }
 
