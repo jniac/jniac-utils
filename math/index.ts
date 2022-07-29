@@ -1,5 +1,6 @@
 export * from './basic-functions'
 export * from './easing-functions'
+export * as easings from './easing-functions'
 export * from './geom-functions'
 export * from './misc-functions'
 export * from './wave-functions'
