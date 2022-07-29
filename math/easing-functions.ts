@@ -60,3 +60,47 @@ export const inout5 = (x: number) => {
     : 1 - 16 * (x = 1 - x) * x * x * x * x
   )
 }
+
+export const inout6 = (x: number) => {
+  return (x < 0 ? 0 : x > 1 ? 1 : x < 0.5
+    ? 32 * x * x * x * x * x * x
+    : 1 - 32 * (x = 1 - x) * x * x * x * x * x
+  )
+}
+
+
+
+
+
+// Signed alternatives:
+
+export const signedHermite01 = (x: number) => x < 0 ? -hermite01(-x) : hermite01(x)
+export const signedHermiteSecond01 = (x: number) => x < 0 ? -hermiteSecond01(-x) : hermiteSecond01(x)
+
+export const signedPow2 = (x: number) => x < 0 ? -pow2(-x) : pow2(x)
+export const signedPow3 = (x: number) => x < 0 ? -pow3(-x) : pow3(x)
+export const signedPow4 = (x: number) => x < 0 ? -pow4(-x) : pow4(x)
+export const signedPow5 = (x: number) => x < 0 ? -pow5(-x) : pow5(x)
+export const signedPow6 = (x: number) => x < 0 ? -pow6(-x) : pow6(x)
+
+export {
+  signedPow2 as signedIn2,
+  signedPow3 as signedIn3,
+  signedPow4 as signedIn4,
+  signedPow5 as signedIn5,
+  signedPow6 as signedIn6,  
+}
+
+export const signedOut2 = (x: number) => x < 0 ? -out2(-x) : out2(x)
+export const signedOut3 = (x: number) => x < 0 ? -out3(-x) : out3(x)
+export const signedOut4 = (x: number) => x < 0 ? -out4(-x) : out4(x)
+export const signedOut5 = (x: number) => x < 0 ? -out5(-x) : out5(x)
+export const signedOut6 = (x: number) => x < 0 ? -out6(-x) : out6(x)
+
+export const signedInout = (x:number, p: number = 3, i: number = 0.5) => x < 0 ? -inout(-x, p, i) : inout(x, p, i)
+
+export const signedInout2 = (x: number) => x < 0 ? -inout2(-x) : inout2(x)
+export const signedInout3 = (x: number) => x < 0 ? -inout3(-x) : inout3(x)
+export const signedInout4 = (x: number) => x < 0 ? -inout4(-x) : inout4(x)
+export const signedInout5 = (x: number) => x < 0 ? -inout5(-x) : inout5(x)
+export const signedInout6 = (x: number) => x < 0 ? -inout6(-x) : inout6(x)
