@@ -105,4 +105,35 @@ export class Padding {
   toCSS({ scalar = 1 } = {}) {
     return `${this.top * scalar}px ${this.right * scalar}px ${this.bottom * scalar}px ${this.left * scalar}px`
   }
+
+  toStyle(filter: string = 'padding all', { scalar = 1 } = {}) {
+    const tokens = filter.split(' ')
+    const padding = tokens.includes('margin') === false
+    const all = tokens.includes('all')
+    const horizontal = all || tokens.includes('horizontal')
+    const vertical = all || tokens.includes('vertical')
+    const top = vertical || tokens.includes('top')
+    const bottom = vertical || tokens.includes('bottom')
+    const left = horizontal || tokens.includes('left')
+    const right = horizontal || tokens.includes('right')
+    
+    const baseKey = padding ? 'padding' : 'margin'
+    const props = [] as [string, string][]
+    if (top) props.push([baseKey + 'Top', `${this.top}px`])
+    if (right) props.push([baseKey + 'Right', `${this.right}px`])
+    if (bottom) props.push([baseKey + 'Bottom', `${this.bottom}px`])
+    if (left) props.push([baseKey + 'Left', `${this.left}px`])
+
+    return Object.fromEntries(props) as ({
+      paddingTop: string
+      paddingRight: string
+      paddingBottom: string
+      paddingLeft: string
+    } | {      
+      marginTop: string
+      marginRight: string
+      marginBottom: string
+      marginLeft: string
+    })
+  }
 }
