@@ -1,6 +1,11 @@
 
-export function range(max: number, options?: { reverse?: boolean, step?: number }): Generator<number>
-export function range(min: number, max: number, options?: { reverse?: boolean, step?: number }): Generator<number>
+type RangeOptions = Partial<{
+  reverse: boolean
+  step: number
+}>
+
+export function range(max: number, options?: RangeOptions): Generator<number>
+export function range(min: number, max: number, options?: RangeOptions): Generator<number>
 export function* range(...args: any[]) {
   const optionsIndex = args.findIndex(v => typeof v === 'object')
   const { 
@@ -27,4 +32,11 @@ export function* range(...args: any[]) {
       yield i
     }
   }
+}
+
+export function aRange(max: number, options?: RangeOptions): number[]
+export function aRange(min: number, max: number, options?: RangeOptions): number[]
+export function aRange(...args: any[]) {
+  // @ts-ignore
+  return [...range(...args)]
 }
