@@ -6,9 +6,12 @@ type Options = Partial<{
 } & {
   passive: boolean
   capture: boolean
+} & {
+  // Allowing custom events: 
+  [key: string]: (event: Event) => void
 }>
 
-export const handleEvent = (target: HTMLElement, options: Options) => {
+export const handleEvent = (target: HTMLElement | Window, options: Options) => {
 
   const {
     capture = false,
