@@ -271,12 +271,12 @@ export function useIntersectionBounds(
  */
 export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
   target: 'createRef' | React.RefObject<T>,
-  selectors: string[], 
+  selector: string | string[], 
   callback: (allBounds: Rectangle[], elements: HTMLElement[]) => void,
   {
     alwaysRecalculate = false, // should recalculate on any render?
     boundsType = 'offset' as BoundsType,
-    querySelectorAll = false,
+    querySelectorAll = Array.isArray(selector) ? false : true,
   } = {},
 ) {
   
@@ -284,9 +284,10 @@ export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
 
   useComplexEffects(function* () {
     const parent = ref.current!
-    const elements = querySelectorAll
-      ? [parent, ...selectors.map(str => parent.querySelector(str) as HTMLElement)]
-      : [parent, ...selectors.map(str => [...parent.querySelectorAll(str)] as HTMLElement[])].flat()
+    const selectorArray = Array.isArray(selector) ? selector : [selector]
+    const elements = querySelectorAll === false
+      ? [parent, ...selectorArray.map(str => parent.querySelector(str) as HTMLElement)]
+      : [parent, ...selectorArray.map(str => [...parent.querySelectorAll(str)] as HTMLElement[])].flat()
 
     const allBounds = elements.map(() => new Rectangle())
     let resizeCount = 0
@@ -306,7 +307,7 @@ export function useChildrenBounds <T extends HTMLElement = HTMLElement>(
       }
     })
     
-  }, alwaysRecalculate ? 'always-recalculate' : [target, selectors])
+  }, alwaysRecalculate ? 'always-recalculate' : [target, selector])
 
   return ref
 }
