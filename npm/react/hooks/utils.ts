@@ -163,6 +163,22 @@ export function useObservable<T, O extends Observable<any> = Observable<T>, U = 
   return observable.value
 }
 
+export function useFetchText(url: string): string | null
+export function useFetchText(url: string, initialValue: string): string
+export function useFetchText(url: string, initialValue: string | null = null) {
+  const [data, setData] = React.useState<string | null>(initialValue)
+  React.useEffect(() => {
+    window.fetch(url).then(async response => {
+      try {
+        setData(await response.text())
+      } catch (e) {
+        console.error(e)
+      }
+    }).catch(e => console.error(e))
+  }, [url])
+  return data
+}
+
 export function useFetchJson<T = any>(url: string): T | null
 export function useFetchJson<T = any>(url: string, initialValue: T): T
 export function useFetchJson<T = any>(url: string, initialValue: T | null = null) {
