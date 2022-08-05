@@ -3,8 +3,8 @@ import * as Animation from '../../../Animation'
 import { Observable } from '../../../observables'
 import { useComplexEffects } from '../hooks'
 
-type Item = React.ElementType | [React.ElementType, Record<string, any>]
-const solveItem = (item: Item): [React.ElementType, Record<string, any>] => {
+export type Item = React.ElementType | [React.ElementType, Record<string, any>]
+export const solveItem = (item: Item): [React.ElementType, Record<string, any>] => {
   return Array.isArray(item) ? item : [item, {}]
 }
 

@@ -1,11 +1,11 @@
 import React from 'react'
 import { inverseLerp, inout, in4 } from '../../../math'
-import { SwitchChildProps, Switch } from './Switch'
+import { SwitchChildProps, Switch, Item, solveItem } from './Switch'
 import './DivSwitch.css'
 
 export const DivSwitch: React.FC<{
   index?: number
-  items?: React.ElementType[]
+  items?: Item[]
   transitionDuration?: number
   debugDisplayAll?: boolean
 } & React.HTMLAttributes<HTMLDivElement>> = ({
@@ -18,11 +18,14 @@ export const DivSwitch: React.FC<{
 }) => {
 
     const mapItems = React.useMemo(() => (
-      items.map(Item => React.forwardRef<HTMLDivElement, SwitchChildProps>(({ entering }, ref) => (
-        <div ref={ref} className="Item" style={{ opacity: `${entering ? '0' : ''}` }}>
-          <Item />
-        </div>
-      )))
+      items.map(item => {
+        const [Item, props] = solveItem(item)
+        return React.forwardRef<HTMLDivElement, SwitchChildProps>(({ entering }, ref) => (
+          <div ref={ref} className="Item" style={{ opacity: `${entering ? '0' : ''}` }}>
+            <Item {...props}/>
+          </div>
+        ))
+      })
       // items as dependencies is ok
       // eslint-disable-next-line react-hooks/exhaustive-deps
     ), items)
