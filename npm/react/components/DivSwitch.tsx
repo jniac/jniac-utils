@@ -38,6 +38,10 @@ export const DivSwitch: React.FC<{
           items={mapItems}
           debugDisplayAll={debugDisplayAll}
           onTransition={(entering, leaving, t) => {
+            // Ensure to remove old class names when changes occurs quickly:
+            entering?.classList.remove('leaving')
+            leaving?.classList.remove('entering')
+            // Transition update:
             if (t < 1) {
               entering?.classList.add('entering')
               leaving?.classList.add('leaving')
