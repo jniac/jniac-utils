@@ -1,5 +1,5 @@
 import React from 'react'
-import { setPathname } from '../../../../router/location'
+import { setUrl } from '../../../../router/location'
 import { RouterContext } from '../Router'
 
 export const Link = React.forwardRef<HTMLAnchorElement, {
@@ -24,12 +24,12 @@ export const Link = React.forwardRef<HTMLAnchorElement, {
         window.open(url, '_self')
       }
       else {
-        setPathname(pathname)
+        setUrl(pathname)
       }
     } 
     
     else {
-      setPathname(to)
+      setUrl(to)
     }
   }
   return (
