@@ -1,7 +1,7 @@
 import React from 'react'
 import { Observable } from '../../../observables'
 
-export type Destroyable = null | { destroy: () => void}  | (() => void)
+export type Destroyable = null | { destroy: () => void }  | (() => void)
 
 export type ComplexEffectsState = { mounted: boolean }
 export type ComplexEffectsDependencyList = React.DependencyList | 'always-recalculate'
