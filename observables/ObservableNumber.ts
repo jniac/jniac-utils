@@ -23,6 +23,19 @@ export class ObservableNumber extends Observable<number> {
     return super.setValue(value, { ignoreCallbacks, owner })
   }
 
+  /**
+   * Shorthand for `obs.setValue(obs.value + delta)`
+   */
+  increment(delta: number | ((v: number) => number), {
+    ignoreCallbacks = false,
+    owner = null as any,
+  } = {}): boolean {
+    if (typeof delta === 'function') {
+      delta = delta(this.value)
+    }
+    return this.setValue(this.value + delta, { ignoreCallbacks, owner })
+  }
+
   get delta() { return this.value - this.valueOld }
 
   passedAbove(threshold: number) {
