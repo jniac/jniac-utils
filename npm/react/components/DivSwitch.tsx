@@ -3,19 +3,23 @@ import { inverseLerp, inout, in4 } from '../../../math'
 import { SwitchChildProps, Switch, Item, solveItem } from './Switch'
 import './DivSwitch.css'
 
-export const DivSwitch: React.FC<{
+type Props = {
   index?: number
   items?: Item[]
   transitionDuration?: number
+  debug?: string
   debugDisplayAll?: boolean
-} & React.HTMLAttributes<HTMLDivElement>> = ({
+} & React.HTMLAttributes<HTMLDivElement>
+
+export const DivSwitch = ({
   index = 0, 
   items = [],
   transitionDuration = .8,
   debugDisplayAll = false,
   className = '',
+  debug,
   ...props
-}) => {
+}: Props) => {
 
     const mapItems = React.useMemo(() => (
       items.map(item => {
@@ -37,7 +41,7 @@ export const DivSwitch: React.FC<{
           transitionDuration={transitionDuration}
           items={mapItems}
           debugDisplayAll={debugDisplayAll}
-          onTransition={(entering, leaving, t) => {
+          onTransition={(entering, leaving, t, animation) => {
             // Ensure to remove old class names when changes occurs quickly:
             entering?.classList.remove('leaving')
             leaving?.classList.remove('entering')

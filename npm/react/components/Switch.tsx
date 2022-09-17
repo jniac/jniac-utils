@@ -8,16 +8,16 @@ export const solveItem = (item: Item): [React.ElementType, Record<string, any>] 
   return Array.isArray(item) ? item : [item, {}]
 }
 
-export interface SwitchChildProps { 
+export type SwitchChildProps = { 
   entering?: boolean
   leaving?: boolean
 }
 
-export interface Props<T> {
+export type Props<T> = {
   index?: number
   items?: Item[]
   transitionDuration?: number
-  onTransition?: (entering: T | null, leaving: T | null, progress: number) => void
+  onTransition?: (entering: T | null, leaving: T | null, progress: number, animation: Animation.AnimationInstance) => void
   debugDisplayAll?: boolean
 }
 
@@ -47,8 +47,8 @@ export const Switch = <T extends unknown>({
       setTransition(true)
       const inverse = inverseObs.value
       const [entering, leaving] = inverse ? [ref1, ref2] : [ref2, ref1]
-      Animation.duringWithTarget(indexObs, { duration: transitionDuration, immediate: true }, ({ progress }) => {
-        onTransition?.(entering.current, leaving.current, progress)
+      Animation.duringWithTarget(indexObs, { duration: transitionDuration, immediate: true }, animation => {
+        onTransition?.(entering.current, leaving.current, animation.progress, animation)
       }).onComplete(() => {
         setTransition(false)
       })
