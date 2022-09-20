@@ -1,8 +1,5 @@
 export const glsl_utils = /* glsl */`
 
-  const vec3 black = vec3(0.0);
-  const vec3 white = vec3(1.0);
-
   vec2 scaleAround(vec2 p, vec2 c, float s) {
     return c + (p - c) / s;
   }
@@ -37,5 +34,10 @@ export const glsl_utils = /* glsl */`
 
   float sin01(float x) {
     return 0.5 + 0.5 * sin(x * 6.283185307179586);
+  }
+
+  float positiveModulo(float x, float modulo) {
+    x = mod(x, modulo);
+    return x < 0.0 ? x + modulo : x;
   }
 `

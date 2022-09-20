@@ -26,7 +26,8 @@ export const glsl_easings = /* glsl */`
   }
   float easeIn6 (float x) {
     x = _clamp01(x);
-    return x * x * x * x * x * x;
+    x *= x * x;
+    return x * x;
   }
 
   float easeOut1 (float x) {
@@ -51,7 +52,9 @@ export const glsl_easings = /* glsl */`
   }
   float easeOut6 (float x) {
     x = _clamp01(x);
-    return 1.0 - (x = 1.0 - x) * x * x * x * x * x;
+    x = 1.0 - x;
+    x *= x * x;
+    return 1.0 - x * x;
   }
 
   float easeInout1 (float x) {
