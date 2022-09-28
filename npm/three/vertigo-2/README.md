@@ -20,7 +20,7 @@ Note:
   is the new reference. Changes to "camera.position" are reported to "camera.focusPosition".
   It is not a good idea to animate both values.
 - Changes that requires to recompute the camera (projection & transform matrices) are 
-  detected through a cache. [Watched values](./VertigoCamera.ts#111-122) are:
+  detected through a cache. [Watched values](./VertigoCamera.ts#L111-L122) are:
   - height
   - fov
   - focusPosition
