@@ -1,9 +1,9 @@
 import { Euler, Matrix4, PerspectiveCamera, Vector3 } from 'three'
 
+const PERSPECTIVE_ONE = .8
+
 const _vector = new Vector3()
 const _matrix = new Matrix4()
-
-const PERSPECTIVE_ONE = .8
 
 type Base = {
   /** The "height" of the camera (this is really the height when fov = 0, otherwise it represents the height of the "frame" at the focus point). */
@@ -95,7 +95,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   fovEpsilon = defaultOptions.fovEpsilon
   focusPosition = new Vector3()
 
-  // Cache take some lines:
+  // Cache takes some lines:
   #cache: Base & Options = {
     height: 0,
     fov: 0,
@@ -177,7 +177,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     const dirty = this.#computeCacheChanges()
 
     if (dirty) {
-      // Compute the "focus position" changes, from the "position" change.
+      // If "position" changes, compute the resulting "focus position" changes.
       if (this.#cacheChanges.position) {
         _vector.subVectors(this.position, this.#cache.position)
         this.focusPosition.add(_vector)
@@ -196,6 +196,28 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
 
     // break the "quaternion-to-euler" callback
     this.quaternion._onChangeCallback = () => { }
+  }
+
+  move(v: Vector3): this
+  move(x: number, y: number, z: number): this
+  move(arg0: number | Vector3, arg1?: number, arg2?: number) {
+    if (arg0 instanceof Vector3) {
+      _vector.copy(arg0)
+    } else {
+      _vector.set(arg0, arg1 ?? 0, arg2 ?? 0)
+    }
+    const { x, y, z } = _vector
+    const position = this.position, matrix = this.matrix.elements
+    position.x += matrix[0] * x
+    position.y += matrix[1] * x
+    position.z += matrix[2] * x
+    position.x += matrix[4] * y
+    position.y += matrix[5] * y
+    position.z += matrix[6] * y
+    position.x += matrix[8] * z
+    position.y += matrix[9] * z
+    position.z += matrix[10] * z
+    return this
   }
 
   getDistance() {
