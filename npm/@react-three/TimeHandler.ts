@@ -23,17 +23,27 @@ class TimeHandler {
   #timeOld = 0
   #deltaTime = 0
   #callbacks = new Set<(time: TimeHandler) => void>()
+  #broken = false
   get frame() { return this.#frame }
   get time() { return this.#time }
   get timeOld() { return this.#timeOld }
   get deltaTime() { return this.#deltaTime }
   update(deltaTime: number) {
-    this.#deltaTime = deltaTime
-    this.#timeOld = this.#time
-    this.#time += deltaTime
-    this.#frame++
-    for (const callback of this.#callbacks)
-      callback(this)
+    if (this.#broken === false) {
+      this.#deltaTime = deltaTime
+      this.#timeOld = this.#time
+      this.#time += deltaTime
+      this.#frame++
+      try {
+        for (const callback of this.#callbacks) {
+          callback(this)
+        }
+      } catch (error) {
+        console.error(`TimeHandler caught an error. Break incoming loops.`)
+        console.error(error)
+        this.#broken = true
+      }
+    }
   }
   onChange(callback: (time: TimeHandler) => void) {
     this.#callbacks.add(callback)
