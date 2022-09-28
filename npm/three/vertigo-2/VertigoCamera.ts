@@ -3,6 +3,21 @@ import { Euler, Matrix4, PerspectiveCamera, Vector3 } from 'three'
 const _vector = new Vector3()
 const _matrix = new Matrix4()
 
+const PERSPECTIVE_ONE = .8
+
+type Base = {
+  /** The "height" of the camera (this is really the height when fov = 0, otherwise it represents the height of the "frame" at the focus point). */
+  height: number
+  /** Field Of View, in degree (because ThreeJS) */
+  fov: number
+  /** Represents the focus point. Where the camera is looking at. Where the "height" makes sense. */
+  focusPosition: Vector3
+  /** The position of the camera. Derives from focusPosition. */
+  position: Vector3
+  /** The rotation of the camera in euler representation. YXZ ordered. */
+  rotation: Euler
+}
+
 type Options = {
   /** Distance "before" the focus point to be rendered. */
   rangeMin: number
@@ -24,26 +39,19 @@ const defaultOptions: Options = {
   fovEpsilon: .02,
 }
 
-export const computeDistance = (fov: number, fovEpsilon: number, height: number, rangeMin: number) => {
-  return fov > fovEpsilon
-    ? height / 2 / Math.tan(fov / 2)
-    : -rangeMin
-}
-
-export const computeVertigoCamera = (
+export const updateVertigoCamera = (
   camera: PerspectiveCamera,
   focusPosition: Vector3,
   height: number,
   aspect: number,
-  {
-    rangeMin = defaultOptions.rangeMin,
-    rangeMax = defaultOptions.rangeMax,
-    nearMin = defaultOptions.nearMin,
-    farMax = defaultOptions.farMax,
-    fovEpsilon = defaultOptions.fovEpsilon,
-  }: Partial<Options> = {},
+  rangeMin = defaultOptions.rangeMin,
+  rangeMax = defaultOptions.rangeMax,
+  nearMin = defaultOptions.nearMin,
+  farMax = defaultOptions.farMax,
+  fovEpsilon = defaultOptions.fovEpsilon,
 ) => {
 
+  // NOTE: In ThreeJS "fov" is in degree.
   const fov = camera.fov * Math.PI / 180
   const isPerspective = fov > fovEpsilon
   const distance = isPerspective ? height / 2 / Math.tan(fov / 2) : -rangeMin
@@ -77,55 +85,104 @@ export const computeVertigoCamera = (
   camera.isOrthographicCamera = !isPerspective
 }
 
-const PERSPECTIVE_ONE = .8
+export class VertigoCamera extends PerspectiveCamera implements Base, Options {
 
-export class VertigoCamera extends PerspectiveCamera {
-  
+  height = 4
+  rangeMin = defaultOptions.rangeMin
+  rangeMax = defaultOptions.rangeMax
+  nearMin = defaultOptions.nearMin
+  farMax = defaultOptions.farMax
+  fovEpsilon = defaultOptions.fovEpsilon
   focusPosition = new Vector3()
-  
-  #height = 4
-  get height() {
-    return this.#height
-  }
-  set height(value: number) {
-    this.#height = value
-    this.updateVertigoCamera()
-  }
 
-  get perspective() {
-    return this.fov * Math.PI / 180 / PERSPECTIVE_ONE
-  }
-  set perspective(value: number) {
-    this.fov = value * PERSPECTIVE_ONE * 180 / Math.PI
-    this.updateVertigoCamera()
-  }
-
-  #cache = {
+  // Cache take some lines:
+  #cache: Base & Options = {
+    height: 0,
+    fov: 0,
+    focusPosition: new Vector3(),
     position: new Vector3(),
     rotation: new Euler(),
-    focusPosition: new Vector3(),
+    rangeMin: 0,
+    rangeMax: 0,
+    nearMin: 0,
+    farMax: 0,
+    fovEpsilon: 0,
+  }
+  #cacheChanges: Record<keyof (Base & Options), boolean> = {
+    height: false,
+    fov: false,
+    focusPosition: false,
+    position: false,
+    rotation: false,
+    rangeMin: false,
+    rangeMax: false,
+    nearMin: false,
+    farMax: false,
+    fovEpsilon: false,
+  }
+  #computeCacheChanges() {
+    const cache = this.#cache
+    const changed = this.#cacheChanges
+    changed.height = cache.height !== this.height
+    changed.fov = cache.fov !== this.fov
+    changed.focusPosition = !cache.focusPosition.equals(this.focusPosition)
+    changed.position = !cache.position.equals(this.position)
+    changed.rotation = !cache.rotation.equals(this.rotation)
+    changed.rangeMin = cache.rangeMin !== this.rangeMin
+    changed.rangeMax = cache.rangeMax !== this.rangeMax
+    changed.nearMin = cache.nearMin !== this.nearMin
+    changed.farMax = cache.farMax !== this.farMax
+    changed.fovEpsilon = cache.fovEpsilon !== this.fovEpsilon
+    return (
+      changed.height
+      || changed.fov
+      || changed.focusPosition
+      || changed.position
+      || changed.rotation
+      || changed.rangeMin
+      || changed.rangeMax
+      || changed.nearMin
+      || changed.farMax
+      || changed.fovEpsilon
+    )
   }
   #updateCache() {
-    this.#cache.focusPosition.copy(this.focusPosition)
-    this.#cache.position.copy(this.position)
-    this.#cache.rotation.copy(this.rotation)
+    const cache = this.#cache
+    cache.height = this.height
+    cache.fov = this.fov
+    cache.focusPosition.copy(this.focusPosition)
+    cache.position.copy(this.position)
+    cache.rotation.copy(this.rotation)
+    cache.rangeMin = this.rangeMin
+    cache.rangeMax = this.rangeMax
+    cache.nearMin = this.nearMin
+    cache.farMax = this.farMax
+    cache.fovEpsilon = this.fovEpsilon
   }
 
   updateVertigoCamera() {
-    computeVertigoCamera(this, this.focusPosition, this.#height, this.aspect)
+    updateVertigoCamera(this,
+      this.focusPosition,
+      this.height,
+      this.aspect,
+      this.rangeMin,
+      this.rangeMax,
+      this.nearMin,
+      this.farMax,
+      this.fovEpsilon)
     this.#updateCache()
   }
 
   update() {
-    const focusPositionHasChanged = this.focusPosition.equals(this.#cache.focusPosition) === false
-    const positionHasChanged = this.position.equals(this.#cache.position) === false
-    const rotationHasChanged = this.rotation.equals(this.#cache.rotation) === false
-    const dirty = focusPositionHasChanged || positionHasChanged || rotationHasChanged
-    if (positionHasChanged) {
-      _vector.subVectors(this.position, this.#cache.position)
-      this.focusPosition.add(_vector)
-    }
+    const dirty = this.#computeCacheChanges()
+
     if (dirty) {
+      // Compute the "focus position" changes, from the "position" change.
+      if (this.#cacheChanges.position) {
+        _vector.subVectors(this.position, this.#cache.position)
+        this.focusPosition.add(_vector)
+      }
+  
       this.updateVertigoCamera()
     }
   }
@@ -138,6 +195,27 @@ export class VertigoCamera extends PerspectiveCamera {
     this.rotation.order = 'YXZ'
 
     // break the "quaternion-to-euler" callback
-    this.quaternion._onChangeCallback = () => {}
+    this.quaternion._onChangeCallback = () => { }
+  }
+
+  getDistance() {
+    const fov = this.fov * Math.PI / 180
+    const isPerspective = fov > this.fovEpsilon
+    return isPerspective ? this.height / 2 / Math.tan(fov / 2) : -this.rangeMin
+  }
+
+  // Some sugar?
+  // Here it is:
+
+  get perspective() {
+    return this.fov * Math.PI / 180 / PERSPECTIVE_ONE
+  }
+  set perspective(value: number) {
+    this.fov = value * PERSPECTIVE_ONE * 180 / Math.PI
+    this.updateVertigoCamera()
+  }
+  
+  get distance() {
+    return this.getDistance()
   }
 }
