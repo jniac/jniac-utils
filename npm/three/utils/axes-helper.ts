@@ -1,4 +1,4 @@
-import { ConeGeometry, CylinderGeometry, RawShaderMaterial } from 'three'
+import { ConeGeometry, CylinderGeometry, RawShaderMaterial, ShaderMaterialParameters, Vector3 } from 'three'
 import { mergeBufferGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils'
 import { ColorArg, helperConfig, getColor } from './helper-config'
 import { setVertexColor } from './vertex-color'
@@ -13,6 +13,7 @@ export const createAxesGeometry = ({
   colorZ = 'axis-z' as ColorArg,
   radius = helperConfig['axis-radius'],
   radiusScale = 1,
+  alignMode = 'positive' as 'positive' | 'center' | 'negative', 
 } = {}) => {
 
   radius *= radiusScale
@@ -31,20 +32,28 @@ export const createAxesGeometry = ({
   const cone3 = cone1.clone()
   const cyl3 = cyl1.clone()
 
-  const coneDistance = 1 - coneHeight * .5
+  const align = {
+    'positive': .5,
+    'center': 0,
+    'negative': -.5,
+  }[alignMode]
+
   const cylLength = 1 - coneHeight
+  const coneDistance = .5 + align - coneHeight * .5
+  const cylDistance = cylLength * .5 + align - .5
+
   transform(cone1, { x: coneDistance, rz: -90 })
-  transform(cyl1, { x: cylLength * .5, sy: cylLength, rz: -90 })
+  transform(cyl1, { x: cylDistance, sy: cylLength, rz: -90 })
   setVertexColor(cone1, _colorX)
   setVertexColor(cyl1, _colorX)
 
   transform(cone2, { y: coneDistance })
-  transform(cyl2, { y: cylLength * .5, sy: cylLength })
+  transform(cyl2, { y: cylDistance, sy: cylLength })
   setVertexColor(cone2, _colorY)
   setVertexColor(cyl2, _colorY)
 
   transform(cone3, { z: coneDistance, rx: 90 })
-  transform(cyl3, { z: cylLength * .5, sy: cylLength, rx: 90 })
+  transform(cyl3, { z: cylDistance, sy: cylLength, rx: 90 })
   setVertexColor(cone3, _colorZ)
   setVertexColor(cyl3, _colorZ)
 
@@ -58,7 +67,16 @@ export const createAxesGeometry = ({
 
 
 // heavily inspired by https://github.com/oframe/ogl/blob/master/examples/base-primitives.html
-export const createAxesMaterial = () => {
+export const createAxesMaterial = ({
+  uniforms = {},
+  opacity = 1,
+  lightPosition = new Vector3(.3, .8, .6),
+  flatShading = 0,
+  ...props
+}: Partial<{
+  lightPosition: Vector3
+  flatShading: number
+}> & Omit<ShaderMaterialParameters, 'vertexShader' | 'fragmentShader'> = {}) => {
   
   const vertexShader = /* glsl */`
     attribute vec3 position, normal, color;
@@ -75,16 +93,23 @@ export const createAxesMaterial = () => {
   
   const fragmentShader = /* glsl */`
     precision highp float;
-    #define light normalize(vec3(0.3, 0.8, 0.6))
     varying vec3 vNormal, vColor;
+    uniform vec3 uLightPosition;
+    uniform float uOpacity, uFlatShading;
     void main() {
-      float lighting = dot(vNormal, light);
-      gl_FragColor.rgb = vColor + lighting * 0.3;
-      gl_FragColor.a = 1.0;
+      float lighting = dot(vNormal, uLightPosition);
+      gl_FragColor.rgb = vColor + lighting * 0.3 * (1.0 - uFlatShading);
+      gl_FragColor.a = uOpacity;
     }
   `
+
+  uniforms.uOpacity = { value: opacity }
+  uniforms.uLightPosition = { value: lightPosition }
+  uniforms.uFlatShading = { value: flatShading }
   
   return new RawShaderMaterial({
+    ...props,
+    uniforms,
     vertexShader,
     fragmentShader,
   })
