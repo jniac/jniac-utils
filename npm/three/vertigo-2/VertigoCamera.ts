@@ -32,7 +32,7 @@ type Options = {
 }
 
 const defaultOptions: Options = {
-  rangeMin: -100,
+  rangeMin: -1000,
   rangeMax: 1000,
   nearMin: .01,
   farMax: 1e5,
@@ -182,7 +182,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
         _vector.subVectors(this.position, this.#cache.position)
         this.focusPosition.add(_vector)
       }
-  
+
       this.updateVertigoCamera()
     }
   }
@@ -207,23 +207,41 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
       _vector.set(arg0, arg1 ?? 0, arg2 ?? 0)
     }
     const { x, y, z } = _vector
-    const position = this.position, matrix = this.matrix.elements
-    position.x += matrix[0] * x
-    position.y += matrix[1] * x
-    position.z += matrix[2] * x
-    position.x += matrix[4] * y
-    position.y += matrix[5] * y
-    position.z += matrix[6] * y
-    position.x += matrix[8] * z
-    position.y += matrix[9] * z
-    position.z += matrix[10] * z
+    const position = this.position, me = this.matrix.elements
+    position.x += me[0] * x
+    position.y += me[1] * x
+    position.z += me[2] * x
+    position.x += me[4] * y
+    position.y += me[5] * y
+    position.z += me[6] * y
+    position.x += me[8] * z
+    position.y += me[9] * z
+    position.z += me[10] * z
     return this
   }
 
   getDistance() {
     const fov = this.fov * Math.PI / 180
     const isPerspective = fov > this.fovEpsilon
-    return isPerspective ? this.height / 2 / Math.tan(fov / 2) : -this.rangeMin
+    return isPerspective ? this.height * .5 / Math.tan(fov * .5) : -this.rangeMin
+  }
+  setDistance(value: number) {
+    if (value <= 0) {
+      throw new Error(`Invalid value (${value}).`)
+    }
+    const fov = this.fov * Math.PI / 180
+    const isPerspective = fov > this.fovEpsilon
+    const me = this.matrix.elements
+    const fx = me[8], fy = me[9], fz = me[10]
+    const tx = me[12], ty = me[13], tz = me[14]
+    this.focusPosition.set(
+      tx - fx * value,
+      ty - fy * value,
+      tz - fz * value)
+    if (isPerspective) {
+      // Compensate height with the new focus position (in perspective only).
+      this.height = Math.tan(fov * .5) * value * 2
+    }
   }
 
   // Some sugar?
@@ -234,10 +252,12 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   }
   set perspective(value: number) {
     this.fov = value * PERSPECTIVE_ONE * 180 / Math.PI
-    this.updateVertigoCamera()
   }
-  
+
   get distance() {
     return this.getDistance()
+  }
+  set distance(value: number) {
+    this.setDistance(value)
   }
 }
