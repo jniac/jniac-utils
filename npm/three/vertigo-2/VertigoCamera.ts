@@ -31,12 +31,14 @@ type Options = {
   fovEpsilon: number
 }
 
+const defaultHeight = 4
+
 const defaultOptions: Options = {
   rangeMin: -1000,
   rangeMax: 1000,
   nearMin: .01,
   farMax: 1e5,
-  fovEpsilon: .02,
+  fovEpsilon: 1 * Math.PI / 180,
 }
 
 export const updateVertigoCamera = (
@@ -87,7 +89,7 @@ export const updateVertigoCamera = (
 
 export class VertigoCamera extends PerspectiveCamera implements Base, Options {
 
-  height = 4
+  height = defaultHeight
   rangeMin = defaultOptions.rangeMin
   rangeMax = defaultOptions.rangeMax
   nearMin = defaultOptions.nearMin
@@ -173,7 +175,21 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     this.#updateCache()
   }
 
+  throwNaN() {
+    if (Number.isNaN(this.height)) {
+      throw new Error(`"height" is NaN!`)
+    }
+    if (Number.isNaN(this.focusPosition.x) || Number.isNaN(this.focusPosition.y) || Number.isNaN(this.focusPosition.z)) {
+      throw new Error(`"focusPosition.x|y|z" is NaN!`)
+    }
+    if (Number.isNaN(this.position.x) || Number.isNaN(this.position.y) || Number.isNaN(this.position.z)) {
+      throw new Error(`"position.x|y|z" is NaN!`)
+    }
+  }
+
   update() {
+    this.throwNaN()
+
     const dirty = this.#computeCacheChanges()
 
     if (dirty) {
@@ -220,11 +236,28 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     return this
   }
 
+  applyZoom(ratio: number, { x = 0, y = 0 } = {}) {
+    const deltaHeight = this.height * (1 - ratio) * .5
+    this.height *= ratio
+    const me = this.matrix.elements
+    const dy = deltaHeight * y
+    const dx = deltaHeight * this.aspect * x
+    const rx = me[0], ry = me[1], rz = me[2]
+    const ux = me[4], uy = me[5], uz = me[6]
+    this.focusPosition.x += dx * rx + dy * ux
+    this.focusPosition.y += dx * ry + dy * uy
+    this.focusPosition.z += dx * rz + dy * uz
+  }
+
   getDistance() {
     const fov = this.fov * Math.PI / 180
     const isPerspective = fov > this.fovEpsilon
     return isPerspective ? this.height * .5 / Math.tan(fov * .5) : -this.rangeMin
   }
+
+  /**
+   * NOTE: Not sure of this function. Does it do what it should do?
+   */
   setDistance(value: number) {
     if (value <= 0) {
       throw new Error(`Invalid value (${value}).`)
