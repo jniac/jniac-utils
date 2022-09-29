@@ -21,15 +21,15 @@ Note:
   It is not a good idea to animate both values.
 - Changes that requires to recompute the camera (projection & transform matrices) are 
   detected through a cache. [Watched values](./VertigoCamera.ts#L111-L122) are:
-  - height
-  - fov
-  - focusPosition
-  - position
-  - rotation
-  - rangeMin
-  - rangeMax
-  - nearMin
-  - farMax
-  - fovEpsilon
+  - `height`
+  - `fov`
+  - `focusPosition`
+  - `position`
+  - `rotation`
+  - `rangeMin`
+  - `rangeMax`
+  - `nearMin`
+  - `farMax`
+  - `fovEpsilon`
   
 
