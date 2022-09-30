@@ -247,6 +247,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     this.focusPosition.x += dx * rx + dy * ux
     this.focusPosition.y += dx * ry + dy * uy
     this.focusPosition.z += dx * rz + dy * uz
+    this.throwNaN()
   }
 
   getDistance() {
@@ -275,6 +276,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
       // Compensate height with the new focus position (in perspective only).
       this.height = Math.tan(fov * .5) * value * 2
     }
+    this.throwNaN()
   }
 
   // Some sugar?
