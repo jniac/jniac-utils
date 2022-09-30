@@ -11,6 +11,7 @@ export type TransformParams = Partial<{
   q: Quaternion
   rotationOrder: string
   useDegree: boolean
+  s: number
   sx: number
   sy: number
   sz: number
@@ -22,11 +23,11 @@ export const getGeometryTransformer = ({
 } = {}) => {
 
   // internal, intermediate values
-  const e = new Euler()
-  const p = new Vector3()
-  const r = new Quaternion()
-  const s = new Vector3()
-  const m = new Matrix4()
+  const _e = new Euler()
+  const _p = new Vector3()
+  const _r = new Quaternion()
+  const _s = new Vector3()
+  const _m = new Matrix4()
 
   const setMatrix = ({
     x = 0,
@@ -38,45 +39,46 @@ export const getGeometryTransformer = ({
     rotationOrder = defaultRotationOrder,
     useDegree = defaultUseDegree,
     q = undefined,
+    s = 1,
     sx = 1,
     sy = 1,
     sz = 1,
   }: TransformParams) => {
     const a = useDegree ? Math.PI / 180 : 1
     if (q) {
-      r.copy(q)
+      _r.copy(q)
     } else {
-      r.setFromEuler(e.set(rx * a, ry * a, rz * a, rotationOrder))
+      _r.setFromEuler(_e.set(rx * a, ry * a, rz * a, rotationOrder))
     }
-    p.set(x, y, z)
-    s.set(sx, sy, sz)
-    m.identity().compose(p, r, s)
+    _p.set(x, y, z)
+    _s.set(s * sx, s * sy, s * sz)
+    _m.identity().compose(_p, _r, _s)
   }
 
   const transformPosition = (attribute: BufferAttribute) => {
     const max = attribute.count
     for (let i = 0; i < max; i++) {
-      p.set(
+      _p.set(
         attribute.getX(i),
         attribute.getY(i),
         attribute.getZ(i)
       )
-      p.applyMatrix4(m)
-      attribute.setXYZ(i, p.x, p.y, p.z)
+      _p.applyMatrix4(_m)
+      attribute.setXYZ(i, _p.x, _p.y, _p.z)
     }
   }
 
   const transformNormal = (attribute: BufferAttribute) => {
-    m.setPosition(0, 0, 0)
+    _m.setPosition(0, 0, 0)
     const max = attribute.count
     for (let i = 0; i < max; i++) {
-      p.set(
+      _p.set(
         attribute.getX(i),
         attribute.getY(i),
         attribute.getZ(i)
       )
-      p.applyMatrix4(m)
-      attribute.setXYZ(i, p.x, p.y, p.z)
+      _p.applyMatrix4(_m)
+      attribute.setXYZ(i, _p.x, _p.y, _p.z)
     }
   }
 
