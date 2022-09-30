@@ -13,7 +13,9 @@ export class DoubleRegister<K1, K2, V> {
     register.add(key2, value)
   }
 
-  remove(key1: K1, key2: K2, value: V) {
+  /** @obsolete Alias for `delete(k1, k2, v)`. */
+  remove(key1: K1, key2: K2, value: V) { return this.delete(key1, key2, value) }
+  delete(key1: K1, key2: K2, value: V) {
     const register = this.#map.get(key1)
     if (register) {
       const size = register.remove(key2, value)

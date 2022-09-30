@@ -59,7 +59,7 @@ class TimeHandler {
       }
     }
     const [{ order }, callback] = resolveArgs()
-    this.#callbacks.set(order, callback)
+    this.#callbacks.add(order, callback)
     const destroy = () => {
       this.#callbacks.delete(order, callback)
     }

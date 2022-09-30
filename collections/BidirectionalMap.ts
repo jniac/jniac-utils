@@ -1,4 +1,14 @@
 
+/**
+ * Guess what? It is as the name suggests, it's a... bidirectionnal map. 
+ * 
+ * Keys may be retrieved from a value: 
+ * ```
+ * bm.set(3, 'three')
+ * bm.getValue(3) // "three"
+ * bm.getKey('three') //  3
+ * ```
+ */
 export class BidirectionalMap<K, V> {
   #keys = new Map<K, V>()
   #values = new Map<V, K>()
