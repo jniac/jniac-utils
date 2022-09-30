@@ -92,11 +92,18 @@ export const easings = (() => {
   const inout4 = (x: number) => clamp01(x < .5 ? 8 * x * x * x * x : 1 - 8 * (x = 1 - x) * x * x * x)
   const inout5 = (x: number) => clamp01(x < .5 ? 16 * x * x * x * x * x : 1 - 16 * (x = 1 - x) * x * x * x * x)
   const inout6 = (x: number) => clamp01(x < .5 ? 32 * x * x * x * x * x * x : 1 - 32 * (x = 1 - x) * x * x * x * x * x)
+  const inout = (x: number, p: number = 3, i: number = 0.5) => {
+    return (x < 0 ? 0 : x > 1 ? 1 : x < i
+      ? 1 / Math.pow(i, p - 1) * Math.pow(x, p)
+      : 1 - 1 / Math.pow(1 - i, p - 1) * Math.pow(1 - x, p)
+    )
+  }
   return {
     linear,
     in1, in2, in3, in4, in5, in6,
     out1, out2, out3, out4, out5, out6,
     inout1, inout2, inout3, inout4, inout5, inout6,
+    inout,
   }
 })()
 

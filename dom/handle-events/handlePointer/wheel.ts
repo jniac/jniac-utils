@@ -6,6 +6,7 @@ type WheelFrameInfo = {
   deltaTime: number
   velocity: { x: number, y: number, z: number }
   velocityOld: { x: number, y: number, z: number }
+  event: WheelEvent
 }
 
 export type WheelOptions = Partial<{
@@ -94,7 +95,7 @@ export const handlePointerWheel = (element: HTMLElement | Window, options: Wheel
 
     const velocity = toXYZ(_averageVelocity.value)
     const velocityOld = toXYZ(_averageVelocity.getValue(1))
-    onWheelFrame?.({ deltaTime, velocity, velocityOld })
+    onWheelFrame?.({ deltaTime, velocity, velocityOld, event: _wheelEvent })
   }
 
 
