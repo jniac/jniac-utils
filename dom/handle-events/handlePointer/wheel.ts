@@ -46,16 +46,16 @@ export const handlePointerWheel = (element: HTMLElement | Window, options: Wheel
 
   const _rawVelocity = new VectorVariable([0, 0, 0], { size: 5 })
   const _averageVelocity = new VectorVariable([0, 0, 0], { size: 100, derivativeCount: 2 })
-  const _velocity = {
-    x: 0,
-    y: 0,
-    z: 0,
-  }
+  const _velocity = { x: 0, y: 0, z: 0 }
 
   let _wheelEvent: WheelEvent | null = null
 
   const _onWheel = (event: WheelEvent) => {
     const deltaTime = (event.timeStamp - (_wheelEvent?.timeStamp ?? 0)) / 1e3
+    if (deltaTime <= 0) {
+      // Skip invalid deltaTimes that lead to NaN values.
+      return
+    }
     if (_wheelEvent === null) {
       onWheelStart?.()
     }
