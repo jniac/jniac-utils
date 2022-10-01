@@ -11,15 +11,27 @@ const cleanPathname = (value: string) => {
   return value.replace(/\/{2,}/g, '/').replace(/\/$/, '') || '/'
 }
 
-export const Router: React.FC<{
+type Props = {
+  // NOTE: Why RegExp here???
   baseUrl?: string | RegExp
   pathnameTransform?: null | ((pathname: string) => string),
   children?: React.ReactNode
-}> = ({
+}
+
+export const Router = ({
   baseUrl = '',
   pathnameTransform = null,
   children,
-}) => {
+}: Props) => {
+
+  // Ensure baseUrl starts with "/"
+  if (typeof baseUrl === 'string') {
+    if (baseUrl.length > 0) {
+      if (baseUrl.startsWith('/') === false) {
+        baseUrl = '/' + baseUrl
+      }
+    }
+  }
 
   const context = {
     baseUrl,

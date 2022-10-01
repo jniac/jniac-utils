@@ -5,12 +5,12 @@ export let homepage = '' as string
 const processPathname = (str: string) => {
 
   // First (and absolutely first), remove double slashes.
-  str = str.replace(/[/]{2,}/g, '/') 
-  
+  str = str.replace(/[/]{2,}/g, '/')
+
   // Handle "homepage".
   if (homepage && str.startsWith(homepage)) {
     str = str.slice(homepage.length)
-  }    
+  }
 
   // Remove trailing slash
   if (str.endsWith('/')) {

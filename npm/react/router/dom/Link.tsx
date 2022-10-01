@@ -8,17 +8,17 @@ export const Link = React.forwardRef<HTMLAnchorElement, {
 } & React.HTMLAttributes<HTMLAnchorElement>>(({
   to,
   reload = false,
-  children, 
+  children,
   ...props
 }, ref) => {
   const { baseUrl } = React.useContext(RouterContext)
   const onClick = (e: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
-    
+
     e.preventDefault()
 
     if (baseUrl && to.startsWith('/')) {
       // baseUrl injection
-      const pathname = `/${baseUrl}${to}`
+      const pathname = baseUrl + to
       if (reload) {
         const url = (window.location.origin + pathname.substring(1))
         window.open(url, '_self')
@@ -26,8 +26,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, {
       else {
         setUrl(pathname)
       }
-    } 
-    
+    }
+
     else {
       setUrl(to)
     }
