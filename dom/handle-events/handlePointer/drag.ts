@@ -80,7 +80,7 @@ const dragHasStart = (downEvent: PointerEvent, moveEvent: PointerEvent | TouchEv
 }
 
 
-export const handlePointerDrag = (element: HTMLElement | Window, options: DragOptions) => {
+export const handleDrag = (element: HTMLElement | Window, options: DragOptions) => {
 
   const {
     capture = false,

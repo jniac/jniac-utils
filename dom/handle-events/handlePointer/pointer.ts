@@ -1,5 +1,5 @@
 import { Point } from '../../../geom'
-import { DragOptions, handlePointerDrag, isDragListening } from './drag'
+import { DragOptions, handleDrag, isDragListening } from './drag'
 import { handlePointerWheel, isWheelListening, WheelOptions } from './wheel'
 
 type TapInfo = {
@@ -237,7 +237,7 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
   target.addEventListener('contextmenu', _onContextMenu, { capture, passive })
 
   const wheelListener = isWheelListening(options) ? handlePointerWheel(element, options) : null
-  const dragListener = isDragListening(options) ? handlePointerDrag(element, options) : null
+  const dragListener = isDragListening(options) ? handleDrag(element, options) : null
 
   const destroy = () => {
     target.removeEventListener('pointerover', _onPointerOver, { capture })
