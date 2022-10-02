@@ -1,11 +1,7 @@
 // @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
 import { useEffect } from 'react'
-// @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
-import { useThree } from '@react-three/fiber'
 import { inout3, inverseLerp } from '../../math'
 import { OrderSet } from '../../collections'
-
-
 
 const requestContinuousAnimationSet = new Set<number>()
 let requestContinuousAnimationCount = 0
@@ -82,7 +78,6 @@ export const AnimationFrame = ({
   timeBeforeFade = 30,
   fadeDuration = 1,
 }: AnimationFrameProps) => {
-  const { invalidate } = useThree()
 
   useEffect(() => {
 
@@ -106,7 +101,6 @@ export const AnimationFrame = ({
 
       if (timeScale > 0) {
         time.update(deltaTime * timeScale)
-        invalidate()
       }
     }
 
