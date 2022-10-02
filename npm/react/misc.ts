@@ -52,13 +52,14 @@ export function mapWithSeparator<T, U, V>(
   return result
 }
 
+type PointerType = 'mouse' | 'touch'
 export const usePointerType = () => {
-  const [pointerType, setPointerType] = useState('mouse')
+  const [pointerType, setPointerType] = useState<PointerType>(window.innerWidth > 800 ? 'mouse' : 'touch')
   useEffect(() => {
     let current = pointerType
     const onPointer = (event: PointerEvent): void => {
       if (event.pointerType !== current) {
-        current = event.pointerType
+        current = event.pointerType as PointerType
         setPointerType(current)
       }
     }
