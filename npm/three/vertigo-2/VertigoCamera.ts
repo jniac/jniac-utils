@@ -5,6 +5,19 @@ const PERSPECTIVE_ONE = .8
 const _vector = new Vector3()
 const _matrix = new Matrix4()
 
+function setupVector(args: [number, number, number, { scalar: number }?]): Vector3
+function setupVector(args: [Vector3, { scalar: number }?]): Vector3
+function setupVector(args: any[]) {
+  if (args[0] instanceof Vector3) {
+    _vector.copy(args[0])
+    _vector.multiplyScalar(args[1]?.scalar ?? 1)
+  } else {
+    _vector.set(args[0], args[1] ?? 0, args[2] ?? 0)
+    _vector.multiplyScalar(args[3]?.scalar ?? 1)
+  }
+  return _vector
+}
+
 type Base = {
   /** The "height" of the camera (this is really the height when fov = 0, otherwise it represents the height of the "frame" at the focus point). */
   height: number
@@ -214,15 +227,10 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     this.quaternion._onChangeCallback = () => { }
   }
 
-  move(v: Vector3): this
-  move(x: number, y: number, z: number): this
-  move(arg0: number | Vector3, arg1?: number, arg2?: number) {
-    if (arg0 instanceof Vector3) {
-      _vector.copy(arg0)
-    } else {
-      _vector.set(arg0, arg1 ?? 0, arg2 ?? 0)
-    }
-    const { x, y, z } = _vector
+  move(v: Vector3, options?: { scalar: number }): this
+  move(x: number, y: number, z: number, options?: { scalar: number }): this
+  move(...args: any[]) {
+    const { x, y, z } = setupVector(args as any)
     const position = this.position, me = this.matrix.elements
     position.x += me[0] * x
     position.y += me[1] * x
