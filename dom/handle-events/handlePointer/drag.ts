@@ -75,8 +75,8 @@ const dragHasStart = (downEvent: PointerEvent, moveEvent: PointerEvent | TouchEv
   const x = p.x - downEvent.clientX
   const y = p.y - downEvent.clientY
   const start = (x * x) + (y * y) > distanceThreshold * distanceThreshold
-  const direction = Math.abs(x / y) > 1 ? 'horizontal' : 'vertical'
-  return [start, direction] as [boolean, DragDirection]
+  const direction: DragDirection = Math.abs(x / y) > 1 ? 'horizontal' : 'vertical'
+  return [start, direction] as const
 }
 
 
@@ -85,114 +85,115 @@ export const handlePointerDrag = (element: HTMLElement | Window, options: DragOp
   const {
     capture = false,
     passive = true,
-
-    onDownIgnore,
-
     dragDistanceThreshold = 10,
     dragDamping = .7,
-    onDrag,
-    onDragStart,
-    onDragStop,
-    onHorizontalDrag,
-    onHorizontalDragStart,
-    onHorizontalDragStop,
-    onVerticalDrag,
-    onVerticalDragStart,
-    onVerticalDragStop,
   } = options
 
-  let _downEvent: PointerEvent | null = null
-  let _moveEvent: PointerEvent | TouchEvent | null = null
-  const isTouch = () => _downEvent?.pointerType === 'touch'
-  const _movePoint = new Point()
-  const _previousMovePoint = new Point()
-  let _isDown = false
-  let _dragStart = false
-  let _dragDirection: DragDirection = 'horizontal'
-  let _onDownFrameId = -1
-  const onDirectionalDrag = () => _dragDirection === 'horizontal' ? onHorizontalDrag : onVerticalDrag
-  const onDirectionalDragStart = () => _dragDirection === 'horizontal' ? onHorizontalDragStart : onVerticalDragStart
-  const onDirectionalDragStop = () => _dragDirection === 'horizontal' ? onHorizontalDragStop : onVerticalDragStop
+  let downEvent: PointerEvent | null = null
+  let moveEvent: PointerEvent | TouchEvent | null = null
+  const isTouch = () => downEvent?.pointerType === 'touch'
+  const movePoint = new Point()
+  const previousMovePoint = new Point()
+  let isDown = false
+  let dragStart = false
+  let dragDirection: DragDirection = 'horizontal'
+  let onDownFrameId = -1
+  const onDirectionalDrag = () => dragDirection === 'horizontal' ? options.onHorizontalDrag : options.onVerticalDrag
+  const onDirectionalDragStart = () => dragDirection === 'horizontal' ? options.onHorizontalDragStart : options.onVerticalDragStart
+  const onDirectionalDragStop = () => dragDirection === 'horizontal' ? options.onHorizontalDragStop : options.onVerticalDragStop
 
-  const _onPointerDown = (event: PointerEvent) => {
-    if (onDownIgnore?.(event)) {
+  const onPointerDown = (event: PointerEvent) => {
+    if (options.onDownIgnore?.(event)) {
       return
     }
 
-    _isDown = true
-    _dragStart = false
-    _downEvent = event
-    _moveEvent = event
-    _movePoint.copy(moveEventToPoint(event))
-    _previousMovePoint.copy(moveEventToPoint(event))
+    isDown = true
+    dragStart = false
+    downEvent = event
+    moveEvent = event
+    movePoint.copy(moveEventToPoint(event))
+    previousMovePoint.copy(moveEventToPoint(event))
 
     if (isTouch()) {
-      window.addEventListener('touchmove', _onMoveDown, { capture, passive })
-      window.addEventListener('touchend', _onMoveDownEnd, { capture, passive })
+      window.addEventListener('touchmove', onMoveDown, { capture, passive })
+      window.addEventListener('touchend', onMoveDownEnd, { capture, passive })
     } else {
-      window.addEventListener('pointermove', _onMoveDown, { capture, passive })
-      window.addEventListener('pointerup', _onMoveDownEnd, { capture, passive })
+      window.addEventListener('pointermove', onMoveDown, { capture, passive })
+      window.addEventListener('pointerup', onMoveDownEnd, { capture, passive })
     }
 
-    _onDownFrame()
+    onDownFrame()
   }
 
-  const _onMoveDown = (event: TouchEvent | PointerEvent) => {
-    _moveEvent = event
+  const onMoveDown = (event: TouchEvent | PointerEvent) => {
+    moveEvent = event
   }
 
-  const _onDownFrame = () => {
-    if (_isDown) {
-      _onDownFrameId = window.requestAnimationFrame(_onDownFrame)
-      if (_dragStart === false) {
-        [_dragStart, _dragDirection] = dragHasStart(_downEvent!, _moveEvent!, dragDistanceThreshold)
-        if (_dragStart) {
+  const onDownFrame = () => {
+    if (isDown) {
+      onDownFrameId = window.requestAnimationFrame(onDownFrame)
+
+      // Do not trigger "end" on multi touch if some touch still exists.
+      if (moveEvent instanceof TouchEvent) {
+        if (moveEvent.touches.length > 1) {
+          const [touch] = moveEvent.touches
+          movePoint.set(touch.clientX, touch.clientY)
+          return
+        }
+      }
+
+      if (dragStart === false) {
+        [dragStart, dragDirection] = dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
+        if (dragStart) {
           // Drag Started!
-          const info = getDragInfo(_downEvent!, _moveEvent!, _movePoint, _previousMovePoint, _dragDirection)
-          onDragStart?.(info)
+          const info = getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint, dragDirection)
+          options.onDragStart?.(info)
           onDirectionalDragStart()?.(info)
         }
       }
-      if (_dragStart) {
-        _previousMovePoint.copy(_movePoint)
-        const p = moveEventToPoint(_moveEvent!)
-        _movePoint.x += (p.x - _movePoint.x) * dragDamping
-        _movePoint.y += (p.y - _movePoint.y) * dragDamping
-        const info = getDragInfo(_downEvent!, _moveEvent!, _movePoint, _previousMovePoint, _dragDirection)
-        onDrag?.(info)
+      if (dragStart) {
+        previousMovePoint.copy(movePoint)
+        const p = moveEventToPoint(moveEvent!)
+        movePoint.x += (p.x - movePoint.x) * dragDamping
+        movePoint.y += (p.y - movePoint.y) * dragDamping
+        const info = getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint, dragDirection)
+        options.onDrag?.(info)
         onDirectionalDrag()?.(info)
       }
     }
   }
 
-  const _onMoveDownEnd = (event: TouchEvent | PointerEvent) => {
+  const onMoveDownEnd = (event: TouchEvent | PointerEvent) => {
     if (isTouch()) {
-      window.removeEventListener('touchmove', _onMoveDown, { capture })
-      window.removeEventListener('touchend', _onMoveDownEnd, { capture })
+      if ((event as TouchEvent).touches.length > 0) {
+        return
+      }
+      window.removeEventListener('touchmove', onMoveDown, { capture })
+      window.removeEventListener('touchend', onMoveDownEnd, { capture })
     } else {
-      window.removeEventListener('pointermove', _onMoveDown, { capture })
-      window.removeEventListener('pointerup', _onMoveDownEnd, { capture })
+      window.removeEventListener('pointermove', onMoveDown, { capture })
+      window.removeEventListener('pointerup', onMoveDownEnd, { capture })
     }
-    window.cancelAnimationFrame(_onDownFrameId)
-    if (_dragStart) {
-      const info = getDragInfo(_downEvent!, event!, _movePoint, _previousMovePoint, _dragDirection)
-      onDragStop?.(info)
+    window.cancelAnimationFrame(onDownFrameId)
+    if (dragStart) {
+      const info = getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint, dragDirection)
+      options.onDragStop?.(info)
       onDirectionalDragStop()?.(info)
     }
-    _isDown = false
-    _downEvent = null
-    _dragStart = false
+    isDown = false
+    downEvent = null
+    dragStart = false
   }
 
   const target = element as HTMLElement // Fooling typescript.
-  target.addEventListener('pointerdown', _onPointerDown, { capture, passive })
+  target.addEventListener('pointerdown', onPointerDown, { capture, passive })
   const destroy = () => {
-    target.removeEventListener('pointerdown', _onPointerDown, { capture })
-    window.removeEventListener('touchmove', _onMoveDown, { capture })
-    window.removeEventListener('touchend', _onMoveDownEnd, { capture })
-    window.removeEventListener('pointermove', _onMoveDown, { capture })
-    window.removeEventListener('pointerup', _onMoveDownEnd, { capture })
-    window.cancelAnimationFrame(_onDownFrameId)
+    target.removeEventListener('pointerdown', onPointerDown, { capture })
+    window.removeEventListener('touchmove', onMoveDown, { capture })
+    window.removeEventListener('touchend', onMoveDownEnd, { capture })
+    window.removeEventListener('pointermove', onMoveDown, { capture })
+    window.removeEventListener('pointerup', onMoveDownEnd, { capture })
+    window.cancelAnimationFrame(onDownFrameId)
   }
 
   return { destroy }
