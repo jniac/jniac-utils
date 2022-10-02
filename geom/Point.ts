@@ -35,6 +35,12 @@ const subtract = <T extends IPoint>(a: IPoint, b: IPoint, receiver: T) => {
   return receiver
 }
 
+const multiplyScalar = <T extends IPoint>(p: IPoint, scalar: number, receiver: T) => {
+  receiver.x = p.x * scalar
+  receiver.y = p.y * scalar
+  return receiver
+}
+
 const sqMagnitude = (p: IPoint) => {
   const { x, y } = p
   return x * x + y * y
@@ -113,13 +119,16 @@ export class Point {
   clone() {
     return new Point(this.x, this.y)
   }
-  add(other: PointParams, receiver = this) {
+  add(other: PointParams, receiver: Point = this) {
     return add(this, ensureIPoint(other), receiver)
   }
-  subtract(other: PointParams, receiver = this) {
+  subtract(other: PointParams, receiver: Point = this) {
     return subtract(this, ensureIPoint(other), receiver)
   }
-  clamp(min: PointParams, max: PointParams, receiver = this) {
+  multiplyScalar(scalar: number, receiver: Point = this) {
+    return multiplyScalar(this, scalar, receiver)
+  }
+  clamp(min: PointParams, max: PointParams, receiver: Point = this) {
     return clamp(this, ensureIPoint(min), ensureIPoint(max), receiver)
   }
 

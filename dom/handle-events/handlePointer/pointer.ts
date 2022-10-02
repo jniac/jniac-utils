@@ -1,5 +1,6 @@
 import { Point } from '../../../geom'
 import { DragOptions, handleDrag, isDragListening } from './drag'
+import { handlePinch, isPinchListening, PinchOptions } from './pinch'
 import { handlePointerWheel, isWheelListening, WheelOptions } from './wheel'
 
 type TapInfo = {
@@ -75,7 +76,7 @@ const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: numb
   )
 }
 
-export const handlePointer = (element: HTMLElement | Window, options: Options & WheelOptions & DragOptions) => {
+export const handlePointer = (element: HTMLElement | Window, options: Options & DragOptions & PinchOptions & WheelOptions) => {
 
   const {
     capture = false,
@@ -236,8 +237,9 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
   target.addEventListener('pointermove', _onPointerMove, { capture, passive })
   target.addEventListener('contextmenu', _onContextMenu, { capture, passive })
 
-  const wheelListener = isWheelListening(options) ? handlePointerWheel(element, options) : null
   const dragListener = isDragListening(options) ? handleDrag(element, options) : null
+  const pinchListener = isPinchListening(options) ? handlePinch(element, options) : null
+  const wheelListener = isWheelListening(options) ? handlePointerWheel(element, options) : null
 
   const destroy = () => {
     target.removeEventListener('pointerover', _onPointerOver, { capture })
@@ -252,8 +254,9 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
     window.removeEventListener('pointerup', _onPointerUp, { capture })
     window.clearTimeout(_tapState.timeoutId)
 
-    wheelListener?.destroy()
     dragListener?.destroy()
+    pinchListener?.destroy()
+    wheelListener?.destroy()
   }
 
   return { destroy }
