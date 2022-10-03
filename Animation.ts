@@ -165,10 +165,18 @@ const getMemoizedEase = (ease: EaseDeclaration) => {
 export const lerpObject = (receiver: any, a: any, b: any, t: number) => {
   for (const key in a) {
     const va = a[key]
+    const vb = b[key]
     // some props may not be numeric, (ex: new THREE.Euler(0, 1, 2, 'XYZ'))
-    if (typeof va === 'number') {
-      const vb = b[key]
-      receiver[key] = lerp(va, vb, t)
+    switch (typeof va) {
+      case 'number': {
+        receiver[key] = lerp(va, vb, t)
+        break
+      }
+
+      case 'object': {
+        lerpObject(receiver[key], va, vb, t)
+        break
+      }
     }
   }
 }
@@ -576,8 +584,8 @@ type EaseDeclaration =
   | undefined 
 
 type TweenParams<T> = {
-  from?: T | Partial<Record<keyof T, number>>
-  to?: T | Partial<Record<keyof T, number>>
+  from?: T | Partial<Record<keyof T, any>>
+  to?: T | Partial<Record<keyof T, any>>
   ease?: EaseDeclaration
   onChange?: AnimationCallback,
   onComplete?: AnimationCallback,
@@ -633,6 +641,9 @@ const tween = <T>(target: T, timing: AnimationParam, {
 
 // syntax sugar / short hand
 const cancelTween = duringCancelTarget
+const hasTween = (target: any) => {
+  return !!duringMap.get(target)
+}
 
 const info = {
   get time() { return time },
@@ -659,6 +670,7 @@ export {
   waitFrames,
   tween,
   cancelTween,
+  hasTween,
   getEase,
   getMemoizedEase,
 }
@@ -683,6 +695,7 @@ export const Animation = {
   waitFrames,
   tween,
   cancelTween,
+  hasTween,
   getEase,
   getMemoizedEase,
   AnimationInstance,
