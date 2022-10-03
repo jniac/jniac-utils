@@ -70,10 +70,8 @@ const moveEventToPoint = (moveEvent: PointerEvent | TouchEvent) => {
   }
 }
 
-const dragHasStart = (downEvent: PointerEvent, moveEvent: PointerEvent | TouchEvent, distanceThreshold: number) => {
-  const p = moveEventToPoint(moveEvent)
-  const x = p.x - downEvent.clientX
-  const y = p.y - downEvent.clientY
+const dragHasStart = (downPoint: Point, movePoint: Point, distanceThreshold: number) => {
+  const { x, y } = Point.subtract(movePoint, downPoint)
   const start = (x * x) + (y * y) > distanceThreshold * distanceThreshold
   const direction: DragDirection = Math.abs(x / y) > 1 ? 'horizontal' : 'vertical'
   return [start, direction] as const
@@ -90,9 +88,12 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions) 
   } = options
 
   let downEvent: PointerEvent | null = null
-  let moveEvent: PointerEvent | TouchEvent | null = null
-  const isTouch = () => downEvent?.pointerType === 'touch'
+  let moveEvent: PointerEvent | TouchEvent
+  let isTouch = false
+  let touchCount = 0
+  const downPoint = new Point()
   const movePoint = new Point()
+  const easeMovePoint = new Point()
   const previousMovePoint = new Point()
   let isDown = false
   let dragStart = false
@@ -108,13 +109,15 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions) 
     }
 
     isDown = true
+    isTouch = event.pointerType === 'touch'
     dragStart = false
     downEvent = event
-    moveEvent = event
-    movePoint.copy(moveEventToPoint(event))
-    previousMovePoint.copy(moveEventToPoint(event))
+    downPoint.set(event.clientX, event.clientY)
+    movePoint.copy(downPoint)
+    easeMovePoint.copy(downPoint)
+    previousMovePoint.copy(downPoint)
 
-    if (isTouch()) {
+    if (isTouch) {
       window.addEventListener('touchmove', onMoveDown, { capture, passive })
       window.addEventListener('touchend', onMoveDownEnd, { capture, passive })
     } else {
@@ -127,23 +130,38 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions) 
 
   const onMoveDown = (event: TouchEvent | PointerEvent) => {
     moveEvent = event
+    if (event instanceof TouchEvent) {
+      const [touch] = event.touches
+      movePoint.set(touch.clientX, touch.clientY)
+    } else {
+      movePoint.set(event.clientX, event.clientY)
+    }
   }
 
   const onDownFrame = () => {
     if (isDown) {
       onDownFrameId = window.requestAnimationFrame(onDownFrame)
-
+      
       // Do not trigger "end" on multi touch if some touch still exists.
       if (moveEvent instanceof TouchEvent) {
-        if (moveEvent.touches.length > 1) {
+        const previousTouchCount = touchCount
+        touchCount = moveEvent.touches.length
+
+        // Back from multi touch (ex: "pinch" gesture), reset the position.
+        if (touchCount === 1 && previousTouchCount > 1) {
           const [touch] = moveEvent.touches
           movePoint.set(touch.clientX, touch.clientY)
+          easeMovePoint.copy(movePoint)
+        }
+
+        // Skip multi touch.
+        if (touchCount > 1) {
           return
         }
       }
 
       if (dragStart === false) {
-        [dragStart, dragDirection] = dragHasStart(downEvent!, moveEvent!, dragDistanceThreshold)
+        [dragStart, dragDirection] = dragHasStart(downPoint, movePoint, dragDistanceThreshold)
         if (dragStart) {
           // Drag Started!
           const info = getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint, dragDirection)
@@ -152,11 +170,10 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions) 
         }
       }
       if (dragStart) {
-        previousMovePoint.copy(movePoint)
-        const p = moveEventToPoint(moveEvent!)
-        movePoint.x += (p.x - movePoint.x) * dragDamping
-        movePoint.y += (p.y - movePoint.y) * dragDamping
-        const info = getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint, dragDirection)
+        previousMovePoint.copy(easeMovePoint)
+        easeMovePoint.x += (movePoint.x - easeMovePoint.x) * dragDamping
+        easeMovePoint.y += (movePoint.y - easeMovePoint.y) * dragDamping
+        const info = getDragInfo(downEvent!, moveEvent!, easeMovePoint, previousMovePoint, dragDirection)
         options.onDrag?.(info)
         onDirectionalDrag()?.(info)
       }
@@ -164,9 +181,11 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions) 
   }
 
   const onMoveDownEnd = (event: TouchEvent | PointerEvent) => {
-    if (isTouch()) {
+    if (isTouch) {
       if ((event as TouchEvent).touches.length > 0) {
-        return
+        const [touch] = (moveEvent as TouchEvent).touches
+        movePoint.set(touch.clientX, touch.clientY)
+      return
       }
       window.removeEventListener('touchmove', onMoveDown, { capture })
       window.removeEventListener('touchend', onMoveDownEnd, { capture })
@@ -176,7 +195,7 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions) 
     }
     window.cancelAnimationFrame(onDownFrameId)
     if (dragStart) {
-      const info = getDragInfo(downEvent!, moveEvent!, movePoint, previousMovePoint, dragDirection)
+      const info = getDragInfo(downEvent!, moveEvent!, easeMovePoint, previousMovePoint, dragDirection)
       options.onDragStop?.(info)
       onDirectionalDragStop()?.(info)
     }
