@@ -1,9 +1,11 @@
-import { Euler, Matrix4, PerspectiveCamera, Vector3 } from 'three'
+import { Euler, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from 'three'
+import { lerp } from 'three/src/math/MathUtils'
 
 const PERSPECTIVE_ONE = .8
 
 const _vector = new Vector3()
 const _matrix = new Matrix4()
+const _quaternion = new Quaternion()
 
 function setupVector(args: [number, number, number, { scalar: number }?]): Vector3
 function setupVector(args: [Vector3, { scalar: number }?]): Vector3
@@ -227,6 +229,45 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     this.quaternion._onChangeCallback = () => { }
   }
 
+  copy(other: this) {
+    super.copy(other)
+    this.height = other.height
+    this.rangeMin = other.rangeMin
+    this.rangeMax = other.rangeMax
+    this.nearMin = other.nearMin
+    this.farMax = other.farMax
+    this.fovEpsilon = other.fovEpsilon
+    this.focusPosition.copy(other.focusPosition)
+    this.rotation.x = other.rotation.x
+    this.rotation.y = other.rotation.y
+    this.rotation.z = other.rotation.z
+    this.#updateCache()
+    return this
+  }
+
+  clone() {
+    return new VertigoCamera().copy(this) as this
+  }
+
+  lerpCameras(a: this, b: this, alpha: number) {
+    this.height = lerp(a.height, b.height, alpha)
+    this.rangeMin = lerp(a.rangeMin, b.rangeMin, alpha)
+    this.rangeMax = lerp(a.rangeMax, b.rangeMax, alpha)
+    this.nearMin = lerp(a.nearMin, b.nearMin, alpha)
+    this.farMax = lerp(a.farMax, b.farMax, alpha)
+    this.fovEpsilon = lerp(a.fovEpsilon, b.fovEpsilon, alpha)
+    this.focusPosition.lerpVectors(a.focusPosition, b.focusPosition, alpha)
+    // NOTE: rotation is interpolated through quaternions
+    _quaternion.slerpQuaternions(a.quaternion, b.quaternion, alpha)
+    this.rotation.setFromQuaternion(_quaternion)
+    this.update()
+    return this
+  }
+
+  lerp(other: this, alpha: number) {
+    return this.lerpCameras(this, other, alpha)
+  }
+
   move(v: Vector3, options?: { scalar: number }): this
   move(x: number, y: number, z: number, options?: { scalar: number }): this
   move(...args: any[]) {
@@ -256,6 +297,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     this.focusPosition.y += dx * ry + dy * uy
     this.focusPosition.z += dx * rz + dy * uz
     this.throwNaN()
+    return this
   }
 
   getDistance() {
