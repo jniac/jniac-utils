@@ -95,8 +95,20 @@
 .flex.gutter-4 > * {
   --gutter: 4px;
 }
+.flex.gutter-6 > * {
+  --gutter: 6px;
+}
 .flex.gutter-8 > * {
   --gutter: 8px;
+}
+.flex.gutter-10 > * {
+  --gutter: 10px;
+}
+.flex.gutter-12 > * {
+  --gutter: 12px;
+}
+.flex.gutter-14 > * {
+  --gutter: 14px;
 }
 .flex.gutter-16 > * {
   --gutter: 16px;
