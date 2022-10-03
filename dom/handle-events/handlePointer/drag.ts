@@ -104,6 +104,9 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions) 
   const onDirectionalDragStop = () => dragDirection === 'horizontal' ? options.onHorizontalDragStop : options.onVerticalDragStop
 
   const onPointerDown = (event: PointerEvent) => {
+    if (isDown) {
+      return
+    }
     if (options.onDownIgnore?.(event)) {
       return
     }
