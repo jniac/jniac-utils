@@ -46,6 +46,8 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     passive = true,
   } = options
   const info: InternalPinchInfo = { frame: 0 }
+  let isPinch = false
+  let points: Point[] = []
   const update = (point0: Point, point1: Point) => {
     info.old = info.current
     const center = Point.add(point0, point1).multiplyScalar(.5)
@@ -64,7 +66,6 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     }
     info.current = state
     if (!info.start) {
-      console.log('start')
       info.start = state
       info.old = state
       options.onPinchStart?.(info as PinchInfo)
@@ -80,20 +81,27 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     info.start = undefined
   }
   const onTouchMove = (event: TouchEvent) => {
-    const points = [...event.touches].map(touch => new Point(touch.clientX, touch.clientY))
-    if (points.length === 2) {
-      update(points[0], points[1])
-    }
+    points = [...event.touches].map(touch => new Point(touch.clientX, touch.clientY))
+    isPinch = points.length === 2
     if (points.length < 2 && info.current) {
       stop()
-    } 
+    }
+  }
+  let frameId = -1
+  const frameUpdate = () => {
+    frameId = window.requestAnimationFrame(frameUpdate)
+    if (isPinch) {
+      update(points[0], points[1])
+    }
   }
   const target = element as HTMLElement // Fooling typescript.
   target.addEventListener('touchmove', onTouchMove, { capture, passive })
   target.addEventListener('touchend', onTouchMove, { capture, passive })
+  frameId = window.requestAnimationFrame(frameUpdate)
   const destroy = () => {
     target.removeEventListener('touchmove', onTouchMove, { capture })
     target.removeEventListener('touchend', onTouchMove, { capture })
+    window.cancelAnimationFrame(frameId)
   }
   return { destroy }
 }
