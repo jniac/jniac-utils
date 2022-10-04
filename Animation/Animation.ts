@@ -16,7 +16,7 @@ const cubic01 = (x2: number, x3: number, t: number) => {
   const ti = 1 - t
   const t2 = t * t
   return (
-    + 3 * ti * ti  * t * x2
+    + 3 * ti * ti * t * x2
     + 3 * ti * t2 * x3
     + t2 * t
   )
@@ -107,7 +107,7 @@ export const easings = (() => {
   }
 })()
 
-const getEase = (ease: EaseDeclaration) => {
+const getEase = (ease: EaseDeclaration): ((x: number) => number) => {
 
   if (typeof ease === 'function') {
     return ease
@@ -131,12 +131,16 @@ const getEase = (ease: EaseDeclaration) => {
 
 const easeMap = new Map<EaseDeclaration, (x: number) => number>()
 const getMemoizedEase = (ease: EaseDeclaration) => {
-  let value = easeMap.get(ease)
-  if (value === undefined) {
-    value = getEase(ease)
-    easeMap.set(ease, value)
+  // Only "string" ease are memoized (lambda / arrow function could be new at each call). 
+  if (typeof ease === 'string') {
+    let value = easeMap.get(ease)
+    if (value === undefined) {
+      value = getEase(ease)
+      easeMap.set(ease, value)
+    }
+    return value
   }
-  return value
+  return getEase(ease)
 }
 
 // EASINGS <
@@ -151,7 +155,7 @@ const getMemoizedEase = (ease: EaseDeclaration) => {
  * Clone a value. If value is an object will return a shallow clone.
  * Used by tween().
  */
- const cloneValue = <T = any>(value: T) => {
+const cloneValue = <T = any>(value: T) => {
   if (value && typeof value === 'object') {
     const clone = new (value as any).constructor()
     for (const key in value) {
@@ -236,7 +240,7 @@ class AnimationInstance {
   autoDestroy = true // autoDestroy on complete?
   destroyed = false
   frame = 0
-  
+
   get normalizedTime() { return clamp(this.time, 0, this.duration) }
   get progress() { return clamp(this.time / this.duration, 0, 1) }
   get progressOld() { return clamp(this.timeOld / this.duration, 0, 1) }
@@ -245,7 +249,7 @@ class AnimationInstance {
   get completeOld() { return this.timeOld >= this.duration }
 
   destroy: () => AnimationInstance
-  
+
   constructor(cb?: AnimationCallback) {
     // destroy must be binded
     this.destroy = () => {
@@ -283,7 +287,7 @@ class AnimationInstance {
    * @param param 
    */
   play({ time, progress } = {} as { time?: number, progress?: number }) {
-    
+
     this.paused = false
 
     // NOTE: time is modified here, but without "jumps".
@@ -358,30 +362,30 @@ class AnimationInstance {
     }
     return this
   }
-  
+
   waitDestroy() {
     if (this.destroyed) {
       return null
     }
     return new Promise<AnimationInstance>(resolve => destroyCallbacks.add(this, resolve))
   }
-  
+
   waitCompletion() {
     if (this.destroyed || this.complete) {
       return null
     }
     return new Promise<AnimationInstance>(resolve => completeCallbacks.add(this, resolve))
   }
-  
+
   waitNextFrame() {
     if (this.destroyed) {
       return null
     }
     return new Promise<AnimationInstance>(resolve => nextFrameCallbacks.add(this, resolve))
   }
-  
+
   async *waitFrames(): AsyncGenerator<AnimationInstance, void, unknown> {
-    while(await this.waitNextFrame()) {
+    while (await this.waitNextFrame()) {
       yield this
     }
   }
@@ -470,10 +474,10 @@ let msOld = 0, msDelta = 0
 const _innerLoop = (ms: number): void => {
   if (autoUpdate) {
     window.requestAnimationFrame(_innerLoop)
-  
+
     msDelta = ms - msOld
     msOld = ms
-  
+
     update(msDelta / 1e3)
   }
 }
@@ -522,7 +526,7 @@ const loopCancelTarget = (target: any) => {
   loopMap.get(target)?.destroy()
 }
 
-type AnimationParam = 
+type AnimationParam =
   | { duration: number, delay?: number, immediate?: boolean, paused?: boolean, autoDestroy?: boolean }
   | [number, number?, boolean?]
   | number
@@ -539,22 +543,22 @@ const fromAnimationParam = (timingParam: AnimationParam) => {
 }
 
 const during = (timing: AnimationParam, cb?: AnimationCallback) => {
-  
+
   const animation = new AnimationInstance(cb)
-  
-  const { 
-    duration, 
-    delay = 0, 
-    immediate = false, 
+
+  const {
+    duration,
+    delay = 0,
+    immediate = false,
     paused = false,
     autoDestroy = true,
   } = fromAnimationParam(timing)
-  
+
   animation.duration = duration
   animation.paused = paused
   animation.time = -delay
   animation.autoDestroy = autoDestroy
-  
+
   if (immediate) {
     cb?.(animation)
   }
@@ -563,7 +567,7 @@ const during = (timing: AnimationParam, cb?: AnimationCallback) => {
 }
 
 const duringMap = new AnimationMap()
-const duringWithTarget = (target: any, timing: AnimationParam, cb: AnimationCallback = () => {}) => {
+const duringWithTarget = (target: any, timing: AnimationParam, cb: AnimationCallback = () => { }) => {
   return duringMap.set(target, during(timing, cb))
 }
 const duringCancelTarget = (target: any) => {
@@ -576,12 +580,12 @@ const waitFrames = (frameCount: number) => loop(({ frame }) => {
   if (frame >= frameCount) return BREAK
 }).waitDestroy()!
 
-type EaseDeclaration = 
-  | ((t: number) => number) 
-  | (keyof typeof easings) 
+type EaseDeclaration =
+  | ((t: number) => number)
+  | (keyof typeof easings)
   | `cubic-bezier(${number}, ${number}, ${number}, ${number})`
   | null
-  | undefined 
+  | undefined
 
 type TweenParams<T> = {
   from?: T | Partial<Record<keyof T, any>>
@@ -601,14 +605,14 @@ const tween = <T>(target: T, timing: AnimationParam, {
   onChange = onProgress,
   onComplete,
 }: TweenParams<T>) => {
-  
+
   const keys = new Set([...Object.keys(from ?? {}), ...Object.keys(to ?? {})]) as Set<keyof T>
-  
+
   const _from = Object.fromEntries([...keys].map(key => {
     const value = cloneValue(from?.[key] ?? target[key])
     return [key, value]
   })) as Record<keyof T, any>
-  
+
   const _to = Object.fromEntries([...keys].map(key => {
     const value = cloneValue(to?.[key] ?? target[key])
     return [key, value]
@@ -616,17 +620,30 @@ const tween = <T>(target: T, timing: AnimationParam, {
 
   const _ease = getEase(ease)
 
+  const isWrapped = (value: any) => value.constructor === Object && ('value' in value)
+
   const anim = duringWithTarget(target, timing, ({ progress }) => {
     const t = _ease(progress)
     for (const key of keys) {
       const propValue = target[key]
       const propType = typeof propValue
+      const fromValueRaw = _from[key]
+      const fromIsWrapped = isWrapped(fromValueRaw)
+      const fromValue = fromIsWrapped ? fromValueRaw.value : fromValueRaw
+      const toValueRaw = _to[key]
+      const toIsWrapped = isWrapped(toValueRaw)
+      const toValue = toIsWrapped ? toValueRaw.value : toValueRaw
+      const ease = fromIsWrapped ? fromValueRaw.ease : toIsWrapped ? toValueRaw.ease : undefined
+      const t2 = ease ? getMemoizedEase(ease)(progress) : t
+      if (key === 'focusPosition') {
+        console.log(t, t2)
+      }
       if (propType === 'number') {
         // numeric
-        target[key] = lerp(_from[key], _to[key], t) as unknown as T[keyof T]
+        target[key] = lerp(fromValue, toValue, t2) as unknown as T[keyof T]
       } else if (propType === 'object') {
         // object
-        lerpObject(target[key], _from[key], _to[key], t)
+        lerpObject(target[key], fromValue, toValue, t2)
       }
     }
   })

@@ -1,5 +1,5 @@
 import React from 'react'
-import * as Animation from '../../../Animation'
+import { Animation } from '../../../Animation'
 import { Observable, ObservableBoolean, ObservableNumber } from '../../../observables'
 import { compareString, location, StringMask } from '../../../router'
 import { useComplexEffects, useForceUpdate } from '..'
