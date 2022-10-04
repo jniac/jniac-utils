@@ -588,6 +588,8 @@ type TweenParams<T> = {
   to?: T | Partial<Record<keyof T, any>>
   ease?: EaseDeclaration
   onChange?: AnimationCallback,
+  /** Alias for "onChange" */
+  onProgress?: AnimationCallback
   onComplete?: AnimationCallback,
 }
 
@@ -595,7 +597,8 @@ const tween = <T>(target: T, timing: AnimationParam, {
   from,
   to,
   ease,
-  onChange,
+  onProgress,
+  onChange = onProgress,
   onComplete,
 }: TweenParams<T>) => {
   
