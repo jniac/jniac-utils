@@ -635,9 +635,6 @@ const tween = <T>(target: T, timing: AnimationParam, {
       const toValue = toIsWrapped ? toValueRaw.value : toValueRaw
       const ease = fromIsWrapped ? fromValueRaw.ease : toIsWrapped ? toValueRaw.ease : undefined
       const t2 = ease ? getMemoizedEase(ease)(progress) : t
-      if (key === 'focusPosition') {
-        console.log(t, t2)
-      }
       if (propType === 'number') {
         // numeric
         target[key] = lerp(fromValue, toValue, t2) as unknown as T[keyof T]
