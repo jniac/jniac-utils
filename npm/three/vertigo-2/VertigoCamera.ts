@@ -250,16 +250,19 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   }
 
   lerpCameras(a: this, b: this, alpha: number) {
+    // Fundamental props.
     this.height = lerp(a.height, b.height, alpha)
-    this.rangeMin = lerp(a.rangeMin, b.rangeMin, alpha)
-    this.rangeMax = lerp(a.rangeMax, b.rangeMax, alpha)
-    this.nearMin = lerp(a.nearMin, b.nearMin, alpha)
-    this.farMax = lerp(a.farMax, b.farMax, alpha)
+    this.fov = lerp(a.fov, b.fov, alpha)
     this.fovEpsilon = lerp(a.fovEpsilon, b.fovEpsilon, alpha)
     this.focusPosition.lerpVectors(a.focusPosition, b.focusPosition, alpha)
     // NOTE: rotation is interpolated through quaternions
     _quaternion.slerpQuaternions(a.quaternion, b.quaternion, alpha)
     this.rotation.setFromQuaternion(_quaternion)
+    // Secondary props.
+    this.rangeMin = lerp(a.rangeMin, b.rangeMin, alpha)
+    this.rangeMax = lerp(a.rangeMax, b.rangeMax, alpha)
+    this.nearMin = lerp(a.nearMin, b.nearMin, alpha)
+    this.farMax = lerp(a.farMax, b.farMax, alpha)
     this.update()
     return this
   }
