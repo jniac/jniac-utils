@@ -271,6 +271,11 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     return this.lerpCameras(this, other, alpha)
   }
 
+  /**
+   * Moves the camera according to its orientation.
+   * @param v 
+   * @param options 
+   */
   move(v: Vector3, options?: { scalar: number }): this
   move(x: number, y: number, z: number, options?: { scalar: number }): this
   move(...args: any[]) {
@@ -286,6 +291,16 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     position.y += me[9] * z
     position.z += me[10] * z
     return this
+  }
+
+  /**
+   * Adjust the focusPosition to keep a constant distance with an hypothetic target.
+   * @param signedDistance The current distance (signed distance).
+   * @param desiredDistance The desired distance.
+   */
+  maintainDistance(signedDistance: number, desiredDistance: number) {
+    const deltaZ = desiredDistance - signedDistance
+    return this.move(0, 0, deltaZ)
   }
 
   applyZoom(ratio: number, { x = 0, y = 0 } = {}) {
@@ -347,5 +362,26 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   }
   set distance(value: number) {
     this.setDistance(value)
+  }
+
+  /** The "right" vector coming directly from the matrix. */
+  get mRight() {
+    const me = this.matrix.elements
+    const x = me[0], y = me[1], z = me[2]
+    return new Vector3(x, y, z)
+  }
+
+  /** The "up" vector coming directly from the matrix. */
+  get mUp() {
+    const me = this.matrix.elements
+    const x = me[4], y = me[5], z = me[6]
+    return new Vector3(x, y, z)
+  }
+
+  /** The "forward" vector coming directly from the matrix. */
+  get mForward() {
+    const me = this.matrix.elements
+    const x = me[8], y = me[9], z = me[10]
+    return new Vector3(x, y, z)
   }
 }
