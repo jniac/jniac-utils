@@ -1,10 +1,36 @@
 import React from 'react'
-import { getPathname } from '../../../router'
+import { getPathname, setUrl } from '../../../router'
 
 export const RouterContext = React.createContext({
+  /** 
+   * The current base url. 
+   */
   baseUrl: '' as string | RegExp,
+  
+  /** 
+   * Can't remember the usage of this... But should be useful nuh? 
+   */
   pathnameTransform: null as null | ((pathname: string) => string),
+  
+  /** 
+   * Get... the pathname. 
+   */
   getPathname: () => '' as string,
+  
+  /** 
+   * Change the current url, according to the "base url". 
+   */
+  go: (to: string) => {},
+
+  /** 
+   * Kind of alias of "go()": return the binded "go" function:
+   * ```
+   * const myLink = link('/foo')
+   * // is equivalent to
+   * const myLink = () => go('/foo')
+   * ```
+   */
+  link: (to: string) => () => {},
 })
 
 const cleanPathname = (value: string) => {
@@ -33,13 +59,29 @@ export const Router = ({
     }
   }
 
+  const routerGetPathname = () => {
+    const pathname = cleanPathname(getPathname().replace(baseUrl, ''))
+    return pathnameTransform ? cleanPathname(pathnameTransform(pathname)) || '/' : pathname
+  }
+  const go = (to: string, { reload = false } = {}) => {
+    if (baseUrl && to.startsWith('/')) {
+      // "baseUrl" injection.
+      to = baseUrl + to
+    }  
+    if (reload) {
+      const url = (window.location.origin + to.substring(1))
+      window.open(url, '_self')
+    } else {
+      setUrl(to)
+    }
+  }
+  const link = (to: string, { reload = false } = {}) => () => go(to, { reload })
   const context = {
     baseUrl,
     pathnameTransform,
-    getPathname: () => {
-      const pathname = cleanPathname(getPathname().replace(baseUrl, ''))
-      return pathnameTransform ? cleanPathname(pathnameTransform(pathname)) || '/' : pathname
-    },
+    getPathname: routerGetPathname,
+    go,
+    link,
   }
 
   return (
