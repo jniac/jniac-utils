@@ -29,6 +29,8 @@ export type PinchOptions = Partial<{
   onDownIgnore: (event: PointerEvent) => boolean
   /** For debug / test purpose. */
   fakePinchWithShiftKey: boolean
+  /** Display debug pinch helpers. */
+  debugPinch: boolean
 
   onPinch: (info: PinchInfo) => void
   onPinchStart: (info: PinchInfo) => void
@@ -43,8 +45,8 @@ export const isPinchListening = (options: PinchOptions) => {
   )
 }
 
-const updateFakeDisplay = (point0: Point, point1: Point) => {
-  const createPin = (id: string) => {
+const updateDebugDisplay = (point0: Point, point1: Point) => {
+  const createPin = (id: string, html: string) => {
     const div = document.createElement('div')
     div.id = id
     document.body.append(div)
@@ -55,21 +57,41 @@ const updateFakeDisplay = (point0: Point, point1: Point) => {
     div.style.borderRadius = '50%'
     div.style.transform = 'translate(-50%, -50%)'
     div.style.backgroundColor = '#fff6'
+    div.style.display = 'flex'
+    div.style.justifyContent = 'center'
+    div.style.alignItems = 'center'
+    div.innerHTML = html
     return div
   }
-  const id0 = 'handlePinch-fakePinch-0'
-  const id1 = 'handlePinch-fakePinch-1'
-  const pin0 = document.querySelector(`#${id0}`) as HTMLDivElement ?? createPin(id0)
-  const pin1 = document.querySelector(`#${id1}`) as HTMLDivElement ?? createPin(id1)
+  const createCenter = (id: string) => {
+    const div = document.createElement('div')
+    div.id = id
+    document.body.append(div)
+    div.style.position = 'fixed'
+    div.style.width = '16px'
+    div.style.height = '16px'
+    div.style.borderRadius = '50%'
+    div.style.transform = 'translate(-50%, -50%)'
+    div.style.backgroundColor = '#0006'
+    return div
+  }
+  const id0 = 'handlePinch-debug-pin-0'
+  const id1 = 'handlePinch-debug-pin-1'
+  const id2 = 'handlePinch-debug-center'
+  const pin0 = document.querySelector(`#${id0}`) as HTMLDivElement ?? createPin(id0, '0')
+  const pin1 = document.querySelector(`#${id1}`) as HTMLDivElement ?? createPin(id1, '1')
+  const center = document.querySelector(`#${id2}`) as HTMLDivElement ?? createCenter(id2)
   pin0.style.left = `${point0.x}px`
   pin0.style.top = `${point0.y}px`
   pin1.style.left = `${point1.x}px`
   pin1.style.top = `${point1.y}px`
+  center.style.left = `${(point0.x + point1.x) / 2}px`
+  center.style.top = `${(point0.y + point1.y) / 2}px`
 }
 
-const destroyFakeDisplay = () => {
-  const id0 = 'handlePinch-fakePinch-0'
-  const id1 = 'handlePinch-fakePinch-1'
+const destroyDebugDisplay = () => {
+  const id0 = 'handlePinch-debug-pin-0'
+  const id1 = 'handlePinch-debug-pin-1'
   document.querySelector(`#${id0}`)?.remove()
   document.querySelector(`#${id1}`)?.remove()
 }
@@ -79,6 +101,7 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     capture = false,
     passive = true,
     fakePinchWithShiftKey = true,
+    debugPinch = false,
   } = options
   const info: InternalPinchInfo = { frame: 0 }
   let isPinch = false
@@ -118,7 +141,7 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     info.old = undefined
     info.start = undefined
     fakePinchStartPoint = null
-    destroyFakeDisplay()
+    destroyDebugDisplay()
   }
   const onTouch = (event: TouchEvent) => {
     points = [...event.touches].map(touch => new Point(touch.clientX, touch.clientY))
@@ -138,6 +161,9 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     // Regular pinch.
     if (isPinch) {
       update(points[0], points[1], false)
+      if (debugPinch) {
+        updateDebugDisplay(points[0], points[1])
+      }
     }
 
     // Fake pinch.
@@ -155,7 +181,7 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
         const point0 = fakePinchStartPoint.clone().add(delta)
         const point1 = fakePinchStartPoint.clone().subtract(delta)
         update(point0, point1, true)
-        updateFakeDisplay(point0, point1)
+        updateDebugDisplay(point0, point1)
       }
     }
   }
