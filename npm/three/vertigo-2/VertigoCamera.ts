@@ -1,5 +1,5 @@
 import { Euler, Matrix4, PerspectiveCamera, Quaternion, Vector3 } from 'three'
-import { lerp } from 'three/src/math/MathUtils'
+import { lerp, clamp } from 'three/src/math/MathUtils'
 
 const PERSPECTIVE_ONE = .8
 
@@ -34,6 +34,10 @@ type Base = {
 }
 
 type Options = {
+  /** A minimum height, because it's handy to handle that from the camera it self.  */
+  heightMin: number
+  /** A maximum height, because it's handy to handle that from the camera it self.  */
+  heightMax: number
   /** Distance "before" the focus point to be rendered. */
   rangeMin: number
   /** Distance "behind" the focus point to be rendered. */
@@ -49,6 +53,8 @@ type Options = {
 const defaultHeight = 4
 
 const defaultOptions: Options = {
+  heightMin: .01,
+  heightMax: 10000,
   rangeMin: -1000,
   rangeMax: 1000,
   nearMin: .01,
@@ -106,7 +112,9 @@ export const updateVertigoCamera = (
 
 export class VertigoCamera extends PerspectiveCamera implements Base, Options {
 
-  height = defaultHeight
+  #height = defaultHeight
+  #heightMin = defaultOptions.heightMin
+  #heightMax = defaultOptions.heightMax
   rangeMin = defaultOptions.rangeMin
   rangeMax = defaultOptions.rangeMax
   nearMin = defaultOptions.nearMin
@@ -114,9 +122,32 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   fovEpsilon = defaultOptions.fovEpsilon
   focusPosition = new Vector3()
 
+  setHeight(value: number) {
+    this.#height = clamp(value, this.#heightMin, this.heightMax)
+  }
+
+  setHeightMin(value: number) {
+    this.#heightMin = value
+    this.#height = clamp(this.#height, this.#heightMin, this.heightMax)
+  }
+
+  setHeightMax(value: number) {
+    this.#heightMax = value
+    this.#height = clamp(this.#height, this.#heightMin, this.heightMax)
+  }
+
+  get height() { return this.#height }
+  get heightMin() { return this.#heightMin }
+  get heightMax() { return this.#heightMax }
+  set height(value) { this.setHeight(value) }
+  set heightMin(value) { this.setHeightMin(value) }
+  set heightMax(value) { this.setHeightMax(value) }
+
   // Cache takes some lines:
   #cache: Base & Options = {
     height: 0,
+    heightMin: 0,
+    heightMax: 0,
     fov: 0,
     focusPosition: new Vector3(),
     position: new Vector3(),
@@ -129,6 +160,8 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   }
   #cacheChanges: Record<keyof (Base & Options), boolean> = {
     height: false,
+    heightMin: false,
+    heightMax: false,
     fov: false,
     focusPosition: false,
     position: false,
@@ -143,6 +176,8 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     const cache = this.#cache
     const changed = this.#cacheChanges
     changed.height = cache.height !== this.height
+    changed.heightMin = cache.heightMin !== this.heightMin
+    changed.heightMax = cache.heightMax !== this.heightMax
     changed.fov = cache.fov !== this.fov
     changed.focusPosition = !cache.focusPosition.equals(this.focusPosition)
     changed.position = !cache.position.equals(this.position)
@@ -154,6 +189,8 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     changed.fovEpsilon = cache.fovEpsilon !== this.fovEpsilon
     return (
       changed.height
+      || changed.heightMin
+      || changed.heightMax
       || changed.fov
       || changed.focusPosition
       || changed.position
@@ -168,6 +205,8 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   #updateCache() {
     const cache = this.#cache
     cache.height = this.height
+    cache.heightMin = this.heightMin
+    cache.heightMax = this.heightMax
     cache.fov = this.fov
     cache.focusPosition.copy(this.focusPosition)
     cache.position.copy(this.position)
@@ -306,17 +345,20 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   }
 
   applyZoom(ratio: number, { x = 0, y = 0 } = {}) {
-    const deltaHeight = this.height * (1 - ratio) * .5
-    this.height *= ratio
-    const me = this.matrix.elements
-    const dy = deltaHeight * y
-    const dx = deltaHeight * this.aspect * x
-    const rx = me[0], ry = me[1], rz = me[2]
-    const ux = me[4], uy = me[5], uz = me[6]
-    this.focusPosition.x += dx * rx + dy * ux
-    this.focusPosition.y += dx * ry + dy * uy
-    this.focusPosition.z += dx * rz + dy * uz
-    this.throwNaN()
+    const oldHeight = this.#height
+    this.setHeight(this.#height * ratio)
+    const deltaHeight = this.height - oldHeight
+    if (deltaHeight !== 0) {
+      const dy = deltaHeight * y
+      const dx = deltaHeight * this.aspect * x
+      const me = this.matrix.elements
+      const rx = me[0], ry = me[1], rz = me[2]
+      const ux = me[4], uy = me[5], uz = me[6]
+      this.focusPosition.x += dx * rx + dy * ux
+      this.focusPosition.y += dx * ry + dy * uy
+      this.focusPosition.z += dx * rz + dy * uz
+      this.throwNaN()
+    }
     return this
   }
 
