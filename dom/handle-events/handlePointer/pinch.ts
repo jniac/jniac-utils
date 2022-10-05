@@ -148,6 +148,11 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
       }
       const delta = point0.clone().subtract(fakePinchStartPoint)
       if (delta.sqMagnitude > 0) {
+        const minimalMagnitude = 20
+        const currentMagnitude = delta.magnitude
+        const desiredMagnitude = Math.max(delta.magnitude, minimalMagnitude)
+        delta.multiplyScalar(desiredMagnitude / currentMagnitude)
+        const point0 = fakePinchStartPoint.clone().add(delta)
         const point1 = fakePinchStartPoint.clone().subtract(delta)
         update(point0, point1, true)
         updateFakeDisplay(point0, point1)
