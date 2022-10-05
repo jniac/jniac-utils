@@ -347,7 +347,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   applyZoom(ratio: number, { x = 0, y = 0 } = {}) {
     const oldHeight = this.#height
     this.setHeight(this.#height * ratio)
-    const deltaHeight = this.height - oldHeight
+    const deltaHeight = (this.height - oldHeight) * -.5
     if (deltaHeight !== 0) {
       const dy = deltaHeight * y
       const dx = deltaHeight * this.aspect * x
