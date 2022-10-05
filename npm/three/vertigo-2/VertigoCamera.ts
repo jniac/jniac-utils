@@ -78,7 +78,9 @@ export const updateVertigoCamera = (
   _matrix.makeRotationFromQuaternion(camera.quaternion)
   _vector.set(0, 0, distance).applyMatrix4(_matrix)
   camera.position.addVectors(focusPosition, _vector)
+  camera.matrixAutoUpdate = false
   camera.updateMatrix()
+  camera.updateMatrixWorld(true)
 
   // 2. Near, far & projection.
   const near = Math.max(nearMin, distance + rangeMin)
