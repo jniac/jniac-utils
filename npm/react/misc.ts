@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Observable } from '../../observables'
 
 /**
  * Allow concise className declaration. Eg:
@@ -53,23 +54,26 @@ export function mapWithSeparator<T, U, V>(
 }
 
 type PointerType = 'mouse' | 'touch'
-export const usePointerType = () => {
-  const [pointerType, setPointerType] = useState<PointerType>(window.innerWidth > 800 ? 'mouse' : 'touch')
-  useEffect(() => {
-    let current = pointerType
+const pointerTypeObs = new Observable<PointerType>(window.innerWidth > 800 ? 'mouse' : 'touch')
+let pointerTypeInitialized = false
+const initPointerType = () => {
+  if (pointerTypeInitialized === false) {
+    pointerTypeInitialized = true
     const onPointer = (event: PointerEvent): void => {
-      if (event.pointerType !== current) {
-        current = event.pointerType as PointerType
-        setPointerType(current)
-      }
+      pointerTypeObs.setValue(event.pointerType as PointerType)
     }
     document.addEventListener('pointermove', onPointer, { capture: true })
     document.addEventListener('pointerdown', onPointer, { capture: true })
-    return () => {
-      document.removeEventListener('pointermove', onPointer, { capture: true })
-      document.removeEventListener('pointerdown', onPointer, { capture: true })
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }
+}
+export const usePointerType = () => {
+  initPointerType()
+  const [count, setCount] = useState(0)
+  const updateRef = useRef(() => {})
+  updateRef.current = () => setCount(count + 1)
+  useEffect(() => {
+    const { destroy } = pointerTypeObs.onChange(() => updateRef.current())
+    return destroy
   }, [])
-  return pointerType
+  return pointerTypeObs.value
 }
