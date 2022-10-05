@@ -92,8 +92,10 @@ const updateDebugDisplay = (point0: Point, point1: Point) => {
 const destroyDebugDisplay = () => {
   const id0 = 'handlePinch-debug-pin-0'
   const id1 = 'handlePinch-debug-pin-1'
+  const id2 = 'handlePinch-debug-center'
   document.querySelector(`#${id0}`)?.remove()
   document.querySelector(`#${id1}`)?.remove()
+  document.querySelector(`#${id2}`)?.remove()
 }
 
 export const handlePinch = (element: HTMLElement | Window, options: PinchOptions) => {
