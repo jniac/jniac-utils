@@ -13,7 +13,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, {
   children,
   ...props
 }, ref) => {
-  const { go } = React.useContext(RouterContext)
+  const { baseUrl, go } = React.useContext(RouterContext)
   const _onClick = (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     if (isClick()) {
       event.preventDefault()
@@ -22,7 +22,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, {
     }
   }
   return (
-    <a {...props} ref={ref} href={to} onClick={_onClick}>
+    <a {...props} ref={ref} href={`${baseUrl}${to}`} onClick={_onClick}>
       {children}
     </a>
   )
