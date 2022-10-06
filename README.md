@@ -5,7 +5,9 @@ typescript / react utils
 Collections d'utilitaires dans toutes les directions (utilitaires, expérimentations) 
 qu'un tree-shaker saura dégraisser.
 
-[Vertigo Camera est pas mal](https://github.com/jniac/some-utils/tree/main/npm/three/vertigo-2)
+[Animation est pratique](some-utils/Animation)
+
+[Vertigo Camera est pas mal](some-utils/npm/three/vertigo-2)
 
 ## Installation
 Par exemple :

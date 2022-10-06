@@ -166,21 +166,13 @@ const cloneValue = <T = any>(value: T) => {
   return value
 }
 
-export const lerpObject = (receiver: any, a: any, b: any, t: number) => {
-  for (const key in a) {
-    const va = a[key]
-    const vb = b[key]
-    // some props may not be numeric, (ex: new THREE.Euler(0, 1, 2, 'XYZ'))
-    switch (typeof va) {
-      case 'number': {
-        receiver[key] = lerp(va, vb, t)
-        break
-      }
-
-      case 'object': {
-        lerpObject(receiver[key], va, vb, t)
-        break
-      }
+const copyValueTo = (source: any, destination: any) => {
+  for (const key in source) {
+    const value = source[key]
+    if (value && typeof value === 'object') {
+      copyValueTo(value, destination[key])
+    } else {
+      source[key] = value
     }
   }
 }
@@ -587,6 +579,19 @@ type EaseDeclaration =
   | null
   | undefined
 
+type FineControlWrapper = {
+  value: any
+  ease?: EaseDeclaration
+  transform?: (value: any, from: any, to: any) => any
+}
+const isFineControlWrapper = (value: any): value is FineControlWrapper => {
+  return value && typeof value === 'object' && 'value' in value
+}
+const ensureFineControlWrapper = (value: any) => {
+  return isFineControlWrapper(value) ? value : { value }
+}
+
+
 type TweenParams<T> = {
   from?: T | Partial<Record<keyof T, any>>
   to?: T | Partial<Record<keyof T, any>>
@@ -620,29 +625,44 @@ const tween = <T>(target: T, timing: AnimationParam, {
 
   const _ease = getEase(ease)
 
-  const isWrapped = (value: any) => value.constructor === Object && ('value' in value)
-
-  const anim = duringWithTarget(target, timing, ({ progress }) => {
-    const t = _ease(progress)
+  const tweenLerp = (target: any, from: any, to: any, alphaFlat: number, alphaEase: number) => {
+    const keys = new Set<string>()
+    for (const key in from) {
+      keys.add(key)
+    }
+    for (const key in to) {
+      keys.add(key)
+    }
     for (const key of keys) {
-      const propValue = target[key]
-      const propType = typeof propValue
-      const fromValueRaw = _from[key]
-      const fromIsWrapped = isWrapped(fromValueRaw)
-      const fromValue = fromIsWrapped ? fromValueRaw.value : fromValueRaw
-      const toValueRaw = _to[key]
-      const toIsWrapped = isWrapped(toValueRaw)
-      const toValue = toIsWrapped ? toValueRaw.value : toValueRaw
-      const ease = fromIsWrapped ? fromValueRaw.ease : toIsWrapped ? toValueRaw.ease : undefined
-      const t2 = ease ? getMemoizedEase(ease)(progress) : t
-      if (propType === 'number') {
-        // numeric
-        target[key] = lerp(fromValue, toValue, t2) as unknown as T[keyof T]
-      } else if (propType === 'object') {
-        // object
-        lerpObject(target[key], fromValue, toValue, t2)
+      const fromValue = ensureFineControlWrapper(from[key])
+      const toValue = ensureFineControlWrapper(to[key])
+      const transform = fromValue.transform ?? toValue.transform
+      const ease = fromValue.ease ?? toValue.ease
+      const alpha = ease ? getMemoizedEase(ease)(alphaFlat) : alphaEase
+      const currentValue = target[key]
+      if (currentValue === null || currentValue === undefined) {
+        continue
+      }
+      switch(typeof currentValue) {
+        case 'number': {
+          const value = lerp(fromValue.value, toValue.value, alpha)
+          target[key] = transform ? transform(value, fromValue.value, toValue.value) : value
+          break
+        }
+        case 'object': {
+          tweenLerp(target[key], fromValue.value, toValue.value, alphaFlat, alpha)
+          if (transform) {
+            const value = transform(target[key], fromValue.value, toValue.value)
+            copyValueTo(value, target[key])
+          }
+        }
       }
     }
+  }
+
+  const anim = duringWithTarget(target, timing, ({ progress }) => {
+    const alpha = _ease(progress)
+    tweenLerp(target, _from, _to, progress, alpha)
   })
 
   if (onChange) {
