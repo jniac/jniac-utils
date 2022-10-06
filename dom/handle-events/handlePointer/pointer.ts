@@ -79,7 +79,7 @@ const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: numb
 export const handlePointer = (element: HTMLElement | Window, options: Options & DragOptions & PinchOptions & WheelOptions) => {
 
   // NOTE: Special case, when faking pinch with the shift key, we don't want any drag to occur.
-  if (options.fakePinchWithShiftKey) {
+  if (options.fakePinch) {
     const originalOnDownIgnore = options.onDownIgnore ?? (() => false)
     options.onDownIgnore = event => {
       return originalOnDownIgnore(event) || event.shiftKey

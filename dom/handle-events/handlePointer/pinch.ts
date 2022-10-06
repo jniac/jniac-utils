@@ -28,8 +28,8 @@ export type PinchOptions = Partial<{
   passive: boolean
   /** Hook that allows to ignore some down event (cancelling at the same time all other events that may follow otherwise (tap, drag etc.)). */
   onDownIgnore: (event: PointerEvent) => boolean
-  /** For debug / test purpose. */
-  fakePinchWithShiftKey: boolean
+  /** For debug / test purpose. [Shift] key to pinch "in" from the current touch point. [Alt] key to pinch "out" (from the center). */
+  fakePinch: boolean
   /** Display debug pinch helpers. */
   debugPinch: boolean
 
@@ -50,7 +50,7 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
   const {
     capture = false,
     passive = true,
-    fakePinchWithShiftKey = true,
+    fakePinch = true,
     debugPinch = false,
   } = options
 
@@ -97,10 +97,20 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     destroyDebugDisplay()
   }
 
+  const onPointerDown = (event: PointerEvent) => {
+    if (fakePinch) {
+      if (fakePinchStartPoint === null) {
+        fakePinchStartPoint = event.altKey
+          ? new Point(window.innerWidth / 2, window.innerHeight / 2)
+          : new Point(event.clientX, event.clientY)
+      }
+    }
+  }
+
   const onTouch = (event: TouchEvent) => {
     points = [...event.touches].map(touch => new Point(touch.clientX, touch.clientY))
     isPinch = points.length === 2
-    isFakePinch = points.length === 1 && fakePinchWithShiftKey && event.shiftKey
+    isFakePinch = points.length === 1 && fakePinch && (event.shiftKey || event.altKey)
     if (points.length < 2 && info.current && info.current.isFakePinch === false) {
       stop()
     }
@@ -122,11 +132,8 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     }
 
     // Fake pinch.
-    if (isFakePinch) {
+    if (isFakePinch && fakePinchStartPoint !== null) {
       const [point0] = points
-      if (fakePinchStartPoint === null) {
-        fakePinchStartPoint = new Point(window.innerWidth / 2, window.innerHeight / 2)
-      }
       const delta = point0.clone().subtract(fakePinchStartPoint)
       if (delta.sqMagnitude > 0) {
         const minimalMagnitude = 20
@@ -142,15 +149,17 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
   }
 
   const target = element as HTMLElement // Fooling typescript.
+  target.addEventListener('pointerdown', onPointerDown, { capture, passive })
   target.addEventListener('touchmove', onTouch, { capture, passive })
   target.addEventListener('touchend', onTouch, { capture, passive })
   frameId = window.requestAnimationFrame(frameUpdate)
-
+  
   const destroy = () => {
+    target.removeEventListener('pointerdown', onPointerDown, { capture })
     target.removeEventListener('touchmove', onTouch, { capture })
     target.removeEventListener('touchend', onTouch, { capture })
     window.cancelAnimationFrame(frameId)
   }
-  
+
   return { destroy }
 }
