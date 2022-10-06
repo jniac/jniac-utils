@@ -2,6 +2,7 @@ import { Point } from '../../../geom'
 import { destroyDebugDisplay, updateDebugDisplay } from './pinch-debug'
 
 type PinchState = {
+  centerExact: Point
   center: Point
   point0: Point
   point1: Point
@@ -32,6 +33,8 @@ export type PinchOptions = Partial<{
   fakePinch: boolean
   /** Display debug pinch helpers. */
   debugPinch: boolean
+  /** When the user pans, some jitters may appear, "panDamping" helps to reduce the jitters. */
+  panDamping: number
 
   onPinch: (info: PinchInfo) => void
   onPinchStart: (info: PinchInfo) => void
@@ -52,25 +55,37 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     passive = true,
     fakePinch = true,
     debugPinch = false,
+    panDamping = .66,
   } = options
 
   const info: InternalPinchInfo = { frame: 0 }
   let isPinch = false
   let isFakePinch = false
   let fakePinchStartPoint: Point | null = null
+  let touchEvent: TouchEvent | null = null
   let points: Point[] = []
+  let pointsOld: Point[] = []
+  const centerEase = new Point()
 
   const update = (point0: Point, point1: Point, isFakePinch: boolean) => {
+    pointsOld = points
     info.old = info.current
     const center = Point.add(point0, point1).multiplyScalar(.5)
     const gap = Point.subtract(point1, point0)
     const gapMagnitude = gap.magnitude
     const totalScale = info.start ? gapMagnitude / info.start.gapMagnitude : 1
     const frameScale = info.old ? gapMagnitude / info.old.gapMagnitude : 1
+    if (info.start) {
+      centerEase.x += (center.x - centerEase.x) * panDamping
+      centerEase.y += (center.y - centerEase.y) * panDamping
+    } else {
+      centerEase.copy(center)
+    }
     const state: PinchState = {
       point0,
       point1,
-      center,
+      centerExact: center,
+      center: centerEase.clone(),
       gap,
       gapMagnitude,
       totalScale,
@@ -108,6 +123,7 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
   }
 
   const onTouch = (event: TouchEvent) => {
+    touchEvent = event
     points = [...event.touches].map(touch => new Point(touch.clientX, touch.clientY))
     isPinch = points.length === 2
     isFakePinch = points.length === 1 && fakePinch && (event.shiftKey || event.altKey)
@@ -134,6 +150,11 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     // Fake pinch.
     if (isFakePinch && fakePinchStartPoint !== null) {
       const [point0] = points
+      const [point0Old] = pointsOld
+      if (point0Old && touchEvent && touchEvent.shiftKey && touchEvent.altKey) {
+        fakePinchStartPoint.x += point0.x - point0Old.x
+        fakePinchStartPoint.y += point0.y - point0Old.y
+      }
       const delta = point0.clone().subtract(fakePinchStartPoint)
       if (delta.sqMagnitude > 0) {
         const minimalMagnitude = 20
