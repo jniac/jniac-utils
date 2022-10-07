@@ -26,7 +26,7 @@ export const limitClamp = (x: number, {
   margin = 1,
   minMargin = margin,
   maxMargin = margin,
-  innerMargin = true,
+  innerMargin = false,
 }: Partial<{
   min: number
   max: number
