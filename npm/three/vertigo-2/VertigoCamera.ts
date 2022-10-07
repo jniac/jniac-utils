@@ -344,9 +344,14 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     return this.move(0, 0, deltaZ)
   }
 
-  applyZoom(ratio: number, { x = 0, y = 0 } = {}) {
+  /**
+   * Change the current height, and the focus position to make a "zoom" effect.
+   * @param height The new height value.
+   * @param screenPoint Screen point (NDC coordinates).
+   */
+  applyHeight(height: number, { x = 0, y = 0 } = {}) {
     const oldHeight = this.#height
-    this.setHeight(this.#height * ratio)
+    this.setHeight(height)
     const deltaHeight = (this.height - oldHeight) * -.5
     if (deltaHeight !== 0) {
       const dy = deltaHeight * y
@@ -359,6 +364,11 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
       this.focusPosition.z += dx * rz + dy * uz
       this.throwNaN()
     }
+    return this
+  }
+
+  applyZoom(ratio: number, { x = 0, y = 0 } = {}) {
+    this.applyHeight(this.#height * ratio, { x, y })
     return this
   }
 
