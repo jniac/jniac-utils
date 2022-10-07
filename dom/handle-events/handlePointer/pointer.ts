@@ -82,7 +82,7 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
   if (options.fakePinch) {
     const originalOnDownIgnore = options.onDownIgnore ?? (() => false)
     options.onDownIgnore = event => {
-      return originalOnDownIgnore(event) || event.shiftKey
+      return originalOnDownIgnore(event) || event.shiftKey || event.altKey
     }
   }
 
