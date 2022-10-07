@@ -15,6 +15,39 @@ export const limitE = (x: number, max: number) => {
   return max * (2 * e / (e + 1) - 1)
 }
 
+/**
+ * Useful but weird function.
+ * Same result than https://www.desmos.com/calculator/zkjchucsqz?lang=fr
+ * but with assymetrical margins.
+ */
+export const limitClamp = (x: number, {
+  min = -Infinity,
+  max = Infinity,
+  margin = 1,
+  minMargin = margin,
+  maxMargin = margin,
+  innerMargin = true,
+}: Partial<{
+  min: number
+  max: number
+  margin: number
+  minMargin: number
+  maxMargin: number
+  innerMargin: boolean
+}> = {}) => {
+  min = innerMargin ? min + minMargin : min
+  max = innerMargin ? max - maxMargin : max
+  if (x < min) {
+    const d = min - x
+    return min - d * minMargin / (d + minMargin)
+  }
+  if (x > max) {
+    const d = x - max
+    return max + d * maxMargin / (d + maxMargin)
+  }
+  return x
+}
+
 // https://www.desmos.com/calculator/jrkunm5kdn?lang=fr
 export const lateCosinus = (x: number, t = 0.5) => Math.cos(((1 + t) * x - t) * Math.PI / 2)
 
