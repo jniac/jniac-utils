@@ -41,8 +41,8 @@ type MinMaxParams2 = Partial<{
  */
 export class GrabbableScalar {
   #grabbed = false
-  valueGrab: number
-  valueEase: number
+  rawGrabValue: number
+  easeValue: number
 
   min = -Infinity
   max = Infinity
@@ -66,19 +66,19 @@ export class GrabbableScalar {
   constructor(value?: number, minMaxParams?: MinMaxParams2)
   constructor(value = 0, minMaxParams: MinMaxParams1 & MinMaxParams2 = {}) {
     this.setMinMax(minMaxParams)
-    this.valueGrab = value
-    this.valueEase = value
+    this.rawGrabValue = value
+    this.easeValue = value
   }
 
   getValue() {
-    return this.#grabbed ? this.getLimitedValueGrab() : this.valueEase
+    return this.#grabbed ? this.getLimitedGrabValue() : this.easeValue
   }
 
   setValue(value: number) {
     if (this.#grabbed) {
-      this.valueGrab = value
+      this.rawGrabValue = value
     } else {
-      this.valueEase = value
+      this.easeValue = value
     }
   }
 
@@ -118,28 +118,33 @@ export class GrabbableScalar {
     return { min, max }
   }
 
-  getLimitedValueGrab() {
-    const { valueGrab, minMargin, maxMargin } = this
+  /**
+   * Returns the "limited grab value", according to the limit function decay:
+   * - https://www.desmos.com/calculator/zq9kbt3xww
+   * - https://www.desmos.com/calculator/zkjchucsqz
+   */
+  getLimitedGrabValue() {
+    const { rawGrabValue, minMargin, maxMargin } = this
     const { min, max } = this.getInnerMinMax()
-    if (valueGrab < min) {
-      const delta = min - valueGrab
+    if (rawGrabValue < min) {
+      const delta = min - rawGrabValue
       return min - delta * minMargin / (delta + minMargin)
     }
-    if (valueGrab > max) {
-      const delta = valueGrab - max
+    if (rawGrabValue > max) {
+      const delta = rawGrabValue - max
       return max + delta * maxMargin / (delta + maxMargin)
     }
-    return valueGrab
+    return rawGrabValue
   }
 
   clampValueEase() {
-    const { valueEase, easeDamping } = this
+    const { easeValue, easeDamping } = this
     const { min, max } = this.getInnerMinMax()
-    if (valueEase < min) {
-      this.valueEase += (min - valueEase) * easeDamping
+    if (easeValue < min) {
+      this.easeValue += (min - easeValue) * easeDamping
     }
-    else if (valueEase > max) {
-      this.valueEase += (max - valueEase) * easeDamping
+    else if (easeValue > max) {
+      this.easeValue += (max - easeValue) * easeDamping
     }
     return this
   }
@@ -148,9 +153,11 @@ export class GrabbableScalar {
     if (this.#grabbed !== value) {
       this.#grabbed = value
       if (value) {
-        this.valueGrab = this.valueEase
+        this.rawGrabValue = this.easeValue
       } else {
-        this.valueEase = this.valueGrab
+        // NOTE: The tricks is here: when back to the "ease" mode (no grab) the 
+        // ease value is copied from the limited current grab value.
+        this.easeValue = this.getLimitedGrabValue()
       }
     }
     return this
