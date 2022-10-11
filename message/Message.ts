@@ -1,30 +1,30 @@
 import { Register } from '../collections'
 
-export interface Message {
+export interface IMessage {
   target: any
   type: any
   props?: any
-  sendModality?: SendModality
+  sendModality?: ISendModality
 }
 
-interface MessageSent {
+export interface IMessageSent {
   stopPropagation: () => void
 }
 
 type MessageCallback = (message: any) => void
 
-interface SendModality {
+interface ISendModality {
   propagation: (currentTarget: any) => any[]
 }
 
-interface Listener {
+interface IListener {
   type: any
   test: (type: any) => boolean
   callback: MessageCallback
   priority: number
 }
 
-const register = new Register<any, Listener>()
+const register = new Register<any, IListener>()
 
 const getTypeTest = (type: any) => {
   if (type === '*') {
@@ -42,7 +42,7 @@ const getTypeTest = (type: any) => {
 const getMatchingCallbacks = (target: any, type: any) => {
   const listeners = register.get(target)
   if (listeners) {
-    const result = [] as Listener[]
+    const result = [] as IListener[]
     for (const listener of listeners) {
       if (listener.test(type)) {
         result.push(listener)
@@ -54,18 +54,18 @@ const getMatchingCallbacks = (target: any, type: any) => {
   return []
 }
 
-const __send = <M extends Message = any>(
+const __send = <M extends IMessage = any>(
   target: M['target'],
   type: M['type'],
   props?: M['props'],
-  modality?: SendModality,
+  modality?: ISendModality,
 ) => {
   const callbacks = [
     ...getMatchingCallbacks('*', '*'),
     ...getMatchingCallbacks(target, type)
   ]
   if (callbacks) {
-    const message: Message & MessageSent = {
+    const message: IMessage & IMessageSent = {
       target,
       type,
       props,
@@ -83,16 +83,16 @@ const __send = <M extends Message = any>(
   } as M
 }
 
-export function send<M extends Message = any>(message: M): M
-export function send<M extends Message = any>(
+export function send<M extends IMessage = any>(message: M): M
+export function send<M extends IMessage = any>(
   target: M['target'],
   type: M['type'],
   props?: M['props'],
-  modality?: SendModality,
+  modality?: ISendModality,
 ): M
 export function send(...args: any[]) {
   if (args.length === 1) {
-    const message = args[0] as Message
+    const message = args[0] as IMessage
     return __send(message.target, message.type, message.props, message.sendModality)
   }
   else if (args.length > 1) {
@@ -101,10 +101,10 @@ export function send(...args: any[]) {
   throw new Error('Oops.')
 }
 
-export const on = <M extends Message>(
+export const on = <M extends IMessage>(
   target: M['target'],
   type: M['type'],
-  callback: (message: M & MessageSent) => void,
+  callback: (message: M & IMessageSent) => void,
   {
     priority = 0,
   } = {}
@@ -121,6 +121,9 @@ export const on = <M extends Message>(
   }
   return { destroy }
 }
+
+// OBSOLETE: Backward compatibility
+export type { IMessage as Message }
 
 // RAW TEST: PRIORITY
 // on('lol', '*', m => console.log(m.type, 'lol #0'))
