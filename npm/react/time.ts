@@ -20,25 +20,32 @@ class TimeHandler {
   #timeOld = 0
   #deltaTime = 0
   #callbacks = new OrderSet<(time: TimeHandler) => void>()
+  #timeScale = 1
   #broken = false
   get frame() { return this.#frame }
   get time() { return this.#time }
   get timeOld() { return this.#timeOld }
   get deltaTime() { return this.#deltaTime }
-  update(deltaTime: number) {
+  get timeScale() { return this.#timeScale }
+  update(deltaTime: number, timeScale: number) {
     if (this.#broken === false) {
-      this.#deltaTime = deltaTime
-      this.#timeOld = this.#time
-      this.#time += deltaTime
-      this.#frame++
-      try {
-        for (const callback of this.#callbacks.values()) {
-          callback(this)
+      deltaTime *= timeScale
+      const freezed = deltaTime === 0 && this.#time === this.#timeOld
+      if (freezed === false) {
+        this.#timeScale = timeScale
+        this.#deltaTime = deltaTime
+        this.#timeOld = this.#time
+        this.#time += deltaTime
+        this.#frame++
+        try {
+          for (const callback of this.#callbacks.values()) {
+            callback(this)
+          }
+        } catch (error) {
+          console.error(`TimeHandler caught an error. Break incoming loops.`)
+          console.error(error)
+          this.#broken = true
         }
-      } catch (error) {
-        console.error(`TimeHandler caught an error. Break incoming loops.`)
-        console.error(error)
-        this.#broken = true
       }
     }
   }
@@ -89,7 +96,7 @@ export const AnimationFrame = ({
       animationFrameId = window.requestAnimationFrame(animationFrame)
       const deltaTime = (ms - msOld) / 1e3
       msOld = ms
-      appTime.update(deltaTime)
+      appTime.update(deltaTime, 1)
 
       // Prevent auto pause if any continuous request
       if (requestContinuousAnimationSet.size > 0 || innerContinuousRequestSet.size > 0) {
@@ -99,17 +106,15 @@ export const AnimationFrame = ({
       const elapsed = appTime.time - lastRenderRequestTime
       const timeScale = inout3(1 - inverseLerp(timeBeforeFade, timeBeforeFade + fadeDuration, elapsed))
 
-      if (timeScale > 0) {
-        time.update(deltaTime * timeScale)
-      }
+      time.update(deltaTime, timeScale)
     }
 
     const firstFrame = (ms: number) => {
       animationFrameId = window.requestAnimationFrame(animationFrame)
       const deltaTime = 1 / 60
       msOld = ms - deltaTime
-      appTime.update(deltaTime)
-      time.update(deltaTime)
+      appTime.update(deltaTime, 1)
+      time.update(deltaTime, 1)
     }
     animationFrameId = window.requestAnimationFrame(firstFrame)
 
