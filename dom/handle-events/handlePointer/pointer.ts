@@ -23,12 +23,14 @@ export type Options = Partial<{
   onDownIgnore: (event: PointerEvent) => boolean
   /** **`up`** callback. */
   onUp: (event: PointerEvent, downEvent: PointerEvent) => void
-  /** **`move when down`** callback. */
+  /** **`move`** callback. */
   onMove: (event: PointerEvent) => void
   /** **`move when down`** callback. */
   onMoveDown: (event: PointerEvent, downEvent: PointerEvent | null) => void
   /** **`move when over`** callback. */
   onMoveOver: (event: PointerEvent) => void
+  /** **`"window" move`** callback. Sort of a hack, because ignores the targeted element to prefer the window. Useful sometimes. */
+  onWindowMove: (event: PointerEvent) => void
   /** **`over`** callback. */
   onOver: (event: PointerEvent) => void
   /** **`out`** callback. */
@@ -96,6 +98,7 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
     onMove,
     onMoveDown,
     onMoveOver,
+    onWindowMove,
     onOver,
     onOut,
     onEnter,
@@ -169,6 +172,10 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
 
   const _onPointerMove = (event: PointerEvent) => {
     onMove?.(event)
+  }
+
+  const _onWindowPointerMove = (event: PointerEvent) => {
+    onWindowMove?.(event)
   }
 
   const _onPointerUp = (event: PointerEvent) => {
@@ -249,6 +256,10 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
   const pinchListener = isPinchListening(options) ? handlePinch(element, options) : null
   const wheelListener = isWheelListening(options) ? handlePointerWheel(element, options) : null
 
+  if (onWindowMove) {
+    window.addEventListener('pointermove', _onWindowPointerMove, { capture, passive })
+  }
+
   const destroy = () => {
     target.removeEventListener('pointerover', _onPointerOver, { capture })
     target.removeEventListener('pointerout', _onPointerOut, { capture })
@@ -265,6 +276,10 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
     dragListener?.destroy()
     pinchListener?.destroy()
     wheelListener?.destroy()
+
+    if (onWindowMove) {
+      window.removeEventListener('pointermove', _onWindowPointerMove, { capture })
+    }
   }
 
   return { destroy }
