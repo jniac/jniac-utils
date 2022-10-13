@@ -14,6 +14,13 @@ export const cancelContinuousAnimation = (id: number) => {
   return requestContinuousAnimationSet.delete(id)
 }
 
+type TimeHandlerCallbackOptions = Partial<{
+  /** The bigger, the later. Default is 0. */
+  order: number
+  /** Frames to skip to save computations. Default is 0. */
+  skip: number
+}>
+
 class TimeHandler {
   #frame = 0
   #time = 0
@@ -49,22 +56,33 @@ class TimeHandler {
       }
     }
   }
-  onChange(options: { order: number }, callback: (time: TimeHandler) => void): { destroy: () => void }
+  onFrame(options: TimeHandlerCallbackOptions, callback: (time: TimeHandler) => void): { destroy: () => void }
+  onFrame(callback: (time: TimeHandler) => void): { destroy: () => void }
+  onFrame(...args: any[]) {
+    // @ts-ignore
+    return this.onChange(...args)
+  }
+  onChange(options: TimeHandlerCallbackOptions, callback: (time: TimeHandler) => void): { destroy: () => void }
   onChange(callback: (time: TimeHandler) => void): { destroy: () => void }
   onChange(...args: any[]) {
-    const resolveArgs = (): [{ order: number }, (time: TimeHandler) => void] => {
+    const resolveArgs = (): [TimeHandlerCallbackOptions, (time: TimeHandler) => void] => {
       if (args.length === 1) {
-        return [{ order: 0 }, args[0]]
+        return [{}, args[0]]
       } else if (args.length === 2) {
         return args as any
       } else {
         throw new Error('Oups')
       }
     }
-    const [{ order }, callback] = resolveArgs()
-    this.#callbacks.add(order, callback)
+    const [{ order = 0, skip = 0 }, callback] = resolveArgs()
+    const finalCallback = skip <= 0 ? callback : () => {
+      if (this.#frame % (skip + 1) === 0) {
+        callback(this)
+      }
+    }
+    this.#callbacks.add(order, finalCallback)
     const destroy = () => {
-      this.#callbacks.delete(order, callback)
+      this.#callbacks.delete(order, finalCallback)
     }
     return { destroy }
   }
