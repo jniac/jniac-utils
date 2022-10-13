@@ -26,7 +26,7 @@ interface IListener {
 
 const register = new Register<any, IListener>()
 
-const getTypeTest = (type: any) => {
+const getTypeTest = (type: any): ((x: any) => boolean) => {
   if (type === '*') {
     return () => true   
   }
@@ -35,6 +35,11 @@ const getTypeTest = (type: any) => {
   }
   if (typeof type === 'string') {
     return (x: any) => x === type
+  }
+  if (Array.isArray(type)) {
+    return (x: any) => {
+      return type.some(subtype => getTypeTest(subtype)(x))
+    }
   }
   throw new Error(`invalid type: ${type}`)
 }
@@ -103,7 +108,7 @@ export function send(...args: any[]) {
 
 export const on = <M extends IMessage>(
   target: M['target'],
-  type: M['type'],
+  type: M['type'] | M['type'][],
   callback: (message: M & IMessageSent) => void,
   {
     priority = 0,
