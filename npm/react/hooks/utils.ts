@@ -1,7 +1,6 @@
 import React from 'react'
 import { Observable } from '../../../observables'
-
-export type Destroyable = null | { destroy: () => void }  | (() => void)
+import { Destroyable, collectDestroys } from './destroyable'
 
 export type ComplexEffectsState = { mounted: boolean }
 export type ComplexEffectsDependencyList = React.DependencyList | 'always-recalculate'
@@ -27,7 +26,7 @@ export type ComplexEffectsDependencyList = React.DependencyList | 'always-recalc
  * ```
  */
 export function useComplexEffects<T = void>(
-  complexEffects: (state: ComplexEffectsState) => Generator<Destroyable, T>, 
+  complexEffects: (state: ComplexEffectsState) => Generator<Destroyable, T>,
   deps: ComplexEffectsDependencyList,
   { debug = '', useLayoutEffect = true } = {}
 ) {
@@ -37,29 +36,20 @@ export function useComplexEffects<T = void>(
   const result = React.useRef<T>(undefined as unknown as T)
 
   use(() => {
-    
+
     let mounted = true
     const state = Object.freeze({ get mounted() { return mounted } })
-    const destroyArray = [() => mounted = false] as (() => void)[]
+    const destroys = [() => mounted = false] as (() => void)[]
 
     const iterator = complexEffects(state)
-    let item = iterator.next()
-    while (item.done === false) {
-      const { value } = item
-      if (value) {
-        destroyArray.push(typeof value === 'function' ? value : value.destroy)
-      }
-      item = iterator.next()
-    }
+    collectDestroys(iterator, destroys, value => result.current = value)
 
-    result.current = item.value as T
-    
     if (debug) {
-      console.log(`useComplexEffects debug ${debug}: ${destroyArray.length} callbacks`)
+      console.log(`useComplexEffects debug ${debug}: ${destroys.length} callbacks`)
     }
 
     return () => {
-      for (const destroy of destroyArray) {
+      for (const destroy of destroys) {
         destroy()
       }
     }
@@ -73,7 +63,7 @@ export function useComplexEffects<T = void>(
  * Same as `useComplexEffects` but with a ref (short-hand).
  */
 export function useRefComplexEffects<T = HTMLElement>(
-  complexEffects: (current: T, state: ComplexEffectsState) => Generator<Destroyable>, 
+  complexEffects: (current: T, state: ComplexEffectsState) => Generator<Destroyable>,
   deps: ComplexEffectsDependencyList,
 ) {
   const ref = React.useRef<T>(null)
@@ -93,13 +83,13 @@ export function useForceUpdate({
   // NOTE: `requestAnimationFrame` & `mounted` here avoid some dependency call bug with React.
   // The kind that happens when a distant component is modifying an observable used here.
   // "setImmediate" solve the probleme because the update is delayed to the next frame.
-  
+
   const [, setCount] = React.useState(0)
   const mounted = React.useRef(true)
   const [forceUpdate, forceUpdateNextFrame] = React.useMemo(() => {
-    
+
     let count = 0
-    
+
     const forceUpdate = () => {
       count++
       setCount(count)
@@ -198,7 +188,7 @@ export function useFetchJson<T = any>(url: string, initialValue: T | null = null
 export function useAnimationFrame(callback: (ms: number) => void) {
   React.useEffect(() => {
     let id = -1
-    const loop = (ms: number) => { 
+    const loop = (ms: number) => {
       id = window.requestAnimationFrame(loop)
       callback(ms)
     }
@@ -206,12 +196,12 @@ export function useAnimationFrame(callback: (ms: number) => void) {
     return () => {
       window.cancelAnimationFrame(id)
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 }
 
 export const usePromise = <T>(
-  getPromise: Promise<T> | (() => Promise<T>), 
+  getPromise: Promise<T> | (() => Promise<T>),
   deps: React.DependencyList = [],
 ) => {
   const [data, setData] = React.useState<T | null>(null)
@@ -226,7 +216,7 @@ export const usePromise = <T>(
     return () => {
       mounted = false
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps)
   return data
 }
