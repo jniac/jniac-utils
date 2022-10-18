@@ -54,7 +54,9 @@ export function mapWithSeparator<T, U, V>(
 }
 
 type PointerType = 'mouse' | 'touch'
-const pointerTypeObs = new Observable<PointerType>(window.innerWidth > 800 ? 'mouse' : 'touch')
+// https://stackoverflow.com/questions/4817029/whats-the-best-way-to-detect-a-touch-screen-device-using-javascript
+const getPointerType = () => navigator.maxTouchPoints === 0 ? 'mouse' : 'touch'
+const pointerTypeObs = new Observable<PointerType>(getPointerType())
 let pointerTypeInitialized = false
 const initPointerType = () => {
   if (pointerTypeInitialized === false) {
@@ -62,8 +64,13 @@ const initPointerType = () => {
     const onPointer = (event: PointerEvent): void => {
       pointerTypeObs.setValue(event.pointerType as PointerType)
     }
+    const onResize = () => {
+      pointerTypeObs.setValue(getPointerType())
+    }
     document.addEventListener('pointermove', onPointer, { capture: true })
     document.addEventListener('pointerdown', onPointer, { capture: true })
+    window.addEventListener('resize', onResize, { capture: true })
+    onResize()
   }
 }
 export const usePointerType = () => {
