@@ -84,10 +84,16 @@ export class PRNG {
     return min + (max - min) * (this.float() ** power)
   }
 
+  /**
+   * Returns a integer between min (inclusive) & max (exclusive) 
+   */
   static integer(min = 0, max = 100) {
     return Math.floor(min + (max - min) * PRNG.float())
   }
-
+  
+  /**
+   * Returns a integer between min (inclusive) & max (exclusive) 
+   */
   integer(min = 0, max = 100) {
     return Math.floor(min + (max - min) * this.float())
   }
