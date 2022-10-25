@@ -270,9 +270,97 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     this.quaternion._onChangeCallback = () => { }
   }
 
+  getSerializedProps() {
+    const {
+      fov,
+      fovEpsilon,
+      height,
+      heightMin,
+      heightMax,
+      rangeMin,
+      rangeMax,
+      nearMin,
+      farMax,
+      focusPosition: { x: focusPositionX, y: focusPositionY, z: focusPositionZ },
+      rotation: { x: rotationX, y: rotationY, z: rotationZ },
+    } = this
+    return {
+      fov,
+      fovEpsilon,
+      height,
+      heightMin,
+      heightMax,
+      rangeMin,
+      rangeMax,
+      nearMin,
+      farMax,
+      focusPositionX,
+      focusPositionY,
+      focusPositionZ,
+      rotationX,
+      rotationY,
+      rotationZ,
+    }
+  }
+
+  setSerializedProps({
+    fov,
+    fovEpsilon,
+    height,
+    heightMin,
+    heightMax,
+    rangeMin,
+    rangeMax,
+    nearMin,
+    farMax,
+    focusPositionX,
+    focusPositionY,
+    focusPositionZ,
+    rotationX,
+    rotationY,
+    rotationZ,
+  }: {
+    fov: number,
+    fovEpsilon: number,
+    height: number,
+    heightMin: number,
+    heightMax: number,
+    rangeMin: number,
+    rangeMax: number,
+    nearMin: number,
+    farMax: number,
+    focusPositionX: number,
+    focusPositionY: number,
+    focusPositionZ: number,
+    rotationX: number,
+    rotationY: number,
+    rotationZ: number,
+  }) {
+    this.fov = fov
+    this.fovEpsilon = fovEpsilon
+    this.height = height
+    this.heightMin = heightMin
+    this.heightMax = heightMax
+    this.rangeMin = rangeMin
+    this.rangeMax = rangeMax
+    this.nearMin = nearMin
+    this.farMax = farMax
+    this.focusPosition.set(
+      focusPositionX,
+      focusPositionY,
+      focusPositionZ)
+    this.rotation.set(
+      rotationX,
+      rotationY,
+      rotationZ)
+
+  }
+
   copy(other: this) {
     super.copy(other)
     this.height = other.height
+    this.heightMin = other.heightMin
+    this.heightMax = other.heightMax
     this.rangeMin = other.rangeMin
     this.rangeMax = other.rangeMax
     this.nearMin = other.nearMin
