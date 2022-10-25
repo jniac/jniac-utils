@@ -44,3 +44,35 @@ export const collectDestroys = <T = any>(
   }
   return array
 }
+
+/**
+ * Destroyable collector.
+ * 
+ * Usage: 
+ * ```
+ * const MyComponent = () => {
+ *   const { destroy } = useMemo(() => {
+ *     const destroyable = new DestroyableCollector()
+ *     destroyable.into = () => console.log(`I'm dead!`)
+ *     return destroyable
+ *   }, [])
+ *   useEffect(() => {
+ *     return destroy
+ *   })
+ *   return (
+ *     <></>
+ *   )
+ * }
+ * ```
+ */
+export class DestroyableCollector {
+  #destroyables: Destroyable[] = []
+  set into(value: Destroyable) {
+    this.#destroyables.push(value)
+  }
+  destroy = () => {
+    for (const callback of collectDestroys(this.#destroyables)) {
+      callback()
+    }
+  }
+}
