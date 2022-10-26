@@ -148,7 +148,17 @@ export class PRNG {
     return items[index]
   }
 
-  static itemWithWeight<T>(items: ArrayLike<T>, weightDelegate: (item: T) => number) {
+  /**
+   * Returns an random item according to its weight.
+   * 
+   * The "weight" information is retrieved via a delegate. 
+   * 
+   * By default the delegate will extract any existing "weight" property or use "1":
+   * ```
+   * (obj: any) => obj.weight ?? 1
+   * ```
+   */
+  static itemWithWeight<T>(items: ArrayLike<T>, weightDelegate: (item: T) => number = (obj: any) => obj.weight ?? 1) {
     const { length } = items
     let cumulWeight = 0
     const cumulWeights = new Array(length)
