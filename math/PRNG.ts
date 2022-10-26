@@ -138,18 +138,31 @@ export class PRNG {
     return result
   }
 
-  static item(str: string): string
-  static item<T = any>(array: T[]): T
-  static item(stringOrArray: any) {
-    const index = PRNG.integer(0, stringOrArray.length)
-    return stringOrArray[index]
+  static item<T>(items: ArrayLike<T>) {
+    const index = PRNG.integer(0, items.length)
+    return items[index]
+  }
+  
+  item<T>(items: ArrayLike<T>) {
+    const index = this.integer(0, items.length)
+    return items[index]
   }
 
-  item(str: string): string
-  item<T = any>(array: T[]): T
-  item(stringOrArray: any) {
-    const index = this.integer(0, stringOrArray.length)
-    return stringOrArray[index]
+  static itemWithWeight<T>(items: ArrayLike<T>, weightDelegate: (item: T) => number) {
+    const { length } = items
+    let cumulWeight = 0
+    const cumulWeights = new Array(length)
+    for (let i = 0; i < length; i++) {
+      cumulWeight += weightDelegate(items[i])
+      cumulWeights[i] = cumulWeight
+    }
+    const random = PRNG.float() * cumulWeight
+    for (let i = 0; i < length; i++) {
+      if (cumulWeights[i] >= random) {
+        return items[i]
+      }
+    }
+    throw new Error(`This can't be.`)
   }
 
   static hash(length = 16, alphabet = '0123456789abcedf') {
