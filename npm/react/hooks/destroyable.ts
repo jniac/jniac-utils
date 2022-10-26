@@ -67,7 +67,33 @@ export const collectDestroys = <T = any>(
  */
 export class DestroyableCollector {
   #destroyables: Destroyable[] = []
+  /**
+   * This is tricky. This is a pure setter that will, under the hood, push the 
+   * given value. Why this weird design?
+   * 
+   * To allow concise declaration:
+   * ```
+   * destroyable.into = () => {
+   *   // Here,
+   *   // a very long function
+   *   // that we don't need 
+   *   // to wrap into parens anymore.
+   * }
+   * ```
+   * If you don't like it, you can still use the following:
+   * ```
+   * destroyable.push(() => {
+   *   // Here,
+   *   // a very long function
+   *   // that we prefer to wrap
+   *   // into parens.
+   * })
+   * ```
+   */
   set into(value: Destroyable) {
+    this.push(value)
+  }
+  push(value: Destroyable) {
     this.#destroyables.push(value)
   }
   destroy = () => {

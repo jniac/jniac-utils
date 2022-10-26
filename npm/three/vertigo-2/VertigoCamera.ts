@@ -272,6 +272,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
 
   getSerializedProps() {
     const {
+      aspect,
       fov,
       fovEpsilon,
       height,
@@ -285,6 +286,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
       rotation: { x: rotationX, y: rotationY, z: rotationZ },
     } = this
     return {
+      aspect,
       fov,
       fovEpsilon,
       height,
@@ -304,6 +306,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   }
 
   setSerializedProps({
+    aspect,
     fov,
     fovEpsilon,
     height,
@@ -320,6 +323,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     rotationY,
     rotationZ,
   }: {
+    aspect: number,
     fov: number,
     fovEpsilon: number,
     height: number,
@@ -336,6 +340,7 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     rotationY: number,
     rotationZ: number,
   }) {
+    this.aspect = aspect
     this.fov = fov
     this.fovEpsilon = fovEpsilon
     this.height = height
