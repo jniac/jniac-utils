@@ -21,12 +21,12 @@ type TimeHandlerCallbackOptions = Partial<{
   skip: number
 }>
 
-class TimeHandler {
+class TimerHandler {
   #frame = 0
   #time = 0
   #timeOld = 0
   #deltaTime = 0
-  #callbacks = new OrderSet<(time: TimeHandler) => void>()
+  #callbacks = new OrderSet<(time: TimerHandler) => void>()
   #timeScale = 1
   #broken = false
   get frame() { return this.#frame }
@@ -56,16 +56,16 @@ class TimeHandler {
       }
     }
   }
-  onFrame(options: TimeHandlerCallbackOptions, callback: (time: TimeHandler) => void): { destroy: () => void }
-  onFrame(callback: (time: TimeHandler) => void): { destroy: () => void }
+  onFrame(options: TimeHandlerCallbackOptions, callback: (time: TimerHandler) => void): { destroy: () => void }
+  onFrame(callback: (time: TimerHandler) => void): { destroy: () => void }
   onFrame(...args: any[]) {
     // @ts-ignore
     return this.onChange(...args)
   }
-  onChange(options: TimeHandlerCallbackOptions, callback: (time: TimeHandler) => void): { destroy: () => void }
-  onChange(callback: (time: TimeHandler) => void): { destroy: () => void }
+  onChange(options: TimeHandlerCallbackOptions, callback: (time: TimerHandler) => void): { destroy: () => void }
+  onChange(callback: (time: TimerHandler) => void): { destroy: () => void }
   onChange(...args: any[]) {
-    const resolveArgs = (): [TimeHandlerCallbackOptions, (time: TimeHandler) => void] => {
+    const resolveArgs = (): [TimeHandlerCallbackOptions, (time: TimerHandler) => void] => {
       if (args.length === 1) {
         return [{}, args[0]]
       } else if (args.length === 2) {
@@ -91,8 +91,8 @@ class TimeHandler {
   }
 }
 
-export const appTime = new TimeHandler()
-export const time = new TimeHandler()
+export const appTimer = new TimerHandler()
+export const timer = new TimerHandler()
 
 type AnimationFrameProps = {
   timeBeforeFade?: number
@@ -114,29 +114,29 @@ export const AnimationFrame = ({
       animationFrameId = window.requestAnimationFrame(animationFrame)
       const deltaTime = (ms - msOld) / 1e3
       msOld = ms
-      appTime.update(deltaTime, 1)
+      appTimer.update(deltaTime, 1)
 
       // Prevent auto pause if any continuous request
       if (requestContinuousAnimationSet.size > 0 || innerContinuousRequestSet.size > 0) {
-        lastRenderRequestTime = appTime.time
+        lastRenderRequestTime = appTimer.time
       }
 
-      const elapsed = appTime.time - lastRenderRequestTime
+      const elapsed = appTimer.time - lastRenderRequestTime
       const timeScale = inout3(1 - inverseLerp(timeBeforeFade, timeBeforeFade + fadeDuration, elapsed))
 
-      time.update(deltaTime, timeScale)
+      timer.update(deltaTime, timeScale)
     }
 
     const firstFrame = (ms: number) => {
       animationFrameId = window.requestAnimationFrame(animationFrame)
       const deltaTime = 1 / 60
       msOld = ms - deltaTime
-      appTime.update(deltaTime, 1)
-      time.update(deltaTime, 1)
+      appTimer.update(deltaTime, 1)
+      timer.update(deltaTime, 1)
     }
     animationFrameId = window.requestAnimationFrame(firstFrame)
 
-    const onInteraction = () => lastRenderRequestTime = appTime.time
+    const onInteraction = () => lastRenderRequestTime = appTimer.time
 
     window.addEventListener('pointermove', onInteraction, { capture: true })
     window.addEventListener('touchstart', onInteraction, { capture: true })
@@ -181,4 +181,10 @@ export const AnimationFrame = ({
   }, [timeBeforeFade, fadeDuration])
 
   return null
+}
+
+// Backward compatibility...
+export {
+  timer as time,
+  appTimer as appTime,
 }

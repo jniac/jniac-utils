@@ -1,6 +1,6 @@
 // @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
 import { SVGAttributes } from 'react'
-import { appTime, time, useRefComplexEffects } from '../react'
+import { appTimer, timer, useRefComplexEffects } from '../react'
 import { middleModulo } from '../../math'
 
 export const TimeIndicator = ({
@@ -35,9 +35,9 @@ export const TimeIndicator = ({
       angle: 0,
       gap: 0,
     }
-    yield appTime.onChange(() => {
-      if (time.timeScale > .5) {
-        state.angle = middleModulo(state.angle + angularVelocity * time.deltaTime, 180)
+    yield appTimer.onChange(() => {
+      if (timer.timeScale > .5) {
+        state.angle = middleModulo(state.angle + angularVelocity * timer.deltaTime, 180)
         state.gap += (0 - state.gap) * .05
       } else {
         state.angle += (0 - state.angle) * .05
