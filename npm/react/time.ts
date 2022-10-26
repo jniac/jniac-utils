@@ -97,11 +97,13 @@ export const timer = new TimerHandler()
 type AnimationFrameProps = {
   timeBeforeFade?: number
   fadeDuration?: number
+  maxDeltaTime?: number
 }
 
 export const AnimationFrame = ({
   timeBeforeFade = 30,
   fadeDuration = 1,
+  maxDeltaTime = 1 / 10,
 }: AnimationFrameProps) => {
 
   useEffect(() => {
@@ -112,7 +114,7 @@ export const AnimationFrame = ({
     let animationFrameId = -1, msOld = -1
     const animationFrame = (ms: number) => {
       animationFrameId = window.requestAnimationFrame(animationFrame)
-      const deltaTime = (ms - msOld) / 1e3
+      const deltaTime = Math.min((ms - msOld) / 1e3, maxDeltaTime)
       msOld = ms
       appTimer.update(deltaTime, 1)
 
