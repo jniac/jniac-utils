@@ -29,6 +29,7 @@ class TimerHandler {
   #callbacks = new OrderSet<(time: TimerHandler) => void>()
   #timeScale = 1
   #broken = false
+  uTime = { value: 0 } // Shorthand for shaders.
   get frame() { return this.#frame }
   get time() { return this.#time }
   get timeOld() { return this.#timeOld }
@@ -44,6 +45,7 @@ class TimerHandler {
         this.#timeOld = this.#time
         this.#time += deltaTime
         this.#frame++
+        this.uTime.value = this.#time
         try {
           for (const callback of this.#callbacks.values()) {
             callback(this)
