@@ -110,6 +110,9 @@
   align-items: stretch;
 }
 
+.flex.gutter-2 > * {
+  --gutter: 2px;
+}
 .flex.gutter-4 > * {
   --gutter: 4px;
 }
@@ -156,59 +159,128 @@
 
 
 
-.flex > .space-4 {
+.flex.row > .space-2 {
+  flex: 0 0 2px;
+  width: 2px;
+  align-self: stretch;
+}
+.flex.row > .space-4 {
   flex: 0 0 4px;
+  width: 4px;
   align-self: stretch;
 }
-
-.flex > .space-8 {
+.flex.row > .space-8 {
   flex: 0 0 8px;
+  width: 8px;
   align-self: stretch;
 }
-
-.flex > .space-16 {
+.flex.row > .space-16 {
   flex: 0 0 16px;
+  width: 16px;
   align-self: stretch;
 }
-
-.flex > .space-32 {
+.flex.row > .space-32 {
   flex: 0 0 32px;
+  width: 32px;
   align-self: stretch;
 }
-
-.flex > .space-48 {
+.flex.row > .space-48 {
   flex: 0 0 48px;
+  width: 48px;
   align-self: stretch;
 }
-
-.flex > .space-64 {
+.flex.row > .space-64 {
   flex: 0 0 64px;
+  width: 64px;
   align-self: stretch;
 }
-
-.flex > .space-96 {
+.flex.row > .space-96 {
   flex: 0 0 96px;
+  width: 96px;
+  align-self: stretch;
+}
+
+.flex.column > .space-2 {
+  flex: 0 0 2px;
+  height: 2px;
+  align-self: stretch;
+}
+.flex.column > .space-4 {
+  flex: 0 0 4px;
+  height: 4px;
+  align-self: stretch;
+}
+.flex.column > .space-8 {
+  flex: 0 0 8px;
+  height: 8px;
+  align-self: stretch;
+}
+.flex.column > .space-16 {
+  flex: 0 0 16px;
+  height: 16px;
+  align-self: stretch;
+}
+.flex.column > .space-32 {
+  flex: 0 0 32px;
+  height: 32px;
+  align-self: stretch;
+}
+.flex.column > .space-48 {
+  flex: 0 0 48px;
+  height: 48px;
+  align-self: stretch;
+}
+.flex.column > .space-64 {
+  flex: 0 0 64px;
+  height: 64px;
+  align-self: stretch;
+}
+.flex.column > .space-96 {
+  flex: 0 0 96px;
+  height: 96px;
   align-self: stretch;
 }
 
 
 
-.flex > .space-1em {
+.flex.row > .space-1em {
   flex: 0 0 1em;
+  width: 1em;
   align-self: stretch;
 }
-
-.flex > .space-2em {
+.flex.row > .space-2em {
   flex: 0 0 2em;
+  width: 2em;
   align-self: stretch;
 }
-
-.flex > .space-3em {
+.flex.row > .space-3em {
   flex: 0 0 3em;
+  width: 3em;
+  align-self: stretch;
+}
+.flex.row > .space-4em {
+  flex: 0 0 4em;
+  width: 4em;
   align-self: stretch;
 }
 
-.flex > .space-4em {
+.flex.column > .space-1em {
+  flex: 0 0 1em;
+  height: 1em;
+  align-self: stretch;
+}
+.flex.column > .space-2em {
+  flex: 0 0 2em;
+  height: 2em;
+  align-self: stretch;
+}
+.flex.column > .space-3em {
+  flex: 0 0 3em;
+  height: 3em;
+  align-self: stretch;
+}
+.flex.column > .space-4em {
   flex: 0 0 4em;
+  height: 4em;
   align-self: stretch;
 }
