@@ -306,40 +306,23 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
   }
 
   setSerializedProps({
-    aspect,
-    fov,
-    fovEpsilon,
-    height,
-    heightMin,
-    heightMax,
-    rangeMin,
-    rangeMax,
-    nearMin,
-    farMax,
-    focusPositionX,
-    focusPositionY,
-    focusPositionZ,
-    rotationX,
-    rotationY,
-    rotationZ,
-  }: {
-    aspect: number,
-    fov: number,
-    fovEpsilon: number,
-    height: number,
-    heightMin: number,
-    heightMax: number,
-    rangeMin: number,
-    rangeMax: number,
-    nearMin: number,
-    farMax: number,
-    focusPositionX: number,
-    focusPositionY: number,
-    focusPositionZ: number,
-    rotationX: number,
-    rotationY: number,
-    rotationZ: number,
-  }) {
+    aspect = this.aspect,
+    fov = this.fov,
+    fovEpsilon = this.fovEpsilon,
+    height = this.height,
+    heightMin = this.heightMin,
+    heightMax = this.heightMax,
+    rangeMin = this.rangeMin,
+    rangeMax = this.rangeMax,
+    nearMin = this.nearMin,
+    farMax = this.farMax,
+    focusPositionX = this.focusPosition.x,
+    focusPositionY = this.focusPosition.y,
+    focusPositionZ = this.focusPosition.z,
+    rotationX = this.rotation.x,
+    rotationY = this.rotation.y,
+    rotationZ = this.rotation.z,
+  }: Partial<ReturnType<VertigoCamera['getSerializedProps']>>) {
     this.aspect = aspect
     this.fov = fov
     this.fovEpsilon = fovEpsilon
@@ -358,7 +341,6 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
       rotationX,
       rotationY,
       rotationZ)
-
   }
 
   copy(other: this) {
