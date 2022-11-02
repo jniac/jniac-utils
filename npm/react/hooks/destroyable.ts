@@ -21,7 +21,7 @@ export const collectDestroys = <T = any>(
   let item = iterator.next()
   while (item.done === false) {
     const { value } = item
-    withValue?.(value as T)
+    withValue?.(value as unknown as T)
     if (value) {
       switch (typeof value) {
         case 'function': {
