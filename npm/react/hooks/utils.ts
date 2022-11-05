@@ -6,6 +6,8 @@ export type ComplexEffectsState = { mounted: boolean }
 export type ComplexEffectsDependencyList = React.DependencyList | 'always-recalculate'
 
 /**
+ * @deprecated `useEffects` should be preferred over this.
+ * 
  * Using generator to allow multiple "on destroy" callbacks.
  * 
  * Callbacks are return with "`yield`".
@@ -60,6 +62,8 @@ export function useComplexEffects<T = void>(
 }
 
 /**
+ * @deprecated `useEffects` should be preferred over this.
+ * 
  * Same as `useComplexEffects` but with a ref (short-hand).
  */
 export function useRefComplexEffects<T = HTMLElement>(
