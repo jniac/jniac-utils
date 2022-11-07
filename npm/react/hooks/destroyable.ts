@@ -59,7 +59,7 @@ type PublicState = { readonly mounted: boolean }
  * and should be preferred over these two.
  */
 export function useEffects<T = undefined>(
-  effect: (value: T, state: PublicState) => Generator<Destroyable> | AsyncGenerator<Destroyable>, 
+  effect: (value: T, state: PublicState) => void | Generator<Destroyable> | AsyncGenerator<Destroyable>, 
   deps: any[] | 'always-recalculate',
 ) {
   const ref = useRef<T>(null)
@@ -68,45 +68,51 @@ export function useEffects<T = undefined>(
       mounted: true,
       destroyCallbacks: [] as (() => void)[],
     }
+
+    // Helping to fix careless mistakes?
     if (effect.length === 1 && ref.current === null) {
-      // Helping to fix careless mistakes?
       console.log(`Hey, "useEffects" here.\nRef current value is null.\nYou probably forgot to link the ref.`)
       console.log(effect)
     }
+    
     const publicState = { get mounted() { return state.mounted }}
     const iterator = effect(ref.current!, publicState)
-    const isAsync = Symbol.asyncIterator in iterator
-    if (isAsync) {
-      // Async:
-      const asyncIterator = iterator as AsyncGenerator<Destroyable>
-      const then = ({ value, done }: IteratorResult<Destroyable, any>): void => {
-        if (done === false) {
-          if (state.mounted) {
-            // If mounted, then collect the callbacks for further usage.
-            solveDestroyableIntoArray(value, state.destroyCallbacks)
-            asyncIterator.next().then(then)
-          } else {
-            // If unmounted call immediately the current callbacks.
-            const destroyCallbacks: (() => void)[] = []
-            solveDestroyableIntoArray(value, destroyCallbacks)
-            for (const callback of destroyCallbacks) {
-              callback()
+
+    if (iterator) {
+      const isAsync = Symbol.asyncIterator in iterator
+      if (isAsync) {
+        // Async:
+        const asyncIterator = iterator as AsyncGenerator<Destroyable>
+        const then = ({ value, done }: IteratorResult<Destroyable, any>): void => {
+          if (done === false) {
+            if (state.mounted) {
+              // If mounted, then collect the callbacks for further usage.
+              solveDestroyableIntoArray(value, state.destroyCallbacks)
+              asyncIterator.next().then(then)
+            } else {
+              // If unmounted call immediately the current callbacks.
+              const destroyCallbacks: (() => void)[] = []
+              solveDestroyableIntoArray(value, destroyCallbacks)
+              for (const callback of destroyCallbacks) {
+                callback()
+              }
             }
           }
         }
-      }
-      asyncIterator.next().then(then)
-    } else {
-      // Sync:
-      const syncIterator = iterator as Generator<Destroyable>
-      while (true) {
-        const { value, done } = syncIterator.next()
-        if (done) {
-          break
+        asyncIterator.next().then(then)
+      } else {
+        // Sync:
+        const syncIterator = iterator as Generator<Destroyable>
+        while (true) {
+          const { value, done } = syncIterator.next()
+          if (done) {
+            break
+          }
+          solveDestroyableIntoArray(value, state.destroyCallbacks)
         }
-        solveDestroyableIntoArray(value, state.destroyCallbacks)
       }
     }
+    
     return () => {
       state.mounted = false
       for(const callback of state.destroyCallbacks) {
