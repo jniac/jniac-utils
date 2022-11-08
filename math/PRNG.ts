@@ -18,6 +18,11 @@ const stringToSeed = (str: string) => {
   return seed
 }
 
+type ShuffeOptions = Partial<{ 
+  /** Should the array be duplicated? Default is false. */
+  duplicate: boolean
+}>
+
 export class PRNG {
   static seedMax = 2147483647
   static seedDefault = 123456
@@ -116,7 +121,7 @@ export class PRNG {
     return from + (value ** power) * deviation * (value * 100 % 2 > 1 ? 1 : -1)
   }
 
-  static shuffle<T = any>(array: T[], { duplicate = false } = {}) {
+  static shuffle<T = any>(array: T[], { duplicate = false }: ShuffeOptions = {}) {
     const result = duplicate ? [...array] : array
     for (let i = 0, max = array.length; i < max; i++) {
       const index = Math.floor(PRNG.float() * max)
@@ -127,7 +132,7 @@ export class PRNG {
     return result
   }
 
-  shuffle<T = any>(array: T[], { duplicate = false } = {}) {
+  shuffle<T = any>(array: T[], { duplicate = false }: ShuffeOptions = {}) {
     const result = duplicate ? [...array] : array
     for (let i = 0, max = array.length; i < max; i++) {
       const index = Math.floor(this.float() * max)
