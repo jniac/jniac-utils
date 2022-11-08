@@ -154,6 +154,7 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions) 
         if (touchCount === 1 && previousTouchCount > 1) {
           const [touch] = moveEvent.touches
           movePoint.set(touch.clientX, touch.clientY)
+          previousMovePoint.copy(movePoint)
           easeMovePoint.copy(movePoint)
         }
 

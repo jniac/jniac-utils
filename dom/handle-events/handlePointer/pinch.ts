@@ -1,15 +1,25 @@
+import { middleModulo } from 'some-utils/math'
 import { Point } from '../../../geom'
 import { destroyDebugDisplay, updateDebugDisplay } from './pinch-debug'
 
 type PinchState = {
+  /** The "exact" center of the transformation (no easings). */
   centerExact: Point
   center: Point
   point0: Point
   point1: Point
+  /** `gap` leads from `point0` to `point1` */
   gap: Point
   gapMagnitude: number
-  totalScale: number
+  /** "Scale" amount that was measured during the last frame. */
   frameScale: number
+  /** Total "scale" amount that was measured since the pinch started. */
+  totalScale: number
+  /** "Top" (or "z") rotation that was measured during the last frame. */
+  frameRotation: number
+  /** Total "top" (or "z") rotation that was measured since the pinch started. */
+  totalRotation: number
+  /** A "fake" pinch is pinch triggered with hotkeys (shift, alt), coming from a "mouse" event (and not "touch" one). */
   isFakePinch: boolean
 }
 
@@ -18,6 +28,7 @@ type InternalPinchInfo = {
   current?: PinchState
   old?: PinchState
   start?: PinchState
+  totalRotation: number
 }
 
 export type PinchInfo = Required<InternalPinchInfo>
@@ -58,7 +69,7 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     panDamping = .66,
   } = options
 
-  const info: InternalPinchInfo = { frame: 0 }
+  const info: InternalPinchInfo = { frame: 0, totalRotation: 0 }
   let isPinch = false
   let isFakePinch = false
   let fakePinchStartPoint: Point | null = null
@@ -75,6 +86,8 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
     const gapMagnitude = gap.magnitude
     const totalScale = info.start ? gapMagnitude / info.start.gapMagnitude : 1
     const frameScale = info.old ? gapMagnitude / info.old.gapMagnitude : 1
+    const frameRotation = info.old ? middleModulo(gap.angle - info.old.gap.angle, 2 * Math.PI) : 0
+    const totalRotation = (info.old ? info.old.totalRotation : 0) + frameRotation
     if (info.start) {
       centerEase.x += (center.x - centerEase.x) * panDamping
       centerEase.y += (center.y - centerEase.y) * panDamping
@@ -88,8 +101,10 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
       center: centerEase.clone(),
       gap,
       gapMagnitude,
-      totalScale,
       frameScale,
+      totalScale,
+      frameRotation,
+      totalRotation,
       isFakePinch,
     }
     info.current = state

@@ -1,6 +1,9 @@
 import React from 'react'
 import { getPathname, setUrl } from '../../../router'
 
+let downPointerEvent: PointerEvent | null = null
+window.addEventListener('pointerdown', event => downPointerEvent = event, { capture: true })
+
 export const RouterContext = React.createContext({
   /** 
    * The current base url. 
@@ -63,16 +66,20 @@ export const Router = ({
     const pathname = cleanPathname(getPathname().replace(baseUrl, ''))
     return pathnameTransform ? cleanPathname(pathnameTransform(pathname)) || '/' : pathname
   }
-  const go = (to: string, { reload = false } = {}) => {
+  const go = (to: string, { reload = false, newTab = downPointerEvent?.metaKey || downPointerEvent?.ctrlKey } = {}) => {
     if (baseUrl && to.startsWith('/')) {
       // "baseUrl" injection.
       to = baseUrl + to
-    }  
+    }
+    const url = new URL(to, window.location.href).href
     if (reload) {
-      const url = (window.location.origin + to.substring(1))
       window.open(url, '_self')
     } else {
-      setUrl(to)
+      if (newTab) {
+        window.open(url, '_blank')
+      } else {
+        setUrl(to)
+      }
     }
   }
   const link = (to: string, { reload = false } = {}) => () => go(to, { reload })

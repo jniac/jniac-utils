@@ -186,12 +186,13 @@ export class PRNG {
   static encode(array: string, option?: { seed: number }): string
   static encode<T = any>(array: T[], option?: { seed: number }): T[]
   static encode(array: any, { seed = PRNG.seedDefault } = {}) {
-    const previous = PRNG.#staticSeed
-    PRNG.reset(seed)
-
     if (typeof array === 'string') {
-      return PRNG.encode([...array]).join('')
+      return PRNG.encode([...array], { seed }).join('')
     }
+
+    const previous = PRNG.#staticSeed
+    
+    PRNG.reset(seed)
     const COUNT = Math.min(array.length, 20)
     const random = Array.from({ length: COUNT }).map(() => PRNG.float())
     const result = [...array]
@@ -203,7 +204,7 @@ export class PRNG {
     }
 
     // Restore previous seed
-    PRNG.reset(previous)
+    PRNG.#staticSeed = previous
 
     return result
   }
@@ -211,12 +212,12 @@ export class PRNG {
   static decode(array: string, option?: { seed: number }): string
   static decode<T = any>(array: T[], option?: { seed: number }): T[]
   static decode(array: any, { seed = PRNG.seedDefault } = {}) {
+    if (typeof array === 'string') {
+      return PRNG.decode([...array], { seed }).join('')
+    }
+
     const previous = PRNG.#staticSeed
     PRNG.reset(seed)
-
-    if (typeof array === 'string') {
-      return PRNG.decode([...array]).join('')
-    }
     const COUNT = Math.min(array.length, 20)
     const random = Array.from({ length: COUNT }).map(() => PRNG.float())
     const result = [...array]
@@ -229,7 +230,6 @@ export class PRNG {
 
     // Restore previous seed
     PRNG.#staticSeed = previous
-    PRNG.reset(previous)
 
     return result
   }

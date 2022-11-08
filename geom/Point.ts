@@ -134,6 +134,8 @@ export class Point {
 
   get magnitude() { return magnitude(this) }
   get sqMagnitude() { return sqMagnitude(this) }
+
+  get angle() { return Math.atan2(this.y, this.x) }
 }
 
 const dummy = new Point()

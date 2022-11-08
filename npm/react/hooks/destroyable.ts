@@ -5,6 +5,29 @@ export type Destroyable =
   | { destroy: () => void }
   | Iterable<Destroyable>
 
+export const solveDestroyableIntoArray = (value: Destroyable, array: (() => void)[] = []) => {
+  if (value) {
+    switch (typeof value) {
+      case 'function': {
+        array.push(value)
+        break
+      }
+      case 'object': {
+        if ('destroy' in value) {
+          array.push(value.destroy)
+        } else if (Symbol.iterator in value) {
+          const iterator = value[Symbol.iterator]() as Generator<Destroyable>
+          for (const value of iterator) {
+            solveDestroyableIntoArray(value, array)
+          }
+        }
+        break
+      }
+    }
+  }
+  return array
+}
+
 /**
  * Returns an array of callbacks `(() => void)[]` extracted from the given 
  * destroyable. Since destroyables can be a lot of things (from null to iterables)
@@ -22,24 +45,7 @@ export const collectDestroys = <T = any>(
   while (item.done === false) {
     const { value } = item
     withValue?.(value as unknown as T)
-    if (value) {
-      switch (typeof value) {
-        case 'function': {
-          array.push(value)
-          break
-        }
-        case 'object': {
-          if ('destroy' in value) {
-            array.push(value.destroy)
-          }
-          else if (Symbol.iterator in value) {
-            const iterator = value[Symbol.iterator]() as Generator<Destroyable>
-            collectDestroys(iterator, array)
-          }
-          break
-        }
-      }
-    }
+    solveDestroyableIntoArray(value, array)
     item = iterator.next()
   }
   return array
