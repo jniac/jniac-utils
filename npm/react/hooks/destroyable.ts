@@ -1,4 +1,3 @@
-import { useEffect, useRef } from 'react'
 
 export type Destroyable =
   | null
@@ -28,102 +27,6 @@ export const solveDestroyableIntoArray = (value: Destroyable, array: (() => void
   }
   return array
 }
-
-
-type PublicState = { readonly mounted: boolean }
-/**
- * `useEffects` is intended to allow the complex declaration of multiple, potentially async effects.
- * 
- * Usage:
- * ```tsx
- * const MyComp = () => {
- *   const ref = useEffects<HTMLDivElement>(async function* (div, state) {
- *     const value = await fetch(something)
- *     if (state.mounted === false) 
- *       return
- *     yield suscribeSomething(value)
- *     await waitSeconds(30)
- *     if (state.mounted === false)
- *       return
- *     dispatch('Are you still there?')
- *   })
- *   return (
- *     <div ref={ref} />
- *   )
- * }
- * ```
- * 
- * NOTE:
- * 
- * `useEffects` is an evolution of `useComplexEffects` & `useRefComplexEffects` 
- * and should be preferred over these two.
- */
-export function useEffects<T = undefined>(
-  effect: (value: T, state: PublicState) => void | Generator<Destroyable> | AsyncGenerator<Destroyable>, 
-  deps: any[] | 'always-recalculate',
-) {
-  const ref = useRef<T>(null)
-  useEffect(() => {
-    const state = {
-      mounted: true,
-      destroyCallbacks: [] as (() => void)[],
-    }
-
-    // Helping to fix careless mistakes?
-    if (effect.length === 1 && ref.current === null) {
-      console.log(`Hey, "useEffects" here.\nRef current value is null.\nYou probably forgot to link the ref.`)
-      console.log(effect)
-    }
-    
-    const publicState = { get mounted() { return state.mounted }}
-    const iterator = effect(ref.current!, publicState)
-
-    if (iterator) {
-      const isAsync = Symbol.asyncIterator in iterator
-      if (isAsync) {
-        // Async:
-        const asyncIterator = iterator as AsyncGenerator<Destroyable>
-        const then = ({ value, done }: IteratorResult<Destroyable, any>): void => {
-          if (done === false) {
-            if (state.mounted) {
-              // If mounted, then collect the callbacks for further usage.
-              solveDestroyableIntoArray(value, state.destroyCallbacks)
-              asyncIterator.next().then(then)
-            } else {
-              // If unmounted call immediately the current callbacks.
-              const destroyCallbacks: (() => void)[] = []
-              solveDestroyableIntoArray(value, destroyCallbacks)
-              for (const callback of destroyCallbacks) {
-                callback()
-              }
-            }
-          }
-        }
-        asyncIterator.next().then(then)
-      } else {
-        // Sync:
-        const syncIterator = iterator as Generator<Destroyable>
-        while (true) {
-          const { value, done } = syncIterator.next()
-          if (done) {
-            break
-          }
-          solveDestroyableIntoArray(value, state.destroyCallbacks)
-        }
-      }
-    }
-    
-    return () => {
-      state.mounted = false
-      for(const callback of state.destroyCallbacks) {
-        callback()
-      }
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps === 'always-recalculate' ? undefined : deps)
-  return ref
-}
-
 
 /**
  * Returns an array of callbacks `(() => void)[]` extracted from the given 
