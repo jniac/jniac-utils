@@ -25,9 +25,9 @@ export const DivSwitch = ({
 
   const mapItems = useMemo(() => {
     return items.map(Item => {
-      return forwardRef<HTMLDivElement, SwitchChildProps>((props, ref) => {
+      return forwardRef<HTMLDivElement, SwitchChildProps>(({ entering, leaving, ...props}, ref) => {
         return (
-          <div ref={ref} className="Item" style={{ opacity: `${props.entering ? '0' : ''}` }}>
+          <div ref={ref} className="Item" style={{ opacity: `${entering ? '0' : ''}` }}>
             <Item {...props} />
           </div>
         )
