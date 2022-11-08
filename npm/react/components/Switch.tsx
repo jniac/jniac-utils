@@ -1,12 +1,7 @@
-import React from 'react'
-import * as Animation from '../../../Animation'
+import { ElementType, useRef, useMemo, useState } from 'react'
+import { Animation, AnimationInstance } from '../../../Animation'
 import { Observable } from '../../../observables'
 import { useComplexEffects } from '../hooks'
-
-export type Item = React.ElementType | [React.ElementType, Record<string, any>]
-export const solveItem = (item: Item): [React.ElementType, Record<string, any>] => {
-  return Array.isArray(item) ? item : [item, {}]
-}
 
 export type SwitchChildProps = { 
   entering?: boolean
@@ -15,32 +10,34 @@ export type SwitchChildProps = {
 
 export type Props<T> = {
   index?: number
-  items?: Item[]
+  items?: ElementType[]
+  itemProps?: Record<string, any>
   transitionDuration?: number
-  onTransition?: (entering: T | null, leaving: T | null, progress: number, animation: Animation.AnimationInstance) => void
+  onTransition?: (entering: T | null, leaving: T | null, progress: number, animation: AnimationInstance) => void
   debugDisplayAll?: boolean
 }
 
 export const Switch = <T extends unknown>({
   index = 0,
   items = [],
+  itemProps = {},
   transitionDuration = 0.8,
   debugDisplayAll = false,
   onTransition,
 }: Props<T>) => {
 
-  const ref1 = React.useRef<T>(null)
-  const ref2 = React.useRef<T>(null)
+  const ref1 = useRef<T>(null)
+  const ref2 = useRef<T>(null)
 
-  const indexObs = React.useMemo(() => new Observable(-1), [])
-  const inverseObs = React.useMemo(() => new Observable(false), [])
+  const indexObs = useMemo(() => new Observable(-1), [])
+  const inverseObs = useMemo(() => new Observable(false), [])
   indexObs.setValue(index)
 
   const hasChanged = indexObs.hasChanged && indexObs.valueOld !== -1
   if (hasChanged) {
     inverseObs.setValue(!inverseObs.value)
   }
-  const [transition, setTransition] = React.useState(false)
+  const [transition, setTransition] = useState(false)
 
   useComplexEffects(function* () {
     yield indexObs.onChange(() => {
@@ -63,15 +60,14 @@ export const Switch = <T extends unknown>({
   const render2 = inverse || transition
   const index1 = !inverse ? indexObs.value : indexObs.valueOld
   const index2 = inverse ? indexObs.value : indexObs.valueOld
-  const [Content1, props1] = solveItem(items[index1])
-  const [Content2, props2] = solveItem(items[index2])
+  const Content1 = items[index1]
+  const Content2 = items[index2]
 
   if (debugDisplayAll) {
     return (
-      <>{items.map((item, index) => {
-        const [Item, props] = solveItem(item)
+      <>{items.map((Item, index) => {
         return (
-          <Item key={index} {...props} />
+          <Item key={index} {...itemProps} />
         )
       })}</>
     )
@@ -82,7 +78,8 @@ export const Switch = <T extends unknown>({
       {(render1 && Content1) && (
         <Content1 
           ref={ref1}
-          {...props1}
+          key={index1}
+          {...itemProps}
           entering={transition && !inverse}
           leaving={transition && inverse}
         />
@@ -90,7 +87,8 @@ export const Switch = <T extends unknown>({
       {(render2 && Content2) && (
         <Content2
           ref={ref2}
-          {...props2}
+          key={index2}
+          {...itemProps}
           entering={transition && inverse}
           leaving={transition && !inverse}
         />
