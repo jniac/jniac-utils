@@ -16,6 +16,9 @@ export type WheelOptions = Partial<{
   /** Are passive listeners wanted? */
   passive: boolean
 
+  /** Should we ignore those wheel events? */
+  onWheelIgnore: (event: WheelEvent) => boolean
+
   onWheel: (event: WheelEvent) => void
   onWheelStart: () => void
   onWheelStop: () => void
@@ -37,6 +40,8 @@ export const handlePointerWheel = (element: HTMLElement | Window, options: Wheel
   const {
     capture = false,
     passive = true,
+
+    onWheelIgnore,
     
     onWheel,
     onWheelStart,
@@ -52,9 +57,13 @@ export const handlePointerWheel = (element: HTMLElement | Window, options: Wheel
   let _wheelEvent: WheelEvent | null = null
 
   const _onWheel = (event: WheelEvent) => {
+    // Skip ignored event.
+    if (onWheelIgnore && onWheelIgnore(event) === true) {
+      return
+    }
     const deltaTime = (event.timeStamp - (_wheelEvent?.timeStamp ?? 0)) / 1e3
+    // Skip invalid deltaTimes that lead to NaN values.
     if (deltaTime <= 0) {
-      // Skip invalid deltaTimes that lead to NaN values.
       return
     }
     if (_wheelEvent === null) {
