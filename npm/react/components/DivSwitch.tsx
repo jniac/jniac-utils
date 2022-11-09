@@ -1,19 +1,21 @@
-import React from 'react'
+import { ElementType, HTMLAttributes, useMemo, forwardRef } from 'react'
 import { inverseLerp, inout, in4 } from '../../../math'
-import { SwitchChildProps, Switch, Item, solveItem } from './Switch'
+import { SwitchChildProps, Switch } from './Switch'
 import './DivSwitch.css'
 
 type Props = {
   index?: number
-  items?: Item[]
+  items?: ElementType[]
+  itemProps?: Record<string, any>
   transitionDuration?: number
   debug?: string
   debugDisplayAll?: boolean
-} & React.HTMLAttributes<HTMLDivElement>
+} & HTMLAttributes<HTMLDivElement>
 
 export const DivSwitch = ({
-  index = 0, 
+  index = 0,
   items = [],
+  itemProps = {},
   transitionDuration = .8,
   debugDisplayAll = false,
   className = '',
@@ -21,47 +23,49 @@ export const DivSwitch = ({
   ...props
 }: Props) => {
 
-    const mapItems = React.useMemo(() => (
-      items.map(item => {
-        const [Item, props] = solveItem(item)
-        return React.forwardRef<HTMLDivElement, SwitchChildProps>(({ entering }, ref) => (
+  const mapItems = useMemo(() => {
+    return items.map(Item => {
+      return forwardRef<HTMLDivElement, SwitchChildProps>(({ entering, leaving, ...props}, ref) => {
+        return (
           <div ref={ref} className="Item" style={{ opacity: `${entering ? '0' : ''}` }}>
-            <Item {...props}/>
+            <Item {...props} />
           </div>
-        ))
+        )
       })
-      // items as dependencies is ok
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    ), items)
+    })
+    // items as dependencies is ok
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, items)
 
-    return (
-      <div className={`DivSwitch ${className}`} {...props}>
-        <Switch<HTMLDivElement>
-          index={index}
-          transitionDuration={transitionDuration}
-          items={mapItems}
-          debugDisplayAll={debugDisplayAll}
-          onTransition={(entering, leaving, t, animation) => {
-            // Ensure to remove old class names when changes occurs quickly:
-            entering?.classList.remove('leaving')
-            leaving?.classList.remove('entering')
-            // Transition update:
-            if (t < 1) {
-              entering?.classList.add('entering')
-              leaving?.classList.add('leaving')
-            }
-            if (t === 1) {
-              entering?.classList.remove('entering')
-            }
-            if (leaving) {
-              const t1 = inverseLerp(0, 0.6, t)
-              leaving.style.opacity = in4((1 - t1)).toFixed(2)
-            }
-            if (entering) {
-              entering.style.opacity = t < 1 ? inout(t, 3, .3).toFixed(2) : ''
-            }
-          }}
-        />
-      </div>
-    )
-  }
+  return (
+    <div className={`DivSwitch ${className}`} {...props}>
+      <Switch<HTMLDivElement>
+        index={index}
+        transitionDuration={transitionDuration}
+        items={mapItems}
+        itemProps={itemProps}
+        debugDisplayAll={debugDisplayAll}
+        onTransition={(entering, leaving, t, animation) => {
+          // Ensure to remove old class names when changes occurs quickly:
+          entering?.classList.remove('leaving')
+          leaving?.classList.remove('entering')
+          // Transition update:
+          if (t < 1) {
+            entering?.classList.add('entering')
+            leaving?.classList.add('leaving')
+          }
+          if (t === 1) {
+            entering?.classList.remove('entering')
+          }
+          if (leaving) {
+            const t1 = inverseLerp(0, 0.6, t)
+            leaving.style.opacity = in4((1 - t1)).toFixed(2)
+          }
+          if (entering) {
+            entering.style.opacity = t < 1 ? inout(t, 3, .3).toFixed(2) : ''
+          }
+        }}
+      />
+    </div>
+  )
+}

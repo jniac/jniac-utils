@@ -150,8 +150,8 @@ export function useEffects<T = undefined>(
  */
 
 export function useLayoutEffects<T = undefined>(
-  effect: Parameters<typeof useEffects>[0],
-  deps: Parameters<typeof useEffects>[1]
+  effect: Parameters<typeof useEffects<T>>[0],
+  deps: Parameters<typeof useEffects<T>>[1]
 ) {
   return useEffects<T>(effect, deps, { moment: 'layout-effect' })
 }
