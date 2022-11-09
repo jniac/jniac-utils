@@ -27,6 +27,8 @@ export class PRNG {
   static seedMax = 2147483647
   static seedDefault = 123456
   static #staticSeed: number = PRNG.seedDefault
+  
+  static get seed() { return this.#staticSeed }
 
   #initialSeed: number
   #seed: number
