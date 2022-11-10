@@ -18,7 +18,7 @@ const stringToSeed = (str: string) => {
   return seed
 }
 
-type ShuffeOptions = Partial<{ 
+type ShuffeOptions = Partial<{
   /** Should the array be duplicated? Default is false. */
   duplicate: boolean
 }>
@@ -27,7 +27,7 @@ export class PRNG {
   static seedMax = 2147483647
   static seedDefault = 123456
   static #staticSeed: number = PRNG.seedDefault
-  
+
   static get seed() { return this.#staticSeed }
 
   #initialSeed: number
@@ -38,33 +38,87 @@ export class PRNG {
     this.#seed = init(seed)
   }
 
-  static reset(seed = PRNG.seedDefault) {
+  static resetByInt(seed = PRNG.seedDefault) {
     PRNG.#staticSeed = init(seed)
     return PRNG
   }
 
-  reset(seed = this.#initialSeed) {
+  resetByInt(seed = this.#initialSeed) {
     this.#initialSeed = seed
     this.#seed = init(seed)
     return this
   }
 
-  static stringReset(str: string) {
-    PRNG.#staticSeed = stringToSeed(str)
-    return PRNG
+  static resetByFloat(seed = .5) {
+    return PRNG.resetByInt(2147483647 * Math.abs(seed % 1))
   }
 
+  resetByFloat(seed = .5) {
+    return this.resetByInt(2147483647 * Math.abs(seed % 1))
+  }
+
+  static resetByString(str: string) {
+    return PRNG.resetByInt(stringToSeed(str))
+  }
+
+  resetByString(str: string) {
+    return this.resetByInt(stringToSeed(str))
+  }
+
+  /**
+   * @deprecated resetByString() should be preferred.
+   */
+  static stringReset(str: string) {
+    return PRNG.resetByString(str)
+  }
+
+  /**
+   * @deprecated resetByString() should be preferred.
+   */
   stringReset(str: string) {
-    this.#seed = stringToSeed(str)
-    return this
+    return this.resetByString(str)
   }
 
   static randomReset() {
-    return PRNG.reset(2147483647 * Math.random())
+    return PRNG.resetByInt(2147483647 * Math.random())
   }
 
   randomReset() {
-    return this.reset(2147483647 * Math.random())
+    return this.resetByInt(2147483647 * Math.random())
+  }
+
+  /**
+   * Resets the current seed according to the provided argument. Internally this 
+   * will call "resetByInt", "resetByFloat" or "resetByString" depending on the 
+   * argument. 
+   */
+  static reset(seed: number | string) {
+    if (typeof seed === 'string') {
+      return PRNG.resetByString(seed)
+    } else {
+      if (seed < 1) {
+        return PRNG.resetByFloat(seed)
+      } else {        
+        return PRNG.resetByInt(seed)
+      }
+    }
+  }
+
+  /**
+   * Resets the current seed according to the provided argument. Internally this 
+   * will call "resetByInt", "resetByFloat" or "resetByString" depending on the 
+   * argument. 
+   */
+  reset(seed: number | string) {
+    if (typeof seed === 'string') {
+      return this.resetByString(seed)
+    } else {
+      if (seed < 1) {
+        return this.resetByFloat(seed)
+      } else {        
+        return this.resetByInt(seed)
+      }
+    }
   }
 
   static float() {
@@ -97,7 +151,7 @@ export class PRNG {
   static integer(min = 0, max = 100) {
     return Math.floor(min + (max - min) * PRNG.float())
   }
-  
+
   /**
    * Returns a integer between min (inclusive) & max (exclusive) 
    */
@@ -161,7 +215,7 @@ export class PRNG {
     const index = PRNG.integer(0, items.length)
     return items[index]
   }
-  
+
   item<T>(items: ArrayLike<T>) {
     const index = this.integer(0, items.length)
     return items[index]
@@ -210,8 +264,8 @@ export class PRNG {
     }
 
     const previous = PRNG.#staticSeed
-    
-    PRNG.reset(seed)
+
+    PRNG.resetByInt(seed)
     const COUNT = Math.min(array.length, 20)
     const random = Array.from({ length: COUNT }).map(() => PRNG.float())
     const result = [...array]
@@ -236,7 +290,7 @@ export class PRNG {
     }
 
     const previous = PRNG.#staticSeed
-    PRNG.reset(seed)
+    PRNG.resetByInt(seed)
     const COUNT = Math.min(array.length, 20)
     const random = Array.from({ length: COUNT }).map(() => PRNG.float())
     const result = [...array]
