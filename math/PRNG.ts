@@ -123,6 +123,12 @@ export class PRNG {
     return from + (value ** power) * deviation * (value * 100 % 2 > 1 ? 1 : -1)
   }
 
+  /**
+   * Shuffles the array.
+   * 
+   * Note: By default, the given array is modified. Use the "duplicate" option 
+   * to keep the array untouched.
+   */
   static shuffle<T = any>(array: T[], { duplicate = false }: ShuffeOptions = {}) {
     const result = duplicate ? [...array] : array
     for (let i = 0, max = array.length; i < max; i++) {
@@ -134,7 +140,13 @@ export class PRNG {
     return result
   }
 
-  shuffle<T = any>(array: T[], { duplicate = false }: ShuffeOptions = {}) {
+  /**
+   * Shuffles the array.
+   * 
+   * Note: By default, the given array is modified. Use the "duplicate" option 
+   * to keep the array untouched.
+   */
+   shuffle<T = any>(array: T[], { duplicate = false }: ShuffeOptions = {}) {
     const result = duplicate ? [...array] : array
     for (let i = 0, max = array.length; i < max; i++) {
       const index = Math.floor(this.float() * max)
