@@ -4,17 +4,27 @@ import { ColorArg, helperConfig, getColor } from './helper-config'
 import { setVertexColor } from './vertex-color'
 import { getGeometryTransformer } from './transform-geometry'
 
+export type CreateAxesGeometryOptions = Partial<{
+  color: ColorArg
+  colorX: ColorArg
+  colorY: ColorArg
+  colorZ: ColorArg
+  radius: number
+  radiusScale: number
+  alignMode: 'positive' | 'center' | 'negative'
+}>
 /**
  * Create axes geometry: 3 arrow X, Y, Z with vertex colors.
  */
 export const createAxesGeometry = ({
-  colorX = 'axis-x' as ColorArg,
-  colorY = 'axis-y' as ColorArg,
-  colorZ = 'axis-z' as ColorArg,
+  color,
+  colorX = color ?? 'axis-x',
+  colorY = color ?? 'axis-y',
+  colorZ = color ?? 'axis-z',
   radius = helperConfig['axis-radius'],
   radiusScale = 1,
-  alignMode = 'positive' as 'positive' | 'center' | 'negative', 
-} = {}) => {
+  alignMode = 'positive', 
+}: CreateAxesGeometryOptions = {}) => {
 
   radius *= radiusScale
 
