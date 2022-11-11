@@ -41,7 +41,7 @@ export type PinchOptions = Partial<{
   /** Hook that allows to ignore some down event (cancelling at the same time all other events that may follow otherwise (tap, drag etc.)). */
   onDownIgnore: (event: PointerEvent) => boolean
   /** For debug / test purpose. [Shift] key to pinch "in" from the current touch point. [Alt] key to pinch "out" (from the center). */
-  fakePinch: boolean
+  useFakePinch: boolean
   /** Display debug pinch helpers. */
   debugPinch: boolean
   /** When the user pans, some jitters may appear, "panDamping" helps to reduce the jitters. */
@@ -64,7 +64,7 @@ export const handlePinch = (element: HTMLElement | Window, options: PinchOptions
   const {
     capture = false,
     passive = true,
-    fakePinch = true,
+    useFakePinch: fakePinch = true,
     debugPinch = false,
     panDamping = .66,
   } = options
