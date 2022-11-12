@@ -51,8 +51,14 @@
 .padding-16 {
   padding: 16px;
 }
+.padding-24 {
+  padding: 24px;
+}
 .padding-32 {
   padding: 32px;
+}
+.padding-48 {
+  padding: 48px;
 }
 .padding-64 {
   padding: 64px;
@@ -134,6 +140,9 @@
 .flex.gutter-16 > * {
   --gutter: 16px;
 }
+.flex.gutter-24 > * {
+  --gutter: 24px;
+}
 .flex.gutter-32 > * {
   --gutter: 32px;
 }
@@ -179,6 +188,11 @@
   width: 16px;
   align-self: stretch;
 }
+.flex.row > .space-24 {
+  flex: 0 0 24px;
+  width: 24px;
+  align-self: stretch;
+}
 .flex.row > .space-32 {
   flex: 0 0 32px;
   width: 32px;
@@ -218,6 +232,11 @@
 .flex.column > .space-16 {
   flex: 0 0 16px;
   height: 16px;
+  align-self: stretch;
+}
+.flex.column > .space-24 {
+  flex: 0 0 24px;
+  height: 24px;
   align-self: stretch;
 }
 .flex.column > .space-32 {
