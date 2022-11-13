@@ -2,7 +2,7 @@ import { VectorVariable } from 'some-utils/variables'
 
 const toXYZ = ([x, y, z]: number[] | Float32Array | Float64Array) => ({ x, y, z })
 
-type WheelFrameInfo = {
+export type WheelFrameInfo = {
   deltaTime: number
   velocity: { x: number, y: number, z: number }
   velocityOld: { x: number, y: number, z: number }
