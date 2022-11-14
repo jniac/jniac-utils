@@ -4,6 +4,54 @@ import { ColorArg, helperConfig, getColor } from './helper-config'
 import { setVertexColor } from './vertex-color'
 import { getGeometryTransformer } from './transform-geometry'
 
+export type CreateSingleAxeGeometryOptions = Partial<{
+  axis: 'x' | 'y' | 'z'
+  length: number
+  color: ColorArg
+  radius: number
+  radiusScale: number
+}>
+/**
+ * Create axes geometry: 3 arrow X, Y, Z with vertex colors.
+ */
+export const createSingleAxeGeometry = ({
+  axis = 'x',
+  length = 1,
+  color = '#fc0',
+  radius = helperConfig['axis-radius'],
+  radiusScale = 1,
+}: CreateSingleAxeGeometryOptions = {}) => {
+
+  radius *= radiusScale
+
+  if (axis !== 'x') {
+    throw new Error('Not implemented!')
+  }
+
+  const { transform } = getGeometryTransformer()
+
+  const _color = getColor(color)
+
+  const coneHeight = radius * 8
+  const cone = new ConeGeometry(radius * 3, coneHeight)
+  const cyl = new CylinderGeometry(radius, radius, 1)
+
+  const cylLength = length - coneHeight
+  const coneDistance = length - coneHeight * .5
+  const cylDistance = cylLength * .5
+
+  transform(cone, { x: coneDistance, rz: -90 })
+  transform(cyl, { x: cylDistance, sy: cylLength, rz: -90 })
+  setVertexColor(cone, _color)
+  setVertexColor(cyl, _color)
+
+  return mergeBufferGeometries([
+    cyl, cone,
+  ], false)
+}
+
+
+
 export type CreateAxesGeometryOptions = Partial<{
   color: ColorArg
   colorX: ColorArg
