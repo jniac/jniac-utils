@@ -5,6 +5,8 @@ model) and no longer the object (the eye).
 
 In other words, exit the eye out, welcome the model.
 
+Vertigo camera is both a perspective and an orthographic camera.
+
 <img width="960" alt="image" src="VertigoCamera.svg">
 
 Key concepts:
