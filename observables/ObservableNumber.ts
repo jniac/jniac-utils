@@ -107,4 +107,11 @@ export class ObservableNumber extends Observable<number> {
       ...props,
     })
   }
+
+  almostEquals(value: number, tolerance?: number): boolean
+  almostEquals(value: number, options?: { tolerance: number }): boolean
+  almostEquals(value: number, options: any) {
+    const tolerance = (typeof options === 'number' ? options : options?.tolerance) ?? 1e-9
+    return Math.abs(this.value - value) <= tolerance
+  }
 }
