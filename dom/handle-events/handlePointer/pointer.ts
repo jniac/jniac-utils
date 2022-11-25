@@ -78,7 +78,21 @@ const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: numb
   )
 }
 
-export const handlePointer = (element: HTMLElement | Window, options: Options & DragOptions & PinchOptions & WheelOptions) => {
+const solveTarget = (element: HTMLElement | Window | string) => {
+  if (element instanceof HTMLElement) {
+    return element
+  }
+  if (element instanceof Window) {
+    return element as any as HTMLElement // Fooling typescript.
+  }
+  const node = document.querySelector(element)
+  if (node instanceof HTMLElement) {
+    return node
+  }
+  throw new Error(`Invalid selector: "${element}". No node in the document for that selector.`)
+}
+
+export const handlePointer = (target: HTMLElement | Window | string, options: Options & DragOptions & PinchOptions & WheelOptions) => {
 
   // NOTE: Special case, when faking pinch with the shift key, we don't want any drag to occur.
   if (options.useFakePinch) {
@@ -243,31 +257,31 @@ export const handlePointer = (element: HTMLElement | Window, options: Options & 
     onContextMenu?.(event)
   }
 
-  const target = element as HTMLElement // Fooling typescript.
-  target.addEventListener('pointerover', _onPointerOver, { capture, passive })
-  target.addEventListener('pointerout', _onPointerOut, { capture, passive })
-  target.addEventListener('pointerenter', _onPointerEnter, { capture, passive })
-  target.addEventListener('pointerleave', _onPointerLeave, { capture, passive })
-  target.addEventListener('pointerdown', _onPointerDown, { capture, passive })
-  target.addEventListener('pointermove', _onPointerMove, { capture, passive })
-  target.addEventListener('contextmenu', _onContextMenu, { capture, passive })
+  const _target = solveTarget(target)
+  _target.addEventListener('pointerover', _onPointerOver, { capture, passive })
+  _target.addEventListener('pointerout', _onPointerOut, { capture, passive })
+  _target.addEventListener('pointerenter', _onPointerEnter, { capture, passive })
+  _target.addEventListener('pointerleave', _onPointerLeave, { capture, passive })
+  _target.addEventListener('pointerdown', _onPointerDown, { capture, passive })
+  _target.addEventListener('pointermove', _onPointerMove, { capture, passive })
+  _target.addEventListener('contextmenu', _onContextMenu, { capture, passive })
 
-  const dragListener = isDragListening(options) ? handleDrag(element, options) : null
-  const pinchListener = isPinchListening(options) ? handlePinch(element, options) : null
-  const wheelListener = isWheelListening(options) ? handlePointerWheel(element, options) : null
+  const dragListener = isDragListening(options) ? handleDrag(_target, options) : null
+  const pinchListener = isPinchListening(options) ? handlePinch(_target, options) : null
+  const wheelListener = isWheelListening(options) ? handlePointerWheel(_target, options) : null
 
   if (onWindowMove) {
     window.addEventListener('pointermove', _onWindowPointerMove, { capture, passive })
   }
 
   const destroy = () => {
-    target.removeEventListener('pointerover', _onPointerOver, { capture })
-    target.removeEventListener('pointerout', _onPointerOut, { capture })
-    target.removeEventListener('pointerenter', _onPointerEnter, { capture })
-    target.removeEventListener('pointerleave', _onPointerLeave, { capture })
-    target.removeEventListener('pointerdown', _onPointerDown, { capture })
-    target.removeEventListener('pointermove', _onPointerMove, { capture })
-    target.removeEventListener('contextmenu', _onContextMenu, { capture })
+    _target.removeEventListener('pointerover', _onPointerOver, { capture })
+    _target.removeEventListener('pointerout', _onPointerOut, { capture })
+    _target.removeEventListener('pointerenter', _onPointerEnter, { capture })
+    _target.removeEventListener('pointerleave', _onPointerLeave, { capture })
+    _target.removeEventListener('pointerdown', _onPointerDown, { capture })
+    _target.removeEventListener('pointermove', _onPointerMove, { capture })
+    _target.removeEventListener('contextmenu', _onContextMenu, { capture })
     window.removeEventListener('pointermove', _onPointerMoveOver, { capture })
     window.removeEventListener('pointermove', _onPointerMoveDown, { capture })
     window.removeEventListener('pointerup', _onPointerUp, { capture })
