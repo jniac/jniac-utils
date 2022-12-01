@@ -19,6 +19,8 @@ type TimeHandlerCallbackOptions = Partial<{
   order: number
   /** Frames to skip to save computations. Default is 0. */
   skip: number
+  /** Should the callback be executed once only? Default is false. */
+  once: boolean
 }>
 
 class TimerHandler {
@@ -76,12 +78,17 @@ class TimerHandler {
         throw new Error('Oups')
       }
     }
-    const [{ order = 0, skip = 0 }, callback] = resolveArgs()
-    const finalCallback = skip <= 0 ? callback : () => {
+    const [{ order = 0, skip = 0, once = false }, callback] = resolveArgs()
+    const isSpecial = skip > 0 || once
+    const getSpecialCallback = () => () => {
       if (this.#frame % (skip + 1) === 0) {
         callback(this)
+        if (once) {
+          destroy()
+        }
       }
     }
+    const finalCallback = isSpecial ? getSpecialCallback() : callback
     this.#callbacks.add(order, finalCallback)
     const destroy = () => {
       this.#callbacks.delete(order, finalCallback)
