@@ -5,12 +5,12 @@ import { OrderSet } from '../../collections'
 
 const requestContinuousAnimationSet = new Set<number>()
 let requestContinuousAnimationCount = 0
-export const requestContinuousAnimation = () => {
+const requestContinuousAnimation = () => {
   const id = requestContinuousAnimationCount++
   requestContinuousAnimationSet.add(id)
   return id
 }
-export const cancelContinuousAnimation = (id: number) => {
+const cancelContinuousAnimation = (id: number) => {
   return requestContinuousAnimationSet.delete(id)
 }
 
@@ -100,8 +100,8 @@ class TimerHandler {
   }
 }
 
-export const appTimer = new TimerHandler()
-export const timer = new TimerHandler()
+const appTimer = new TimerHandler()
+const timer = new TimerHandler()
 
 type AnimationFrameProps = {
   timeBeforeFade?: number
@@ -109,7 +109,7 @@ type AnimationFrameProps = {
   maxDeltaTime?: number
 }
 
-export const AnimationFrame = ({
+const AnimationFrame = ({
   timeBeforeFade = 30,
   fadeDuration = 1,
   maxDeltaTime = 1 / 10,
@@ -194,8 +194,15 @@ export const AnimationFrame = ({
   return null
 }
 
-// Backward compatibility...
 export {
+  requestContinuousAnimation,
+  cancelContinuousAnimation,
+
+  appTimer,
+  timer,
+  AnimationFrame,
+
+  // Backward compatibility...
   timer as time,
   appTimer as appTime,
 }
