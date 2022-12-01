@@ -1,7 +1,29 @@
 
 // export const distance = (x: number, y: number) => Math.sqrt(x * x + y * y)
 
+/**
+ * Very little wrapper around Math.sin().
+ * ```
+ * sin02(0)    // 0
+ * sin02(.25)  // 1
+ * sin02(.5)   // 0
+ * sin02(.75)  // -1
+ * sin02(1)    // 0
+ * ```
+ */
 export const sin01 = (x: number) => Math.sin(x * Math.PI * 2)
+
+/**
+ * Very little wrapper around Math.sin().
+ * ```
+ * sin02(0.0) // 0
+ * sin02(0.5) // 1
+ * sin02(1.0) // 0
+ * sin02(1.5) // -1
+ * sin02(2.0) // 0
+ * ```
+ */
+export const sin02 = (x: number) => Math.sin(x * Math.PI)
 
 export const radian = (degree: number) => degree * Math.PI / 180
 export const degree = (radian: number) => radian / Math.PI * 180
