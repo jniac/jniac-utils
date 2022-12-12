@@ -1,6 +1,6 @@
 // @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
 import { SVGAttributes } from 'react'
-import { appTimer, timer, useRefComplexEffects } from '../react'
+import { appTimer, timer, useEffects } from '../react'
 import { middleModulo } from '../../math'
 
 export const TimeIndicator = ({
@@ -28,7 +28,7 @@ export const TimeIndicator = ({
   }
   const width = size * .8 / 4
   const height = size * 3 / 4
-  const ref = useRefComplexEffects<SVGSVGElement>(function* (svg) {
+  const { ref } = useEffects<SVGSVGElement>(function* (svg) {
     const [rect1, rect2] = svg.querySelectorAll('rect')
     const angularVelocity = 240
     const state = {
