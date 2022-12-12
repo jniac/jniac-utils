@@ -2,17 +2,15 @@
 import { useState } from 'react'
 // @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
 import * as THREE from 'three'
-import { useRefComplexEffects } from '../react'
-import { radian } from '../../math'
-import { time } from '.'
+import { useEffects, timer } from '../react'
 
 export const DebugCube = ({ rotate = true }) => {
 
   const [hovered, setHover] = useState(false)
 
-  const ref = useRefComplexEffects<THREE.Mesh>(function* (mesh) {
+  const { ref } = useEffects<THREE.Mesh>(function* (mesh) {
     if (rotate) {
-      yield time.onChange(({ deltaTime }) => {
+      yield timer.onFrame(({ deltaTime }) => {
         mesh.rotation.x += 1 * deltaTime
         mesh.rotation.y += 1 * deltaTime
       })
@@ -24,7 +22,8 @@ export const DebugCube = ({ rotate = true }) => {
       <ambientLight intensity={.5} />
       <directionalLight position={[5, 10, 3]} castShadow />
 
-      <mesh ref={ref} 
+      <mesh 
+        ref={ref} 
         castShadow 
         receiveShadow 
         position-y={1}
@@ -41,7 +40,7 @@ export const DebugCube = ({ rotate = true }) => {
         <meshPhysicalMaterial color='cyan' reflectivity={1} roughness={.1}/>
       </mesh>
 
-      <mesh rotation-x={radian(-90)} receiveShadow>
+      <mesh rotation-x={Math.PI / 2 } receiveShadow>
         <circleGeometry args={[3]} />
         <shadowMaterial opacity={.33}/>
       </mesh>
