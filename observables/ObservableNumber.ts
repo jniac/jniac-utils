@@ -12,6 +12,37 @@ export class ObservableNumber extends Observable<number> {
     this.#max = max
   }
 
+  setMinMax(min: number, max: number, {
+    ignoreCallbacks = false,
+    owner = null as any,
+  } = {}) {
+    if (min > this.#max) {
+      this.#max = min
+    }
+    if (max < this.#min) {
+      this.#min = max
+    }
+    this.#min = min
+    this.#max = max
+    return this.setValue(this.value, { ignoreCallbacks, owner })
+  }
+
+  getMin() { return this.#min }
+  setMin(value: number, {
+    ignoreCallbacks = false,
+    owner = null as any,
+  } = {}) {
+    return this.setMinMax(value, this.#max, { ignoreCallbacks, owner })
+  }
+
+  getMax() { return this.#max }
+  setMax(value: number, {
+    ignoreCallbacks = false,
+    owner = null as any,
+  } = {}) {
+    return this.setMinMax(this.#min, value, { ignoreCallbacks, owner })
+  }
+
   setValue(value: number | ((v: number) => number), {
     ignoreCallbacks = false,
     owner = null as any,
