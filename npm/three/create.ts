@@ -1,5 +1,6 @@
 // @ts-ignore (ignore none-existing module, of course if module does not exist this file should not be imported)
 import * as THREE from 'three'
+import { EulerOrder } from 'three'
 import { radian } from '../../math'
 
 export type TransformArg = Partial<{
@@ -30,7 +31,7 @@ export const applyTransform = <T extends THREE.Object3D>(target: T, {
   rotationY = 0,
   rotationZ = 0,
   rotationOrder = 'XYZ',
-  rotation = new THREE.Euler(radian(rotationX), radian(rotationY), radian(rotationZ), rotationOrder),
+  rotation = new THREE.Euler(radian(rotationX), radian(rotationY), radian(rotationZ), rotationOrder as EulerOrder),
   scaleX = 1,
   scaleY = 1,
   scaleZ = 1,

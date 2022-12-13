@@ -1,5 +1,5 @@
 // @ts-ignore
-import { Euler, PerspectiveCamera, Vector3 } from 'three'
+import { Euler, EulerOrder, PerspectiveCamera, Vector3 } from 'three'
 
 const EPSILON = 0.0001
 const TO_RADIAN = Math.PI / 180
@@ -60,7 +60,7 @@ export class VertigoCamera extends PerspectiveCamera {
   } = {}) {
     super()
     this.aspect = aspect
-    this.rotation.order = rotationOrder
+    this.rotation.order = rotationOrder as EulerOrder
     this.matrixAutoUpdate = false
     this.setVertigo({ height, perspective, range, distance })
   }

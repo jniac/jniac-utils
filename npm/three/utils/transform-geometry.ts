@@ -1,4 +1,4 @@
-import { BufferAttribute, BufferGeometry, Euler, Matrix4, Quaternion, Vector3 } from 'three'
+import { BufferAttribute, BufferGeometry, Euler, EulerOrder, Matrix4, Quaternion, Vector3 } from 'three'
 
 export type TransformParams = Partial<{
   x: number
@@ -48,7 +48,7 @@ export const getGeometryTransformer = ({
     if (q) {
       _r.copy(q)
     } else {
-      _r.setFromEuler(_e.set(rx * a, ry * a, rz * a, rotationOrder))
+      _r.setFromEuler(_e.set(rx * a, ry * a, rz * a, rotationOrder as EulerOrder))
     }
     _p.set(x, y, z)
     _s.set(s * sx, s * sy, s * sz)
