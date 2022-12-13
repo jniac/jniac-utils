@@ -1,6 +1,10 @@
 # PRNG: Pseudo Random Number Generator
 
-# encode / decode
+## Very WIP here
+And, maybe, a lot to learn before cleaning anything ([prng](https://en.wikipedia.org/wiki/Pseudorandom_number_generator), 
+[lcg](https://en.wikipedia.org/wiki/Linear_congruential_generator)).
+
+## encode / decode
 
 PRNG.encode & PRNG.decode are specials reversible functions:
 ```js

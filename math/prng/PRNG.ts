@@ -1,19 +1,11 @@
+import { algorithms } from './algorithms/simple-state'
 
-const next = (seed: number) => seed * 16807 % 2147483647
-
-const map = (seed: number) => (seed - 1) / 2147483646
-
-const init = (initialSeed: number) => {
-  initialSeed %= 2147483647
-  initialSeed += initialSeed < 0 ? 2147483647 : 0
-  initialSeed = initialSeed === 0 ? 1 : initialSeed
-  return next(initialSeed)
-}
+const { init, next, map } = algorithms['parkmiller-v1']
 
 const stringToSeed = (str: string) => {
   let seed = init(PRNG.seedDefault)
   for (let i = 0, max = str.length; i < max; i++) {
-    seed = seed * str.charCodeAt(i) % 2147483647
+    seed = (seed * str.charCodeAt(i)) % 2147483647
   }
   return seed
 }
@@ -92,13 +84,15 @@ export class PRNG {
    * will call "resetByInt", "resetByFloat" or "resetByString" depending on the 
    * argument. 
    */
-  static reset(seed: number | string) {
-    if (typeof seed === 'string') {
+  static reset(seed?: number | string) {
+    if (seed === undefined) {
+      PRNG.resetByInt(PRNG.seedDefault)
+    } else if (typeof seed === 'string') {
       return PRNG.resetByString(seed)
     } else {
       if (seed < 1) {
         return PRNG.resetByFloat(seed)
-      } else {        
+      } else {
         return PRNG.resetByInt(seed)
       }
     }
@@ -109,13 +103,15 @@ export class PRNG {
    * will call "resetByInt", "resetByFloat" or "resetByString" depending on the 
    * argument. 
    */
-  reset(seed: number | string) {
-    if (typeof seed === 'string') {
+  reset(seed?: number | string) {
+    if (seed === undefined) {
+      this.resetByInt(PRNG.seedDefault)
+    } else if (typeof seed === 'string') {
       return this.resetByString(seed)
     } else {
       if (seed < 1) {
         return this.resetByFloat(seed)
-      } else {        
+      } else {
         return this.resetByInt(seed)
       }
     }
@@ -200,7 +196,7 @@ export class PRNG {
    * Note: By default, the given array is modified. Use the "duplicate" option 
    * to keep the array untouched.
    */
-   shuffle<T = any>(array: T[], { duplicate = false }: ShuffeOptions = {}) {
+  shuffle<T = any>(array: T[], { duplicate = false }: ShuffeOptions = {}) {
     const result = duplicate ? [...array] : array
     for (let i = 0, max = array.length; i < max; i++) {
       const index = Math.floor(this.float() * max)
@@ -248,10 +244,16 @@ export class PRNG {
     throw new Error(`This can't be.`)
   }
 
+  /**
+   * Generates a hash (string) of the specified length, using the specified alphabet.
+   */
   static hash(length = 16, alphabet = '0123456789abcedf') {
     return Array.from({ length }).map(() => PRNG.item(alphabet)).join('')
   }
 
+  /**
+   * Generates a hash (string) of the specified length, using the specified alphabet.
+   */
   hash(length = 16, alphabet = '0123456789abcedf') {
     return Array.from({ length }).map(() => this.item(alphabet)).join('')
   }
