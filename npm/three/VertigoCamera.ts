@@ -56,7 +56,7 @@ export class VertigoCamera extends PerspectiveCamera {
     distance = 0, 
     perspective = 1, 
     aspect = 1,
-    rotationOrder = 'YXZ',
+    rotationOrder = 'YXZ' as EulerOrder,
   } = {}) {
     super()
     this.aspect = aspect

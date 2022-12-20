@@ -9,7 +9,7 @@ export type TransformParams = Partial<{
   rz: number
   /** Specify directly the quaternion (instead of using euler rotation). */
   q: Quaternion
-  rotationOrder: string
+  rotationOrder: EulerOrder
   useDegree: boolean
   s: number
   sx: number
@@ -18,7 +18,7 @@ export type TransformParams = Partial<{
 }>
 
 export const getGeometryTransformer = ({
-  defaultRotationOrder = 'XYZ',
+  defaultRotationOrder = 'XYZ' as EulerOrder,
   defaultUseDegree = true,
 } = {}) => {
 

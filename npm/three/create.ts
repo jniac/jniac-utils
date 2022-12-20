@@ -11,7 +11,7 @@ export type TransformArg = Partial<{
   rotationX: number
   rotationY: number
   rotationZ: number
-  rotationOrder: string
+  rotationOrder: EulerOrder
   rotation: THREE.Euler
   scaleX: number
   scaleY: number
