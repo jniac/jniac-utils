@@ -53,3 +53,23 @@ export const clampModulo = (x: number, min: number, max: number) => {
   return delta === 0 ? 0 : min + positiveModulo(x - min, delta)
 }
 
+/**
+ * "Short" linear interpolation using modulo. Kind of weird. Authorize interpolation 
+ * over limit of a range (rotation, hue, etc).
+ *
+ * Eg (with t from 0 to 1): 
+ * - moduloShortLerp(350, 10, 360, t) -> [350, 352, 354, 356, 358, 0, 2, 4, 6, 8, 10] 
+ * - moduloShortLerp(10, 350, 360, t) -> [10, 8, 6, 4, 2, 0, 358, 356, 354, 352, 350] 
+ */
+export const moduloShortLerp = (a: number, b: number, mod: number, alpha: number) => {
+  let delta = b - a
+  if (Math.abs(delta) > mod) {
+    if (delta < 0) {
+      b += mod
+    } else {
+      a += mod
+    }
+    delta = b - a
+  }
+  return positiveModulo(a + b * alpha, mod)
+}
