@@ -71,5 +71,5 @@ export const moduloShortLerp = (a: number, b: number, mod: number, alpha: number
     }
     delta = b - a
   }
-  return positiveModulo(a + b * alpha, mod)
+  return positiveModulo(a + delta * alpha, mod)
 }
