@@ -106,7 +106,7 @@ export class ObservableNumber extends Observable<number> {
   }
 
   onStepChange(step: number, callback: ObservableCallback<number, ObservableNumber>, { execute = false, once = false } = {}) {
-    let currentValue = Math.round(this.value / step) * step
+    let currentValue = NaN
     return this.onChange((value) => {
       let newValue = Math.round(value / step) * step
       if (currentValue !== newValue) {
