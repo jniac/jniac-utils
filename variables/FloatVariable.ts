@@ -1,3 +1,4 @@
+import { toSvgDocumentString, toSvgString } from './FloatVariable-svg'
 import { Variable } from './types'
 
 export class FloatVariable implements Variable<number> {
@@ -7,23 +8,6 @@ export class FloatVariable implements Variable<number> {
   #array: Float32Array | Float64Array
   #index = 0
   #sum!: number
-
-  get size() { return this.#array.length }
-  get floatSize() { return this.#array instanceof Float32Array ? 32 : 64 }
-
-  get value() { return this.#array[this.#index] }
-
-  get newValue() { return this.#array[this.#index] }
-  set newValue(value: number) { this.setNewValue(value) }
-
-  get currentValue() { return this.#array[this.#index] }
-  set currentValue(value: number) { this.setCurrentValue(value) }
-
-  get sum() { return this.#sum }
-  get average() { return this.#sum / this.#array.length }
-
-  get derivative() { return this.#derivative }
-  get derivativeCount(): number { return this.#derivative ? this.#derivative.derivativeCount + 1 : 0 }
 
   constructor(initialValue: number, {
     size = 16,
@@ -37,6 +21,26 @@ export class FloatVariable implements Variable<number> {
     }
   }
 
+  getMin() {
+    const array = this.#array
+    const size = array.length
+    let value = array[0]
+    for (let i = 1; i < size; i++) {
+      value = Math.min(value, array[i])
+    }
+    return value
+  }
+
+  getMax() {
+    const array = this.#array
+    const size = array.length
+    let value = array[0]
+    for (let i = 1; i < size; i++) {
+      value = Math.max(value, array[i])
+    }
+    return value
+  }
+
   *values() {
     const array = this.#array
     const index = this.#index
@@ -45,6 +49,26 @@ export class FloatVariable implements Variable<number> {
       const valueIndex = (index - i + size) % size
       yield array[valueIndex]
     }
+  }
+
+  /**
+   * Returns an array in the "right" order.
+   */
+  getArray(out: Float32Array | Float64Array | null = null) {
+    const array = this.#array
+    const index = this.#index
+    const size = array.length
+    if (out === null) {
+      out = this.floatSize === 32 ? new Float32Array(size) : new Float64Array(size)
+    }
+    if (out.length !== size) {
+      throw new Error(`Invalid size.`)
+    }
+    for (let i = 0; i < size; i++) {
+      const valueIndex = (index - i + size) % size
+      out[i] = array[valueIndex]
+    }
+    return out
   }
 
   fill(value: number) {
@@ -104,5 +128,54 @@ export class FloatVariable implements Variable<number> {
       `\n${tab}[${data}${trunc}]`
     )
   }
+
+  toSvgString(param?: Parameters<typeof toSvgString>[1]) {
+    return toSvgString(this, param)
+  }
+
+  toSvgDocumentString() {
+    return toSvgDocumentString(this)
+  }
+
+  toSvgElement() {
+    if (typeof window === 'undefined') {
+      throw new Error(`Cannot create an svg element without an access to {window}`)
+    }
+    const div = window.document.createElement('div')
+    div.innerHTML = this.toSvgString()
+    const svg = div.querySelector('svg')!
+    return svg
+  }
+
+  openSvgDocument() {
+    if (typeof window === 'undefined') {
+      throw new Error(`Cannot create an svg element without an access to {window}`)
+    }
+    const win = window.open('about:blank', '_blank')!
+    win.document.write(this.toSvgDocumentString())
+    return win
+  }
+
+  get min() { return this.getMin() }
+  get max() { return this.getMax() }
+
+  get size() { return this.#array.length }
+  get floatSize() { return this.#array instanceof Float32Array ? 32 : 64 }
+
+  get value() { return this.#array[this.#index] }
+
+  get newValue() { return this.#array[this.#index] }
+  set newValue(value: number) { this.setNewValue(value) }
+
+  get currentValue() { return this.#array[this.#index] }
+  set currentValue(value: number) { this.setCurrentValue(value) }
+
+  get sum() { return this.#sum }
+  get average() { return this.#sum / this.#array.length }
+
+  get derivative() { return this.#derivative }
+  get derivativeCount(): number { return this.#derivative ? this.#derivative.derivativeCount + 1 : 0 }
+
+  get array() { return this.getArray() }
 }
 
