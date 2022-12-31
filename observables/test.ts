@@ -3,8 +3,8 @@ import { ObservableNumber } from './ObservableNumber'
 
 const assert = {
   equivalent: <T extends Record<any, any>>(A: T, B: T) => {
-    const aKeys = Object.keys(A)
-    const bKeys = Object.keys(B)
+    const aKeys = Object.keys(A) as any[]
+    const bKeys = Object.keys(B) as any[]
     if (aKeys.length !== bKeys.length || aKeys.some(k => bKeys.includes(k) === false)) {
       throw new Error(`A & B does not have the same keys: \n(${aKeys.join(', ')}) <-> (${bKeys.join(', ')})`)
     }
