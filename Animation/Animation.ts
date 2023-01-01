@@ -385,6 +385,11 @@ class AnimationInstance {
   async *[Symbol.asyncIterator]() {
     yield* this.waitFrames()
   }
+
+  toString() {
+    const { id, frame, time, progress } = this
+    return `Animation#${id}{ f:${frame} t:${time.toFixed(4)} p:${progress.toFixed(4)} }`
+  }
 }
 
 const animations = new Set<AnimationInstance>()
@@ -397,31 +402,39 @@ const addAnimation = (animation: AnimationInstance) => {
 }
 
 const updateAnimation = (animation: AnimationInstance, animationTime: number) => {
-  animation.timeOld = animation.time
-  animation.time = animationTime
-  animation.deltaTime = animationTime - animation.timeOld
-  if (animation.time >= 0) {
-    let done = false
-    if (animation.frame === 0) {
-      for (const cb of startCallbacks.get(animation) ?? nothing) {
+  // NOTE: try/catch has zero performance penalty with Chrome V8 version > 6 
+  try {
+    animation.timeOld = animation.time
+    animation.time = animationTime
+    animation.deltaTime = animationTime - animation.timeOld
+    if (animation.time >= 0) {
+      let done = false
+      if (animation.frame === 0) {
+        for (const cb of startCallbacks.get(animation) ?? nothing) {
+          done = (cb(animation) === BREAK) || done
+        }
+      }
+      animation.frame += 1
+      for (const cb of frameCallbacks.get(animation) ?? nothing) {
         done = (cb(animation) === BREAK) || done
       }
-    }
-    animation.frame += 1
-    for (const cb of frameCallbacks.get(animation) ?? nothing) {
-      done = (cb(animation) === BREAK) || done
-    }
-    for (const cb of nextFrameCallbacks.getAndDelete(animation) ?? nothing) {
-      done = (cb(animation) === BREAK) || done
-    }
-    if (animation.complete && animation.completeOld === false) {
-      for (const cb of completeCallbacks.get(animation) ?? nothing) {
-        cb(animation)
+      for (const cb of nextFrameCallbacks.getAndDelete(animation) ?? nothing) {
+        done = (cb(animation) === BREAK) || done
+      }
+      if (animation.complete && animation.completeOld === false) {
+        for (const cb of completeCallbacks.get(animation) ?? nothing) {
+          cb(animation)
+        }
+      }
+      if (animation.autoDestroy && (done || animation.complete)) {
+        animation.destroy()
       }
     }
-    if (animation.autoDestroy && (done || animation.complete)) {
-      animation.destroy()
-    }
+  } catch(error) {
+    console.log(`Animation caught an error. To prevent any further error the instance will be destroyed.`)
+    console.log(animation.toString())
+    console.error(error)
+    animation.destroy()
   }
 }
 
