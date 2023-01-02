@@ -180,12 +180,28 @@ export class Observable<T> {
   }
 
   /**
+   * @deprecated
    * Should not exists. Here because used somewhere.
    */
   clearCallbacks() {
     this.#onChange.clear()
   }
 
+  /**
+   * Returns all the callbacks, for debug purpose huh. Future implementation may
+   * return null here, for security reasons.
+   */
+  getAllCallbacksForDebugPurpose() {
+    return this.#onChange
+  }
+
+  /**
+   * Change the value, but not immediately. Any intermediate changes will prevent
+   * that futur change (allowing an interesting design where long terms changes 
+   * can be overrided by more urgent changes).
+   * 
+   * Uses internally `setTimeout`.
+   */
   setValueWithDelay(value: T | ((v: T) => T), seconds: number, {
     clearOnChange = true,
     clearPrevious = true,
