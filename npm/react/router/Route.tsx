@@ -2,7 +2,7 @@ import React from 'react'
 import { Animation } from '../../../Animation'
 import { Observable, ObservableBoolean, ObservableNumber } from '../../../observables'
 import { compareString, location, StringMask } from '../../../router'
-import { useComplexEffects, useForceUpdate } from '..'
+import { useEffects, useForceUpdate } from '..'
 import { RouterContext } from './Router'
 
 export type RouteStatus = 'entering' | 'leaving' | 'visible' | 'invisible'
@@ -12,10 +12,19 @@ export type RouteStatus = 'entering' | 'leaving' | 'visible' | 'invisible'
  */
 interface RouteState {
   transitionDuration: number
-  status: Observable<RouteStatus>
-  active: ObservableBoolean
-  alpha: ObservableNumber
+  statusObs: Observable<RouteStatus>
+  activeObs: ObservableBoolean
+  alphaObs: ObservableNumber
+  flatAlphaObs: ObservableNumber
   routeProps: RouteProps
+
+  // Backward compatibility:
+  /** @deprecated @obsolete Prefer "statusObs" over "status" */
+  status: Observable<RouteStatus>
+  /** @deprecated @obsolete Prefer "statusObs" over "status" */
+  active: ObservableBoolean
+  /** @deprecated @obsolete Prefer "statusObs" over "status" */
+  alpha: ObservableNumber
 }
 
 export const RouteStateContext = React.createContext<RouteState>(null!)
@@ -29,9 +38,10 @@ export interface RouteProps {
   strict?: boolean
   transitionDuration?: number
   children?: React.ReactNode
+  debug?: boolean
 }
 
-export const Route: React.FC<RouteProps> = ({
+export const Route = ({
   path,
   excludePath,
   hash,
@@ -40,61 +50,84 @@ export const Route: React.FC<RouteProps> = ({
   strict = false, // should consider the last slash? otherwise `/foo/` and `/foo` are considered as a same vlaue. cf express "strict" property
   transitionDuration = 0,
   children,
-}) => {
+  debug = false,
+}: RouteProps) => {
 
   const { getPathname } = React.useContext(RouterContext)
 
   const innerState = React.useMemo(() => ({
-    visible: new ObservableBoolean(false),
-    mounted: new ObservableBoolean(false),
+    visibleObs: new ObservableBoolean(false),
+    mountedObs: new ObservableBoolean(false),
   }), [])
 
-  const state: RouteState = React.useMemo<RouteState>(() => ({
-    transitionDuration,
-    status: new Observable<RouteStatus>('invisible'),
-    active: new ObservableBoolean(false),
-    alpha: new ObservableNumber(0),
-
-    // exposing routeProps to any child, for debugging purpose essentially
-    routeProps: { path, excludePath, search, hash, exact, transitionDuration }
-  // NOTE: be prudent with this
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [])
+  const state: RouteState = React.useMemo<RouteState>(() => {
+    const statusObs = new Observable<RouteStatus>('invisible')
+    const activeObs = new ObservableBoolean(false)
+    const alphaObs = new ObservableNumber(0)
+    const flatAlphaObs = new ObservableNumber(0)
+    return {
+      transitionDuration,
+      statusObs,
+      activeObs,
+      alphaObs,
+      flatAlphaObs,
+      // Exposing routeProps to any child, for debugging purpose essentially:
+      routeProps: { path, excludePath, search, hash, exact, transitionDuration },
+      // Backward compatibility:
+      status: statusObs,
+      active: activeObs,
+      alpha: alphaObs,
+    }
+    // NOTE: be prudent with this
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const forceUpdate = useForceUpdate({ waitNextFrame: true })
 
-  useComplexEffects(function* () {
-    
-    // link the "status" and the inner "mounted" values 
-    yield state.status.onChange(value => innerState.mounted.setValue(value !== 'invisible'))
-    yield state.status.onChange(value => state.active.setValue(value === 'visible' || value === 'entering'))
-    
-    yield innerState.mounted.onChange(forceUpdate)
-    yield innerState.visible.onChange(value => {
+  useEffects(function* () {
+    const {
+      statusObs,
+      activeObs,
+      alphaObs,
+      flatAlphaObs,
+    } = state
+
+    // Link the "status" and the inner "mounted" values:
+    yield statusObs.onChange(value => innerState.mountedObs.setValue(value !== 'invisible'))
+    yield statusObs.onChange(value => activeObs.setValue(value === 'visible' || value === 'entering'))
+
+    if (debug) {
+      statusObs.onChange(status => {
+        console.log(`DEBUG: Route statusObs value: %c"${status}" %c${new Date().toJSON()}`, 'color: #98c379;', '')
+      })
+    }
+
+    yield innerState.mountedObs.onChange(forceUpdate)
+    yield innerState.visibleObs.onChange(value => {
       if (transitionDuration === 0) {
         if (value) {
-          state.status.setValue('visible')
-          state.alpha.setValue(1)
+          statusObs.setValue('visible')
+          alphaObs.setValue(1)
         } else {
-          state.status.setValue('invisible')
-          state.alpha.setValue(0)
+          statusObs.setValue('invisible')
+          alphaObs.setValue(0)
         }
       } else {
         if (value) {
-          state.status.setValue('entering')
-          Animation.tween(state.alpha, transitionDuration, {
-            from: { value: 0 },
+          statusObs.setValue('entering')
+          Animation.tween(flatAlphaObs, transitionDuration, {
             to: { value: 1 },
-            ease: 'out3',
-            onComplete: () => state.status.setValue('visible'),
+            ease: 'linear',
+            onChange: () => alphaObs.setValue(Animation.getMemoizedEase('out3')(flatAlphaObs.value)),
+            onComplete: () => statusObs.setValue('visible'),
           })
         } else {
-          state.status.setValue('leaving')
-          Animation.tween(state.alpha, transitionDuration, {
-            from: { value: 1 },
+          statusObs.setValue('leaving')
+          Animation.tween(flatAlphaObs, transitionDuration, {
             to: { value: 0 },
-            ease: 'out3',
-            onComplete: () => state.status.setValue('invisible'),
+            ease: 'linear',
+            onChange: () => alphaObs.setValue(Animation.getMemoizedEase('out3')(flatAlphaObs.value)),
+            onComplete: () => statusObs.setValue('invisible'),
           })
         }
       }
@@ -103,7 +136,7 @@ export const Route: React.FC<RouteProps> = ({
     const isVisible = () => {
       const pathname = getPathname()
       const exclude = excludePath && compareString(pathname, excludePath, exact)
-      return (!exclude 
+      return (!exclude
         && compareString(pathname, path, exact)
         && (search === undefined || compareString(location.search.value, search))
         && (hash === undefined || compareString(location.hash.value, hash))
@@ -111,7 +144,7 @@ export const Route: React.FC<RouteProps> = ({
     }
 
     yield location.href.onChange(() => {
-      innerState.visible.setValue(() => {
+      innerState.visibleObs.setValue(() => {
         const visible = isVisible()
         return visible
       })
@@ -119,7 +152,7 @@ export const Route: React.FC<RouteProps> = ({
 
   }, [path, excludePath])
 
-  if (innerState.mounted.value === false) {
+  if (innerState.mountedObs.value === false) {
     return null
   }
 
