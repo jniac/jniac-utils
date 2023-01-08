@@ -94,3 +94,18 @@ export const parentQuerySelector = (element: any, selector: string, {
   }
   return null
 }
+
+export function* getScrolledElements() {
+  const queue = [document.firstElementChild]
+  while(queue.length > 0) {
+    const element = queue.pop()!
+    if (element.scrollTop > 0) {
+      yield element
+    }
+    queue.push(...element.children)
+  }
+}
+
+export const getScrolledElementsArray = () => {
+  return [...getScrolledElements()]
+}
