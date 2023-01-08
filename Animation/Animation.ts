@@ -107,6 +107,14 @@ export const easings = (() => {
   }
 })()
 
+/**
+ * Usage:
+ * ```
+ * const ease = Animation.getEase('inout4')
+ * const ease = Animation.getEase('cubic-bezier(.5, 0, .5, 1)')
+ * const ease = Animation.getEase('inout(3, .33)')
+ * ```
+ */
 const getEase = (ease: EaseDeclaration): ((x: number) => number) => {
 
   if (typeof ease === 'function') {
@@ -118,11 +126,19 @@ const getEase = (ease: EaseDeclaration): ((x: number) => number) => {
       const [x1, y1, x2, y2] = ease
         .slice(13, -1)
         .split(/\s*,\s*/)
-        .map(s => parseFloat(s))
+        .map(s => Number.parseFloat(s))
       return (x: number) => solveCubicEasing(x1, y1, x2, y2, x)
     }
     else if (ease in easings) {
       return easings[ease as keyof typeof easings]
+    }
+    // inout(.5, 3)
+    else if (ease.startsWith('inout')) {
+      const [power = 3, inflexion = .5] = ease
+        .slice(6, -1)
+        .split(/\s*,\s*/)
+        .map(s => Number.parseFloat(s))
+      return (x: number) => easings.inout(x, power, inflexion)
     }
   }
 
@@ -130,6 +146,14 @@ const getEase = (ease: EaseDeclaration): ((x: number) => number) => {
 }
 
 const easeMap = new Map<EaseDeclaration, (x: number) => number>()
+/**
+ * Same usage than getEase():
+ * ```
+ * const ease = Animation.getMemoizedEase('inout4')
+ * const ease = Animation.getMemoizedEase('cubic-bezier(.5, 0, .5, 1)')
+ * const ease = Animation.getMemoizedEase('inout(3, .33)')
+ * ```
+ */
 const getMemoizedEase = (ease: EaseDeclaration) => {
   // Only "string" ease are memoized (lambda / arrow function could be new at each call). 
   if (typeof ease === 'string') {
@@ -589,6 +613,7 @@ type EaseDeclaration =
   | ((t: number) => number)
   | (keyof typeof easings)
   | `cubic-bezier(${number}, ${number}, ${number}, ${number})`
+  | `inout(${number}, ${number})`
   | null
   | undefined
 
