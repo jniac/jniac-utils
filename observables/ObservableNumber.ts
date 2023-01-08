@@ -43,6 +43,10 @@ export class ObservableNumber extends Observable<number> {
     return this.setMinMax(this.#min, value, { ignoreCallbacks, owner })
   }
 
+  clamp(value: number) {
+    return value < this.#min ? this.#min : value > this.#max ? this.#max : value
+  }
+
   setValue(value: number | ((v: number) => number), {
     ignoreCallbacks = false,
     owner = null as any,
@@ -50,7 +54,7 @@ export class ObservableNumber extends Observable<number> {
     if (typeof value === 'function') {
       value = value(this.value)
     }
-    value = value < this.#min ? this.#min : value > this.#max ? this.#max : value
+    value = this.clamp(value)
     return super.setValue(value, { ignoreCallbacks, owner })
   }
 
