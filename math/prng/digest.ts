@@ -1,10 +1,11 @@
-let n = 0
+
+let state = 0
 
 /**
  * Initialize the digest algorithm.
  */
 const init = () => {
-  n = 1073741823
+  state = 1073741823
   return digest
 }
 
@@ -12,9 +13,9 @@ const init = () => {
  * Digest the new number.
  */
 const next = (x: number) => {
-  n += x
-  n = Math.imul(n, 48271)
-  n = (n & 0x7fffffff) + (n >> 31)
+  state += x
+  state = Math.imul(state, 48271)
+  state = (state & 0x7fffffff) + (state >> 31)
   return digest
 }
 
@@ -22,7 +23,7 @@ const next = (x: number) => {
  * Returns the result of all previous digested numbers.
  */
 const result = () => {
-  return (n & 2147483647) / 2147483648
+  return (state & 0x7fffffff) / 0x80000000
 }
 
 /**
@@ -75,3 +76,5 @@ export const digest = {
   string,
   any,
 }
+
+import('./digest-test')

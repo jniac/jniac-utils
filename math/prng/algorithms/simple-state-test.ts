@@ -1,4 +1,5 @@
-import { waitNextFrame } from 'some-utils/misc'
+import { waitNextFrame } from '../../../misc'
+import { createBooleanStore } from '../test/test-utils'
 import { AlgorithmName, algorithms } from './simple-state'
 
 class TestCheck {
@@ -37,29 +38,9 @@ class TestCheck {
  * no collision over 2_147_000_000! 419ms (907.3s)
  * algorithms.ts:88 collision @2147483646: 1664377282
  */
-const prngTest = async (name: AlgorithmName, maxInt = 2 ** 32) => {
-  const len = maxInt / 64
-  const array = new BigInt64Array(len)
-  const set = (index: number, value: boolean) => {
-    if (index < 0 || index >= maxInt) {
-      throw new Error(`Invalid index: "${index}"`)
-    }
-    const i = Math.floor(index / 64)
-    const f = index - i * 64
-    const n = array[i]
-    array[i] = value
-      ? n | (BigInt(1) << BigInt(f))
-      : n & ~(BigInt(1) << BigInt(f))
-  }
-  const get = (index: number) => {
-    if (index < 0 || index >= maxInt) {
-      throw new Error(`Invalid index: "${index}"`)
-    }
-    const i = Math.floor(index / 64)
-    const f = index - i * 64
-    const n = array[i]
-    return (n & (BigInt(1) << BigInt(f))) > BigInt(0)
-  }
+const test = async (name: AlgorithmName, maxInt = 2 ** 32) => {
+
+  const store = createBooleanStore(maxInt)
 
   const { next, map } = algorithms[name]
   let n = 123456
@@ -79,14 +60,14 @@ const prngTest = async (name: AlgorithmName, maxInt = 2 ** 32) => {
       if (n === 2292331840) {
         console.log(i)
       }
-      if (get(n)) {
+      if (store.get(n)) {
         console.log(`collision @${i}: ${n}`)
         stepCollisionCount++
         if (stepCollisionCount > 100) {
           return
         }
       } else {
-        set(n, true)
+        store.set(n, true)
       }
       check.record(map(n))
     }
@@ -99,4 +80,4 @@ const prngTest = async (name: AlgorithmName, maxInt = 2 ** 32) => {
   }
 }
 
-prngTest('parkmiller-v2')
+test('parkmiller-v2')
