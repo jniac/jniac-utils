@@ -74,6 +74,7 @@ const test = async () => {
   let loopCount = 0
   while (true) {
     await waitNextFrame()
+    testGrid2D()
     console.log('loop', loopCount)
     loopCount++
     break
