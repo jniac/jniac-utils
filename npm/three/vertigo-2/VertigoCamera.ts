@@ -101,6 +101,8 @@ export const updateVertigoCamera = (
     const mWidth = mHeight * aspect
     camera.projectionMatrix.makeOrthographic(-mWidth, mWidth, mHeight, -mHeight, near, far)
   }
+  camera.near = near
+  camera.far = far
   camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert()
 
   // 3. Three internals.
