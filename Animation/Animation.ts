@@ -716,9 +716,17 @@ const tween = <T>(target: T, timing: AnimationParam, {
 
 // syntax sugar / short hand
 const cancelTween = duringCancelTarget
-const hasTween = (target: any) => {
+/**
+ * Returns true if there's currently an animation on target.
+ */
+const hasTarget = (target: any) => {
   return !!duringMap.get(target)
 }
+
+/**
+ * Same as hasTarget(), sugar syntax.
+ */
+const hasTween = (target: any) => hasTarget(target)
 
 const info = {
   get time() { return time },
@@ -745,6 +753,7 @@ export {
   waitFrames,
   tween,
   cancelTween,
+  hasTarget,
   hasTween,
   getEase,
   getMemoizedEase,
@@ -770,6 +779,7 @@ export const Animation = {
   waitFrames,
   tween,
   cancelTween,
+  hasTarget,
   hasTween,
   getEase,
   getMemoizedEase,
