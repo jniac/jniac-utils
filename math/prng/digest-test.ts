@@ -70,7 +70,7 @@ const testGrid2D = function* () {
  * 4 billions / 2^32 ?). So a boolean store baked through bitwise operation in 
  * bigint stored in BigInt64Array is used here... or somewhere else! 
  */
-const test = async () => {
+export const test = async () => {
   let loopCount = 0
   while (true) {
     await waitNextFrame()
@@ -81,5 +81,5 @@ const test = async () => {
   }
 }
 
-test()
+// test()
 
