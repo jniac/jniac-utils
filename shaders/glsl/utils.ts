@@ -40,4 +40,17 @@ export const glsl_utils = /* glsl */`
     x = mod(x, modulo);
     return x < 0.0 ? x + modulo : x;
   }
+
+  // Limit a value to a maximum that the function tends to reach when x -> ∞
+  // https://www.desmos.com/calculator/0vewkbnscu
+  float limited(float x, float maxValue) {
+    return x <= 0.0 ? x : maxValue * x / (maxValue + x);
+  }
+
+  // https://www.desmos.com/calculator/0vewkbnscu
+  float limited(float x, float minValue, float maxValue) {
+    float d = maxValue - minValue;
+    float xd = x - minValue;
+    return x <= minValue ? x : minValue + d * xd / (d + xd);
+  }
 `
