@@ -1,32 +1,63 @@
 
-export const arraysAreEquivalent = (a: any[], b: any[]) => {
+const _arraysAreEquivalent = (a: any[], b: any[]) => {
   if (a.length !== b.length) {
     return false
   }
   for (let index = 0, max = a.length; index < max; index++) {
-    if (a[index] !== b[index]) {
+    const va = a[index]
+    const vb = b[index]
+    const ta = typeof va
+    const tb = typeof vb
+    if (ta !== tb) {
       return false
+    }
+    if (ta === 'object') {
+      if (areEquivalent(va, vb) === false) {
+        return false
+      }
+    } else {
+      if (va !== vb) {
+        return false
+      }
     }
   }
   return true
 }
 
-export const objectsAreEquivalent = (a: object, b: object) => {
+const _objectsAreEquivalent = (a: object, b: object) => {
   if (a === b) {
     return true
   }
   if (a === undefined || a === null || b === undefined || b === null) {
     return false
   }
-  for (const key in a) {
+  const aKeys = Object.getOwnPropertyNames(a)
+  for (const key of aKeys) {
     if (key in b === false) {
       return false
     }
-    if ((a as any)[key] !== (b as any)[key]) {
+    const va = (a as any)[key]
+    const vb = (b as any)[key]
+    const ta = typeof va
+    const tb = typeof vb
+    if (ta !== tb) {
       return false
     }
+    if (ta === 'object') {
+      if (areEquivalent(va, vb) === false) {
+        return false
+      }
+    } else {
+      if (va !== vb) {
+        return false
+      }
+    }
   }
-  for (const key in b) {
+  const bKeys = Object.getOwnPropertyNames(b)
+  if (bKeys.length !== aKeys.length) {
+    return false
+  }
+  for (const key in bKeys) {
     if (key in a === false) {
       return false
     }
@@ -34,15 +65,37 @@ export const objectsAreEquivalent = (a: object, b: object) => {
   return true
 }
 
+/**
+ * Deep compare the two objects entries to determine if the objects are equivalent.
+ * 
+ * Two objects are considered equivalent when: 
+ * - They share the same constructor.
+ * - They have the same value for the same keys.
+ */
 export const areEquivalent = (a: any, b: any) => {
   if (a.constructor !== b.constructor) {
     return false
   }
   if (Array.isArray(a)) {
-    return arraysAreEquivalent(a, b)
+    return _arraysAreEquivalent(a, b)
   }
   else {
-    return objectsAreEquivalent(a, b)
+    return _objectsAreEquivalent(a, b)
   }
 }
 
+// Backward compatibility:
+export {
+  /** 
+   * @deprecated
+   * @obsolete
+   * Deprecated, use 'areEquivalent' instead.
+   */
+  areEquivalent as arraysAreEquivalent,
+  /** 
+   * @deprecated
+   * @obsolete
+   * Deprecated, use 'areEquivalent' instead.
+   */
+  areEquivalent as objectsAreEquivalent,
+}
