@@ -53,4 +53,12 @@ export const glsl_utils = /* glsl */`
     float xd = x - minValue;
     return x <= minValue ? x : minValue + d * xd / (d + xd);
   }
+
+  float sqLength(in vec2 p) {
+    return p.x * p.x + p.y * p.y;
+  }
+
+  float sqLength(in vec3 p) {
+    return p.x * p.x + p.y * p.y + p.z * p.z;
+  }
 `
