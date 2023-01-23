@@ -6,7 +6,9 @@ type WindowSize = {
 }
 
 type Options = Partial<{
+  /** @obsolete @deprecated Not clear, prefer "executeOnResizeImmediately" instead. */
   executeOnResize: boolean
+  executeOnResizeImmediately: boolean
   onResize: (size: WindowSize, sizeOld: WindowSize) => void
 }>
 
@@ -22,6 +24,7 @@ export const getWindowSize = () => size
 
 export const handleWindow = ({
   executeOnResize = true,
+  executeOnResizeImmediately = executeOnResize, // Depends from the deprecated variable, but no other choice here. 
   onResize,
 }: Options) => {
   
@@ -33,7 +36,7 @@ export const handleWindow = ({
     onResize?.(size, sizeOld)
   }
 
-  if (executeOnResize) {
+  if (executeOnResizeImmediately) {
     onResize?.(size, sizeOld)
   }
   
