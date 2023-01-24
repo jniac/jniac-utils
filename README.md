@@ -2,6 +2,8 @@
 
 typescript / react utils
 
+[Ici un version transpilée (some-utils-js, utilisable directement dans le navigateur)](https://github.com/jniac/some-utils-js)
+
 Collections d'utilitaires dans toutes les directions (utilitaires, expérimentations) 
 qu'un tree-shaker saura dégraisser.
 
