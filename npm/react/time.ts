@@ -194,6 +194,9 @@ const AnimationFrame = ({
   return null
 }
 
+const { uTime } = timer
+const { uTime: uAppTime } = appTimer
+
 export {
   requestContinuousAnimation,
   cancelContinuousAnimation,
@@ -201,6 +204,10 @@ export {
   appTimer,
   timer,
   AnimationFrame,
+
+  // convenient exports:
+  uTime,
+  uAppTime,
 
   // Backward compatibility...
   timer as time,
