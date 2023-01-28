@@ -77,7 +77,7 @@ const anyNext = (value: any) => {
       if (value === null) {
         next(NULL_NUMBER)
       } else {
-        const entries = Object.entries(value)
+        const entries = Object.entries(value) as [string, any]
         entries.sort((a, b) => a[0] < b[0] ? -1 : 1)
         for (const [key, value2] of entries) {
           for (let i = 0, max = key.length; i < max; i++) {
