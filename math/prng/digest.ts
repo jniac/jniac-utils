@@ -50,20 +50,69 @@ const string = (str: string) => {
   return result()
 }
 
+const NULL_NUMBER = 34567849373
+const UNDEFINED_NUMBER = 7743012743
+
+const anyNext = (value: any) => {
+  switch (typeof value) {
+    case 'undefined': {
+      next(UNDEFINED_NUMBER)
+      break
+    }
+    case 'string': {
+      for (let i = 0, max = value.length; i < max; i++) {
+        next(value.charCodeAt(i))
+      }
+      break
+    }
+    case 'number': {
+      next(value)
+      break
+    }
+    case 'boolean': {
+      next(value ? 0 : 1)
+      break
+    }
+    case 'object': {
+      if (value === null) {
+        next(NULL_NUMBER)
+      } else {
+        const entries = Object.entries(value)
+        entries.sort((a, b) => a[0] < b[0] ? -1 : 1)
+        for (const [key, value2] of entries) {
+          for (let i = 0, max = key.length; i < max; i++) {
+            next(key.charCodeAt(i))
+          }
+          anyNext(value2)
+        }
+      }
+      break
+    }
+  }
+}
+
+/**
+ * Digest any value and return the result.
+ * 
+ * If the value is an object, the function will recursively iterate over any 
+ * sub-entries and digest keys and values.
+ * 
+ * Key order does NOT affect the result (entries are sorted first).
+ * 
+ * Usage:
+ * ```
+ * digest.any(1, 2, 3) // 0.5850774045102298
+ * digest.any({ x: { y: 3 }, foo: 'bar' }) // 0.27742494409903884
+ * digest.any({ foo: 'bar', x: { y: 3 } }) // 0.27742494409903884
+ * digest.any({ foo: 'bar', x: { y: 4 } }) // 0.27744742203503847
+ * ```
+ */
 const any = (...args: any[]) => {
   init()
   const max = args.length
   for (let i = 0; i < max; i++) {
     const x = args[i]
-    if (typeof x === 'number') {
-      next(x)
-    } else {
-      const str = String(x)
-      const strLength = str.length
-      for (let j = 0; j < strLength; j++) {
-        next(str.charCodeAt(j))
-      }
-    }
+    anyNext(x)
   }
   return result()
 }
