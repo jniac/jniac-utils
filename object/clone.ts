@@ -34,7 +34,7 @@ export const deepPartialEquals = (source: any, destination: any) => {
 
 /**
  * `deepPartialCopy` assumes that source and destination have the same structure. 
- * "Writable" properties of array & "plain" object are copied ONLY. Objects withs
+ * "Writable" properties of array & "plain" object are copied ONLY. Objects with
  * constructor are copied via reference (allowing to copy "native" properties as 
  * HTMLElement, Event etc.): 
  * ```js
@@ -66,15 +66,48 @@ export const deepPartialCopy = (source: any, destination: any): boolean => {
   return hasChanged
 }
 
-export const deepClone = <T extends unknown>(source: T) => {
+type DeepCloneOptions = Partial<{
+  ignoredKeys: Set<String>
+  ignoreEntry: (key: string, value: any) => boolean
+  authorizedKeys: Set<String>
+  authorizeEntry: (key: string, value: any) => boolean
+}>
+/**
+ * Returns a "deep" (recursive) copy of an object.
+ * 
+ * NOTE: About "object" clones: 
+ * - If the object provides a "clone()" method, the method will be used to produce the value.
+ * - If not, the constructor will be used, if possible, without providing any arguments (new source.constructor()).
+ */
+export const deepClone = <T extends unknown>(source: T, options: DeepCloneOptions = {}): T => {
+  const {
+    ignoredKeys,
+    authorizedKeys,
+    ignoreEntry,
+    authorizeEntry,
+  } = options
   if (isObject(source)) {
+    if ('clone' in (source as any) && typeof (source as any).clone === 'function') {
+      return (source as any).clone()
+    }
     try {
-      // @ts-ignore
-      const ctor = source.constructor
+      const ctor = (source as any).constructor
       const clone = new ctor()
       for (const key in source) {
+        if (ignoredKeys && ignoredKeys.has(key)) {
+          continue
+        }
+        if (authorizedKeys && authorizedKeys.has(key) === false) {
+          continue
+        }
         const value = source[key]
-        clone[key] = deepClone(value)
+        if (ignoreEntry && ignoreEntry(key, value)) {
+          continue
+        }
+        if (authorizeEntry && authorizeEntry(key, value) === false) {
+          continue
+        }
+        clone[key] = deepClone(value, options)
       }
       return clone
     } 
