@@ -1,5 +1,6 @@
 import React from 'react'
 import { isClick } from '../../../../dom'
+import { safeClassName } from '../../misc'
 import { RouterContext } from '../Router'
 
 export const Link = React.forwardRef<HTMLAnchorElement, {
@@ -15,6 +16,7 @@ export const Link = React.forwardRef<HTMLAnchorElement, {
   preventNavigation = false,
   onClick,
   onLink,
+  className,
   children,
   ...props
 }, ref) => {
@@ -22,13 +24,21 @@ export const Link = React.forwardRef<HTMLAnchorElement, {
   const _onClick = (event: React.MouseEvent<HTMLAnchorElement, MouseEvent>) => {
     if (isClick()) {
       event.preventDefault()
-      go(to)
+      if (preventNavigation === false) {
+        go(to)
+      }
       onClick?.(event)
       onLink?.()
     }
   }
   return (
-    <a {...props} ref={ref} href={`${baseUrl}${to}`} onPointerUp={_onClick}>
+    <a
+      {...props}
+      className={safeClassName('Link', className)}
+      ref={ref}
+      href={`${baseUrl}${to}`}
+      onPointerUp={_onClick}
+    >
       {children}
     </a>
   )
