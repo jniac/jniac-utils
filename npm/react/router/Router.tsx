@@ -62,6 +62,15 @@ export const Router = ({
     }
   }
 
+  const solveBaseUrl = () => {
+    if (baseUrl instanceof RegExp) {
+      const [realBaseUrl] = getPathname().match(baseUrl)!
+      return realBaseUrl
+    } else {
+      return baseUrl
+    }
+  }
+
   const routerGetPathname = () => {
     const pathname = cleanPathname(getPathname().replace(baseUrl, ''))
     return pathnameTransform ? cleanPathname(pathnameTransform(pathname)) || '/' : pathname
@@ -69,7 +78,7 @@ export const Router = ({
   const go = (to: string, { reload = false, newTab = downPointerEvent?.metaKey || downPointerEvent?.ctrlKey } = {}) => {
     if (baseUrl && to.startsWith('/')) {
       // "baseUrl" injection.
-      to = baseUrl + to
+      to = solveBaseUrl() + to
     }
     const url = new URL(to, window.location.href).href
     if (reload) {
@@ -84,7 +93,7 @@ export const Router = ({
   }
   const link = (to: string, { reload = false } = {}) => () => go(to, { reload })
   const context = {
-    baseUrl,
+    get baseUrl() { return solveBaseUrl() },
     pathnameTransform,
     getPathname: routerGetPathname,
     go,
