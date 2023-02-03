@@ -32,6 +32,5 @@ export const generics = (typeArg: TypeArg | TypeArg[], template: string) => {
   for (const type of types) {
     chunks.push(template.replaceAll(/\bT\b/g, type))
   }
-  console.log(chunks.join('\n'))
   return chunks.join('\n')
 }
