@@ -12,6 +12,8 @@ const init = () => {
 /**
  * Digest the new number.
  * 
+ * Based on [Lehmer or Park-Miller random number generator](https://en.wikipedia.org/wiki/Lehmer_random_number_generator).
+ * 
  * NOTE: The second paramater is a scalar internally used to scale the input. 
  * The default value (1e14) is a compromise allowing sensitivity to both small 
  * and very large values. The limits are 1e-15 and 2^36. That means that for any

@@ -53,7 +53,7 @@ export const algorithms = {
 
   /**
    * From [Pierre Lecuyer](http://www.iro.umontreal.ca/~lecuyer/), found [here](https://gist.github.com/blixt/f17b47c62508be59987b?permalink_comment_id=2682175#gistcomment-2682175)
-   * Quite short period of 16_777_216 (0x1000000).
+   * Quite short period of 2^24 (16_777_216, 0x1000000).
    */
   'lecuyer-24': (() => {
     const next = (n: number) => (n = Math.imul(741103597, n)) >>> 0
