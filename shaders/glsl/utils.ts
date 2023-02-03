@@ -1,3 +1,5 @@
+import { generics } from './tools/generics'
+
 export const glsl_utils = /* glsl */`
 
   vec2 scaleAround(vec2 p, vec2 c, float s) {
@@ -61,4 +63,16 @@ export const glsl_utils = /* glsl */`
   float sqLength(in vec3 p) {
     return p.x * p.x + p.y * p.y + p.z * p.z;
   }
+
+  ${generics('vecX', /* glsl */`
+    T min3(in T a, in T b, in T c) {
+      return min(min(a, b), c);
+    }
+  `)}
+
+  ${generics('vecX', /* glsl */`
+    T min4(in T a, in T b, in T c, in T d) {
+      return min(min(a, b), min(c, d));
+    }
+  `)}
 `
