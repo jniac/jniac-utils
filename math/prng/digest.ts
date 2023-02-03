@@ -11,9 +11,23 @@ const init = () => {
 
 /**
  * Digest the new number.
+ * 
+ * NOTE: The second paramater is a scalar internally used to scale the input. 
+ * The default value (1e14) is a compromise allowing sensitivity to both small 
+ * and very large values. The limits are 1e-15 and 2^36. That means that for any
+ * input smaller than 1e-15 or bigger 2^36 the result will be the same. If you 
+ * need to react to value bigger than 2^36 (which is already bigger than an 
+ * classic 32 bit int), the scalar may be reduced to 1.
+ * 
+ * ```
+ * digest.init().next(1e-15).result() // 0.4999775215983391
+ * digest.init().next(2e-15).result() // 0.4999775215983391
+ * digest.init().next(68719476736).result() // 0.4999999995343387
+ * digest.init().next(68719476737).result() // 0.4999999995343387
+ * ```
  */
-const next = (x: number) => {
-  state += x
+const next = (x: number, scalar = 1e14) => {
+  state += x * scalar
   state = Math.imul(state, 48271)
   state = (state & 0x7fffffff) + (state >> 31)
   return digest
@@ -91,22 +105,7 @@ const anyNext = (value: any) => {
   }
 }
 
-/**
- * Digest any value and return the result.
- * 
- * If the value is an object, the function will recursively iterate over any 
- * sub-entries and digest keys and values.
- * 
- * Key order does NOT affect the result (entries are sorted first).
- * 
- * Usage:
- * ```
- * digest.any(1, 2, 3) // 0.5850774045102298
- * digest.any({ x: { y: 3 }, foo: 'bar' }) // 0.27742494409903884
- * digest.any({ foo: 'bar', x: { y: 3 } }) // 0.27742494409903884
- * digest.any({ foo: 'bar', x: { y: 4 } }) // 0.27744742203503847
- * ```
- */
+
 const any = (...args: any[]) => {
   init()
   const max = args.length
@@ -117,13 +116,49 @@ const any = (...args: any[]) => {
   return result()
 }
 
-export const digest = {
+/**
+ * Digest any value and return the result.
+ * 
+ * If the value is an object, the function will recursively iterate over any 
+ * sub-entries and digest keys and values.
+ * 
+ * Key order does NOT affect the result (entries are sorted first).
+ * 
+ * Usage:
+ * ```
+ * digest(1, 2, 3) // 0.5850774045102298
+ * digest({ x: { y: 3 }, foo: 'bar' }) // 0.27742494409903884
+ * digest({ foo: 'bar', x: { y: 3 } }) // 0.27742494409903884
+ * digest({ foo: 'bar', x: { y: 4 } }) // 0.27744742203503847
+ * ```
+ * 
+ * For a finer control, the different steps used internally can also be accessed:
+ * ```
+ * const hash = digest.init().next(myNumber1).next(myNumber2).result()
+ * ```
+ */
+type Digest = {
+  (...args: any[]): number
+  init: typeof init
+  next: typeof next
+  result: typeof result
+  numbers: typeof numbers
+  string: typeof string
+  any: typeof any
+}
+
+const digest = ((...args: any[]) => any(...args)) as Digest
+
+Object.assign(digest, {
+  // internal steps:
   init,
   next,
   result,
+
+  // specific functions:
   numbers,
   string,
   any,
-}
+})
 
-import('./digest-test')
+export { digest }
