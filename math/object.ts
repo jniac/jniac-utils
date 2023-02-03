@@ -23,7 +23,11 @@ export const deepLerpUnclamped = (from: any, to: any, out: any, alpha: number): 
         }
         case 'object': {
           if (fromValue !== null) {
-            out[key] = deepLerpUnclamped(fromValue, to[key], out[key], alpha)
+            // Assign only if the key does not exist (eg: out is raw empty object):
+            if (key in out === false) {
+              out[key] = Array.isArray(fromValue) ? [] : {}
+            }
+            deepLerpUnclamped(fromValue, to[key], out[key], alpha)
           }
           break
         }
