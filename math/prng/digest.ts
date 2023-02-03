@@ -91,13 +91,24 @@ const anyNext = (value: any) => {
       if (value === null) {
         next(NULL_NUMBER)
       } else {
-        const entries = Object.entries(value) as [string, any]
-        entries.sort((a, b) => a[0] < b[0] ? -1 : 1)
-        for (const [key, value2] of entries) {
-          for (let i = 0, max = key.length; i < max; i++) {
-            next(key.charCodeAt(i))
+        if (Array.isArray(value)) {
+          // NOTE: If the value is an array, do not iterate over keys, the order 
+          // is sufficient to produce an unique result.
+          for (let i = 0, max = value.length; i < max; i++) {
+            anyNext(value[i])
           }
-          anyNext(value2)
+        } else {
+          // NOTE: But if the value is an object, iterate over SORTED keys since 
+          // { x, y } should produce the same than { y, x }
+          const entries = Object.entries(value) as [string, any]
+          entries.sort((a, b) => a[0] < b[0] ? -1 : 1)
+          for (let i = 0, imax = entries.length; i < imax; i++) {
+            const [key, value2] = entries[i]
+            for (let j = 0, jmax = key.length; j < jmax; j++) {
+              next(key.charCodeAt(j))
+            }
+            anyNext(value2)
+          }
         }
       }
       break
