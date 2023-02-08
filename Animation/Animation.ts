@@ -757,6 +757,9 @@ export {
   hasTween,
   getEase,
   getMemoizedEase,
+
+  // shorthands
+  getMemoizedEase as mEase,
 }
 
 export type {
