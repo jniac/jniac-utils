@@ -26,10 +26,15 @@ export const glsl_utils = /* glsl */`
     return x < 0.0 ? 0.0 : x > 1.0 ? 1.0 : x;
   }
   
-  float inverseLerp(float a, float b, float x) {
+  float inverseLerpUnclamped(float a, float b, float x) {
     return (x - a) / (b - a);
   }
 
+  float inverseLerp(float a, float b, float x) {
+    return clamp01((x - a) / (b - a));
+  }
+
+  // Same as "inverseLerp", but here for backward compatibility.
   float inverseLerpClamped(float a, float b, float x) {
     return clamp01((x - a) / (b - a));
   }
