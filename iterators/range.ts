@@ -34,6 +34,10 @@ export function* range(...args: any[]) {
   }
 }
 
+/**
+ * Make an array, and fill it with integers, ranging by default from 0 to the 
+ * length of the array. 
+ */
 export function aRange(max: number, options?: RangeOptions): number[]
 export function aRange(min: number, max: number, options?: RangeOptions): number[]
 export function aRange(...args: any[]) {
