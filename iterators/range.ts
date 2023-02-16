@@ -40,3 +40,5 @@ export function aRange(...args: any[]) {
   // @ts-ignore
   return [...range(...args)]
 }
+
+export { aRange as makeArray }
