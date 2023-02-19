@@ -62,7 +62,7 @@ const getMatchingCallbacks = (target: any, type: any) => {
 const __send = <M extends IMessage = any>(
   target: M['target'],
   type: M['type'],
-  props?: M['props'],
+  props: M['props'] = {},
   modality?: ISendModality,
 ) => {
   const callbacks = [
