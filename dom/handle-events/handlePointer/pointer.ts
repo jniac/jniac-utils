@@ -1,4 +1,5 @@
 import { Point } from '../../../geom'
+import { Destroyable } from './types'
 import { DragOptions, handleDrag, isDragListening } from './drag'
 import { handlePinch, isPinchListening, PinchOptions } from './pinch'
 import { handlePointerWheel, isWheelListening, WheelOptions } from './wheel'
@@ -92,7 +93,12 @@ const solveTarget = (element: HTMLElement | Window | string) => {
   throw new Error(`Invalid selector: "${element}". No node in the document for that selector.`)
 }
 
-export const handlePointer = (target: HTMLElement | Window | string, options: Options & DragOptions & PinchOptions & WheelOptions) => {
+type HandlePointerOptions = Options & DragOptions & PinchOptions & WheelOptions
+
+export const handlePointer = (
+  target: HTMLElement | Window | string, 
+  options: HandlePointerOptions,
+): Destroyable => {
 
   // NOTE: Special case, when faking pinch with the shift key, we don't want any drag to occur.
   if (options.useFakePinch) {

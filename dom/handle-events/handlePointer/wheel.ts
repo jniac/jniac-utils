@@ -1,4 +1,5 @@
 import { VectorVariable } from 'some-utils/variables'
+import { Destroyable } from './types'
 
 const toXYZ = ([x, y, z]: number[] | Float32Array | Float64Array) => ({ x, y, z })
 
@@ -35,7 +36,7 @@ export const isWheelListening = (options: WheelOptions) => {
   )
 }
 
-export const handlePointerWheel = (element: HTMLElement | Window, options: WheelOptions) => {
+export const handlePointerWheel = (element: HTMLElement | Window, options: WheelOptions): Destroyable => {
 
   const {
     capture = false,

@@ -1,4 +1,5 @@
 import { Point } from '../../../geom'
+import { Destroyable } from './types'
 
 
 export type DragDirection = 'horizontal' | 'vertical'
@@ -78,7 +79,7 @@ const dragHasStart = (downPoint: Point, movePoint: Point, distanceThreshold: num
 }
 
 
-export const handleDrag = (element: HTMLElement | Window, options: DragOptions) => {
+export const handleDrag = (element: HTMLElement | Window, options: DragOptions): Destroyable => {
 
   const {
     capture = false,
