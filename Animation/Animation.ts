@@ -649,6 +649,10 @@ const tween = <T>(target: T, timing: AnimationParam, {
   onComplete,
 }: TweenParams<T>) => {
 
+  if (target === null || target === undefined) {
+    throw new Error(`Invalid target: null or undefined are not valid target.`)
+  }
+
   const keys = new Set([...Object.keys(from ?? {}), ...Object.keys(to ?? {})]) as Set<keyof T>
 
   const _from = Object.fromEntries([...keys].map(key => {

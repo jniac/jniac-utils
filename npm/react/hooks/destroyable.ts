@@ -1,5 +1,6 @@
 
 export type Destroyable =
+  | undefined
   | null
   | (() => void)
   | { destroy: () => void }
