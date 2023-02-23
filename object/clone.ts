@@ -4,14 +4,14 @@ import { isObject, isPlainObjectOrArray } from './isObject'
  * NOTE: The source may have less keys than the destination, the result still may
  * be true. This is the meaning of "Partial". Eg:
  * ```js
- * deepPartialEquals({ foo: 1 }, { foo: 1, bar: 2 }) // true
+ * isDeepSubset({ foo: 1 }, { foo: 1, bar: 2 }) // true
  * ```
  * So, the order is important here, and keep in mind that this could be true:
  * ```js 
- * deepPartialEquals(x, y) !== deepPartialEquals(y, x)
+ * isDeepSubset(x, y) !== isDeepSubset(y, x)
  * ```
  */
-export const deepPartialEquals = (source: any, destination: any) => {
+const isDeepSubset = (source: any, destination: any) => {
   if (isObject(source)) {
     if (isObject(destination) === false) {
       // source exists, but not destination!
@@ -23,13 +23,19 @@ export const deepPartialEquals = (source: any, destination: any) => {
     }
     // not the same reference, but may be the same properties values
     for (const key in source) {
-      if (deepPartialEquals(source[key], destination[key]) === false) {
+      if (isDeepSubset(source[key], destination[key]) === false) {
         return false
       }
     }
     return true
   }
   return source === destination
+}
+
+export {
+  isDeepSubset,
+  /** @deprecated use `isDeepSubset` instead. */
+  isDeepSubset as deepPartialEquals,
 }
 
 /**
