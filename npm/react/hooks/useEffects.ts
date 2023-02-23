@@ -1,4 +1,4 @@
-import { RefObject, useEffect as reactUseEffect, useLayoutEffect as reactUseLayoutEffect, useMemo as reactUseMemo } from 'react'
+import { RefObject, useEffect as reactUseEffect, useLayoutEffect as reactUseLayoutEffect, useMemo as reactUseMemo, useRef, useState } from 'react'
 import { Destroyable, solveDestroyableIntoArray } from './destroyable'
 
 // "mount check" is for checking that the component is still mounted in an async effect. 
@@ -9,6 +9,7 @@ type UseEffectOptions = Partial<{ moment: CallbackMoment} >
 type PublicState<T> = {
   readonly mounted: boolean
   ref: RefObject<T>
+  setDirty: () => void
 }
 /**
  * `useEffects` is intended to allow the complex declaration of multiple, potentially async effects.
@@ -46,6 +47,10 @@ export function useEffects<T = undefined>(
   // creation / destruction will not be called in the right order.
   const callbackDeps = deps === 'always-recalculate' ? undefined : deps
 
+  const [count, setCount] = useState(0)
+  const forceUpdateRef = useRef(() => setCount(count + 1))
+  forceUpdateRef.current = () => setCount(count + 1)
+
   // 1. "memo": This is the "initialization" phase. The states are created.
   const [state, publicState] = reactUseMemo(() => {
     let innerValue: T | null = null
@@ -58,8 +63,9 @@ export function useEffects<T = undefined>(
       mounted: true,
       destroyCallbacks: [] as (() => void)[],
     }
-    const publicState = {
+    const publicState: PublicState<T> = {
       ref,
+      setDirty: () => forceUpdateRef.current(),
       get mounted() { return state.mounted },
     }
     return [state, publicState]
