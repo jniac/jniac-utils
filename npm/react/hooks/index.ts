@@ -1,4 +1,5 @@
 export * from './destroyable'
+export * from './dirty'
 export * from './handle'
 export * from './layout'
 export * from './state'
