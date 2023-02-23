@@ -5,12 +5,28 @@ import { Destroyable, solveDestroyableIntoArray } from './destroyable'
 const mountCheck = 'mounted?'
 
 type CallbackMoment = 'effect' | 'layout-effect' | 'memo'
-type UseEffectOptions = Partial<{ moment: CallbackMoment} >
+
+type UseEffectOptions = Partial<{
+  moment: CallbackMoment
+  skipIfNullable: any
+} >
+
 type PublicState<T> = {
   readonly mounted: boolean
   ref: RefObject<T>
   setDirty: () => void
 }
+
+const computeSkipIfNullable = (skipIfNullable: any[] | undefined): boolean => {
+  if (skipIfNullable === undefined) {
+    return false
+  }
+  if (Array.isArray(skipIfNullable)) {
+    return skipIfNullable.some(item => item === null || item === undefined)
+  }
+  return skipIfNullable === null || skipIfNullable === undefined
+}
+
 /**
  * `useEffects` is intended to allow the complex declaration of multiple, potentially async effects.
  *
@@ -39,7 +55,10 @@ type PublicState<T> = {
 export function useEffects<T = undefined>(
   effect: (value: T, state: PublicState<T>) => void | Generator<Destroyable | typeof mountCheck> | AsyncGenerator<Destroyable | typeof mountCheck>,
   deps: any[] | 'always-recalculate',
-  { moment = 'effect' }: UseEffectOptions = {}
+  {
+    moment = 'effect',
+    skipIfNullable,
+  }: UseEffectOptions = {}
 ) {
 
   // NOTE: It is very important here that the 3 internal callbacks ("initialization", 
@@ -89,7 +108,8 @@ export function useEffects<T = undefined>(
       console.log(effect)
     }
 
-    const iterator = effect(state.ref.current!, publicState)
+    const skip = computeSkipIfNullable(skipIfNullable)
+    const iterator = skip === false && effect(state.ref.current!, publicState)
 
     if (iterator) {
       const isAsync = Symbol.asyncIterator in iterator
