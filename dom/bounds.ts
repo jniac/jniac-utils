@@ -2,8 +2,8 @@ import { Register } from '../collections'
 import { Rectangle } from '../geom'
 import { computeOffsetBounds, computeLocalBounds } from './utils'
 
-export type BoundsCallback<T extends HTMLElement = HTMLElement> = (bounds: Rectangle, element: T) => void
-export type BoundsType = 'local' | 'client' | 'offset'
+type BoundsCallback<T extends HTMLElement = HTMLElement> = (bounds: Rectangle, element: T) => void
+type BoundsType = 'local' | 'client' | 'offset'
 interface BoundsOptions {
   boundsType?: BoundsType
 }
@@ -41,23 +41,23 @@ const windowOnResize = () => {
   windowBounds.width = window.innerWidth
   windowBounds.height = window.innerHeight
 }
-export const trackWindow = (callback: BoundsCallback) => {
+const trackWindow = (callback: BoundsCallback) => {
   if (windowCallbacks.size === 0) {
     window.addEventListener('resize', windowOnResize)
   }
   windowCallbacks.add(callback)
   callback(windowBounds, document.body)
 }
-export const untrackWindow = (callback: BoundsCallback) => {
+const untrackWindow = (callback: BoundsCallback) => {
   const success = windowCallbacks.delete(callback)
   if (success && windowCallbacks.size === 0) {
     window.addEventListener('resize', windowOnResize)
   }
 }
 
-export const track = (
-  element: HTMLElement | Window, 
-  callback: BoundsCallback, 
+const track = (
+  element: HTMLElement | Window,
+  callback: BoundsCallback,
   options: BoundsOptions = {},
 ) => {
 
@@ -85,8 +85,8 @@ export const track = (
   return { destroy }
 }
 
-export const untrack = (element: HTMLElement | Window, callback: BoundsCallback) => {
-  
+const untrack = (element: HTMLElement | Window, callback: BoundsCallback) => {
+
   if (element instanceof Window) {
     return untrackWindow(callback)
   }
@@ -101,10 +101,29 @@ export const untrack = (element: HTMLElement | Window, callback: BoundsCallback)
   allOptions.delete(callback)
 }
 
-export const onResizeEnd = (callback: () => void) => {
+const onResizeEnd = (callback: () => void) => {
   onResizeEndCallbacks.add(callback)
   const destroy = () => {
     onResizeEndCallbacks.delete(callback)
   }
   return { destroy }
+}
+
+export type {
+  BoundsCallback,
+  BoundsType,
+}
+
+export {
+  trackWindow,
+  untrackWindow,
+  track,
+  untrack,
+  onResizeEnd,
+}
+
+export {
+  // using the common keyword "handle":
+  track as handleBounds,
+  Rectangle,
 }
