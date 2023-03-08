@@ -16,13 +16,16 @@ vec3 contrast(vec3 mValue, float mScale) {
 	return contrast(mValue, mScale, .5);
 }
 
-vec3 greyscale(vec3 color, float str) {
-    float g = dot(color, vec3(0.299, 0.587, 0.114));
-    return mix(color, vec3(g), str);
+float greyscaleFloat(vec3 color) {
+	return dot(color, vec3(0.299, 0.587, 0.114));
 }
 
 vec3 greyscale(vec3 color) {
-    return greyscale(color, 1.0);
+    return vec3(greyscaleFloat(color));
+}
+
+vec3 greyscale(vec3 color, float alpha) {
+    return mix(color, greyscale(color), alpha);
 }
 
 `
