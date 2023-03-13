@@ -25,7 +25,7 @@ export class Array2d<T = any> extends Array<T> {
     return this
   }
 
-  toGridString(stringifier: (value: T) => string, separator = '') {
+  toGridString(stringifier: (value: T) => string = v => !!v ? 'X' : '•', separator = '') {
     const { col, count } = this.#props
     const row = count / col
     const lines: string[] = new Array(row)
