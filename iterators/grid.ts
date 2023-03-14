@@ -60,9 +60,13 @@ export function* centerGrid(colHalf = 4, rowHalf = 4) {
   }
 }
 
-export function gridArray(col: number, row: number): GridIteration[]
-export function gridArray(size: { x: number, y: number }): GridIteration[]
-export function gridArray(...args: any[]): GridIteration[] {
+/**
+ * Returns a FLAT array, filled with "grid" items. Grid items are made from GridIteration.
+ * NOTE: makeGridArray
+ */
+export function makeGridArray(col: number, row: number): GridIteration[]
+export function makeGridArray(size: { x: number, y: number }): GridIteration[]
+export function makeGridArray(...args: any[]): GridIteration[] {
   const [col, row] = resolveColRow(args)
   const array: GridIteration[] = new Array(col * row)
   for (const iteration of grid(col, row)) {
