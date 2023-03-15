@@ -1,4 +1,4 @@
-export { Array2d } from './Array2d'
+export * from './Array2d'
 export { BidirectionalMap } from './BidirectionalMap'
 export * from './double'
 export * from './lazy'

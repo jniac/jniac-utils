@@ -44,8 +44,8 @@ export function* grid(...args: any[]) {
   }
   
   for (i = 0; i < count; i++) {
-    x = i % col
     y = Math.floor(i / col)
+    x = i - y * col
     yield iteration
   }
 }
@@ -62,7 +62,14 @@ export function* centerGrid(colHalf = 4, rowHalf = 4) {
 
 /**
  * Returns a FLAT array, filled with "grid" items. Grid items are made from GridIteration.
- * NOTE: makeGridArray
+ * 
+ * NOTE: makeGridArray is FLAT, it means it is not a 2D array (`GridIteration[][]`) but a regular array (`GridIteration[]`)
+ * 
+ * Usage:
+ * ```
+ * makeGridArray(4, 3).map(({ x, y }) => new Vector2(x, y))
+ * makeGridArray(4, 3).map(({ centerX, centerY }) => new Vector2(centerX, centerY))
+ * ```
  */
 export function makeGridArray(col: number, row: number): GridIteration[]
 export function makeGridArray(size: { x: number, y: number }): GridIteration[]

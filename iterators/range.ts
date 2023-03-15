@@ -34,15 +34,26 @@ export function* range(...args: any[]) {
   }
 }
 
+type MakeArrayOptions<T> = RangeOptions & {
+  defaultValue: T,
+}
 /**
  * Make an array, and fill it with integers, ranging by default from 0 to the 
  * length of the array. 
  */
-export function aRange(max: number, options?: RangeOptions): number[]
-export function aRange(min: number, max: number, options?: RangeOptions): number[]
-export function aRange(...args: any[]) {
+export function makeArray<T = number>(max: number, options?: MakeArrayOptions<T>): T[]
+export function makeArray<T = number>(min: number, max: number, options?: MakeArrayOptions<T>): T[]
+export function makeArray(...args: any[]) {
+  const { defaultValue } = typeof args[1] === 'object' ? args[1] : (args[2] ?? {})
   // @ts-ignore
-  return [...range(...args)]
+  const array = [...range(...args)]
+  if (defaultValue !== undefined) {
+    array.fill(defaultValue)
+  }
+  return array
 }
 
-export { aRange as makeArray }
+export {
+  // Backward compatibility:
+  makeArray as aRange,
+}
