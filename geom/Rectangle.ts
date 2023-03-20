@@ -326,8 +326,8 @@ export class Rectangle {
 
   x = 0
   y = 0
-  width = 1
-  height = 1
+  width = 0
+  height = 0
 
   constructor()
   constructor(x: number, y: number, width: number, height: number, mode?: DegenerateMode)
