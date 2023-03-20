@@ -112,7 +112,8 @@
 .flex.column {
   flex-direction: column;
 }
-.flex.column[class*="gutter"] > * + * {
+/* Phew quite hard isn't it? not "absolute" is for ignore children like "absolute-fill". */
+.flex.column[class*="gutter"] > * + *:not([class*="absolute"]) {
   margin-top: var(--gutter);
 }
 
