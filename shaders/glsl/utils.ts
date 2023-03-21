@@ -43,6 +43,11 @@ export const glsl_utils = /* glsl */`
     return 0.5 + 0.5 * sin(x * 6.283185307179586);
   }
 
+  float positiveModulo(float x) {
+    x = mod(x, 1.0);
+    return x < 0.0 ? x + 1.0 : x;
+  }
+
   float positiveModulo(float x, float modulo) {
     x = mod(x, modulo);
     return x < 0.0 ? x + modulo : x;
