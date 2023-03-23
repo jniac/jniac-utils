@@ -9,7 +9,7 @@ type Array2dType<T> = {
   get(x: number, y: number): T
   set(x: number, y: number, value: T): Array2dType<T>
   gridMap<U>(callback: (value: T, iteration: Iteration) => U): Array2dType<U>
-  toGridString(stringifier?: (value: T) => string): string
+  toGridString(stringifier?: (value: T) => any, separator?: string): string
 }
 
 const cache = new WeakMap<Array<any>, { col: number, row: number }>()
@@ -89,6 +89,7 @@ export function Array2d<T>(...args: any[]): Array2dType<T> {
     get count() { return col * row },
     get col() { return col },
     get row() { return row },
+
     *entries() {
       for (let i = 0; i < count; i++) {
         const y = Math.floor(i / col)
@@ -98,13 +99,16 @@ export function Array2d<T>(...args: any[]): Array2dType<T> {
       }
       return handler
     },
+    
     get(x: number, y: number): T {
       return array[y * col + x]
     },
+
     set(x: number, y: number, value: T) {
       array[y * col + x] = value
       return handler
     },
+
     gridMap<U>(callback: (value: T, iteration: Iteration) => U): Array2dType<U> {
       const result = new Array<U>(count)
       cache.set(result, { col: col, row: row })
@@ -115,12 +119,14 @@ export function Array2d<T>(...args: any[]): Array2dType<T> {
       }
       return Array2d(result)
     },
-    toGridString(stringifier: (value: T) => string = v => !!v ? 'X' : '•', separator = ''): string {
+
+    toGridString(stringifier: (value: T) => any = (value => !!value ? 'X' : '•'), separator = ''): string {
       const lines: string[] = new Array(row)
       for (let y = 0; y < row; y++) {
         const line: string[] = []
         for (let x = 0; x < col; x++) {
-          line[x] = stringifier(array[y * col + x])
+          const value = stringifier(array[y * col + x])
+          line[x] = typeof value === 'string' ? value : (!!value ? 'X' : '•')
         }
         lines[y] = line.join(separator)
       }
