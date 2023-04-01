@@ -167,6 +167,7 @@ export function useEffects<T = undefined>(
 
   return publicState
 }
+
 /**
  * Exactly the same function than useEffects, but with the option "moment"
  * set to "layout-effect" (callback is executed ["before the browser has any chance to paint"](https://reactjs.org/docs/hooks-reference.html#uselayouteffect)).
@@ -174,7 +175,6 @@ export function useEffects<T = undefined>(
  * @param deps
  * @returns
  */
-
 export function useLayoutEffects<T = undefined>(
   effect: Parameters<typeof useEffects<T>>[0],
   deps: Parameters<typeof useEffects<T>>[1]
