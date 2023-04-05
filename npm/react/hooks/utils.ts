@@ -173,6 +173,21 @@ export function useFetchText(url: string, initialValue: string | null = null) {
   return data
 }
 
+/**
+ * Will fetch and return the final value once it has been loaded. Meanwhile the 
+ * returned value depends on the parameter following the url: 
+ * - If it's an object, it's considered as an initial value. 
+ * - If it's nothing or a callback, the initial value is null.
+ * 
+ * A callback may be provided in the case of the url not been solved properly. 
+ * There are 3 cases for a fail: 
+ * - The url is not reachable.
+ * - The url is reachable but the status code is not 200.
+ * - The url is reachable, the status code is 200 but the payload is not a JSON.
+ * 
+ * NOTE: the callback, if provided, is not really used as dependency (since a 
+ * callback may be actualised on every render (if not using `useCallback`)).
+ */
 export function useFetchJson<T = any>(url: string): T | null
 export function useFetchJson<T = any>(url: string, initialValue: T): T
 export function useFetchJson<T = any>(url: string, callback: (url: string) => T): T | null
@@ -182,6 +197,7 @@ export function useFetchJson<T = any>(url: string, arg: any = null) {
   const argAsValue: T | null = argIsFunction ? null : (arg ?? null)
   const argAsFunction: ((url: string) => T) | null = argIsFunction ? arg : null
   const [data, setData] = React.useState(argAsValue)
+
   React.useEffect(() => {
     let mounted = true
     const safeSetData = (data: T) => {
@@ -237,7 +253,10 @@ export function useFetchJson<T = any>(url: string, arg: any = null) {
     return () => {
       mounted = false
     }
-  }, [argAsFunction, url])
+
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [!!argAsFunction, url])
+
   return data
 }
 
