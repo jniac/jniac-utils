@@ -175,17 +175,69 @@ export function useFetchText(url: string, initialValue: string | null = null) {
 
 export function useFetchJson<T = any>(url: string): T | null
 export function useFetchJson<T = any>(url: string, initialValue: T): T
-export function useFetchJson<T = any>(url: string, initialValue: T | null = null) {
-  const [data, setData] = React.useState<T | null>(initialValue)
+export function useFetchJson<T = any>(url: string, callback: (url: string) => T): T | null
+export function useFetchJson<T = any>(url: string, callback: (url: string) => Promise<T>): T | null
+export function useFetchJson<T = any>(url: string, arg: any = null) {
+  const argIsFunction = typeof arg === 'function'
+  const argAsValue: T | null = argIsFunction ? null : (arg ?? null)
+  const argAsFunction: ((url: string) => T) | null = argIsFunction ? arg : null
+  const [data, setData] = React.useState(argAsValue)
   React.useEffect(() => {
-    window.fetch(url).then(async response => {
-      try {
-        setData(await response.json())
-      } catch (e) {
-        console.error(e)
+    let mounted = true
+    const safeSetData = (data: T) => {
+      if (mounted) {
+        setData(data)
       }
-    }).catch(e => console.error(e))
-  }, [url])
+    }
+    const safeWarn = (message: any) => {
+      if (mounted) {
+        console.warn(message)
+      }
+    }
+    const safeError = (message: any) => {
+      if (mounted) {
+        console.error(message)
+      }
+    }
+    window.fetch(url)
+      .then(async response => {
+        if (response.status !== 200) {
+          const message = 'Invalid request, using fallback.'
+          if (argAsFunction) {
+            safeWarn(message)
+            safeSetData(await argAsFunction(url))
+          } else {
+            safeError(message)
+          }
+        } else {
+          try {
+            safeSetData(await response.json())
+          } catch (e) {
+            const message = 'The fetched data is not JSON, using fallback.'
+            if (argAsFunction) {
+              safeWarn(message)
+              safeSetData(await argAsFunction(url))
+            } else {
+              safeError(message)
+              safeError(e)
+            }
+          }
+        }
+      })
+      .catch(async e => {
+        const message = 'Cannot fetch data (invalid url), using fallback.'
+        if (argAsFunction) {
+          safeWarn(message)
+          safeSetData(await argAsFunction(url))
+        } else {
+          safeError(message)
+          safeError(e)
+        }
+      })
+    return () => {
+      mounted = false
+    }
+  }, [argAsFunction, url])
   return data
 }
 
