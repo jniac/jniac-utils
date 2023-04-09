@@ -79,16 +79,18 @@ const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: numb
   )
 }
 
-const solveTarget = (element: HTMLElement | Window | string) => {
+const solveTarget = (element: Element | Window | string) => {
   if (element instanceof HTMLElement) {
     return element
   }
   if (element instanceof Window) {
     return element as any as HTMLElement // Fooling typescript.
   }
-  const node = document.querySelector(element)
-  if (node instanceof HTMLElement) {
-    return node
+  if (typeof element === 'string') {
+    const node = document.querySelector(element)
+    if (node instanceof HTMLElement) {
+      return node
+    }
   }
   throw new Error(`Invalid selector: "${element}". No node in the document for that selector.`)
 }
@@ -96,7 +98,7 @@ const solveTarget = (element: HTMLElement | Window | string) => {
 type HandlePointerOptions = Options & DragOptions & PinchOptions & WheelOptions
 
 export const handlePointer = (
-  target: HTMLElement | Window | string, 
+  target: Element | Window | string, 
   options: HandlePointerOptions,
 ): Destroyable => {
 
