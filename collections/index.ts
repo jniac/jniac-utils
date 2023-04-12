@@ -1,6 +1,7 @@
 export * from './Array2d'
 export { BidirectionalMap } from './BidirectionalMap'
 export * from './double'
+export * from './HighScore'
 export * from './lazy'
 export { OrderSet } from './OrderSet'
 export { Register } from './Register'
