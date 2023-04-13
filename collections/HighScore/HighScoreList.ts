@@ -56,6 +56,28 @@ class HighScoreList {
     head: Node | null
   }
 
+  /**
+   * The maximum number of score in the list.
+   */
+  get size() {
+    return this.#props.size
+  }
+
+  /**
+   * The actual remaining number of free nodes (less or equal to `size`).
+   */
+  get freeSize() {
+    return this.#props.freeSize
+  }
+
+  /**
+   * The "current" number of score in the list (less or equal to `size`).
+   */
+  get currentSize() {
+    const { size, freeSize } = this.#props
+    return size - freeSize
+  }
+
   constructor(size: number) {
     if (size < 1) {
       throw new Error(`Invalid Size!`)
@@ -77,7 +99,110 @@ class HighScoreList {
     }
   }
 
-  #freeNode() {
+  copy(other: HighScoreList): this {
+    // NOTE: copy is not so trivial, since here we have to wait (potentially) for
+    // the beginning of pertinent nodes (delta), and proceed to the "cut" of the 
+    // free link.
+    this.clear()
+    const props = this.#props
+    let otherNode = other.#props.head
+    if (otherNode === null) {
+      // The other list is empty, skip.
+      return this
+    }
+    const { size, free } = props
+    const otherCurrentSize = other.currentSize
+    let delta = Math.max(0, otherCurrentSize - size)
+    let node = free!
+    props.freeSize = size - (otherCurrentSize - delta)
+    while (delta-- > 0) {
+      otherNode = otherNode.next!
+    }
+    while (otherNode!.next) {
+      node.score = otherNode.score
+      node = node.next!
+      otherNode = otherNode.next
+    }
+    node.score = otherNode.score
+    
+    // Cut the "free" link
+    props.head = free
+    props.free = node.next
+    node.next = null
+
+    return this
+  }
+
+  clone(): HighScoreList {
+    return new HighScoreList(this.size).copy(this)
+  }
+
+  /**
+   * Drops one node from the chain and returns its id.
+   */
+  drop(): number {
+    const props = this.#props
+    const {
+      size,
+      freeSize,
+      free,
+      head,
+    } = props
+    if (size < 2) {
+      throw new Error('Not enough space in to drop one item.')
+    }
+    props.size = size - 1
+    if (free) {
+      props.free = free.next
+      props.freeSize = freeSize - 1
+      return free.id
+    }
+    if (head) {
+      props.head = head.next
+      return head.id
+    }
+    throw new Error('Your computer is broken.')
+  }
+
+  extend(): void {
+    const props = this.#props
+    const {
+      size,
+      freeSize,
+      free,
+    } = props
+    const newNode = new Node(-1)
+    props.size = size + 1
+    props.freeSize = freeSize + 1
+    if (free === null) {
+      props.free = newNode
+      return
+    }
+    let node = free
+    while (node.next) {
+      node = node.next
+    }
+    node.next = newNode
+  }
+
+  /**
+   * Resizes the list of nodes and returns dropped node ids.
+   */
+  resize(newSize: number): number[] {
+    if (newSize < 1) {
+      throw new Error('Invalid Size!')
+    }
+    const droppedNodeIds: number[] = []
+    while (this.size > newSize) {
+      droppedNodeIds.push(this.drop())
+    }
+    while (this.size < newSize) {
+      this.extend()
+    }
+    return droppedNodeIds
+  }
+
+  #freeNode(): Node | null {
     const props = this.#props
     const { free: node } = props
     if (node) {
@@ -88,7 +213,7 @@ class HighScoreList {
     return node
   }
 
-  #freeHead() {
+  #freeHead(): Node | null {
     const props = this.#props
     const { head: node } = props
     if (node) {
@@ -98,7 +223,7 @@ class HighScoreList {
     return node
   }
 
-  #getLastFreeNode() {
+  #getLastFreeNode(): Node | null {
     let node = this.#props.free
     while (node?.next) {
       node = node.next
@@ -109,14 +234,16 @@ class HighScoreList {
   clear(): this {
     const props = this.#props
     const { head } = props
-    const lastFreeNode = this.#getLastFreeNode()
-    if (lastFreeNode === null) {
-      props.free = head
-    } else {
-      lastFreeNode.next = head
+    if (head) {
+      const lastFreeNode = this.#getLastFreeNode()
+      if (lastFreeNode === null) {
+        props.free = head
+      } else {
+        lastFreeNode.next = head
+      }
+      props.head = null
+      props.freeSize = props.size
     }
-    props.head = null
-    props.freeSize = props.size
     return this
   }
 
@@ -193,6 +320,27 @@ class HighScoreList {
 
   toArray(): number[] {
     return [...this]
+  }
+
+  toString(): string {
+    const { size, freeSize } = this.#props
+    return `HighScoreList(${size}:${size-freeSize}:${freeSize})`
+  }
+
+  toDebugString(): string {
+    const { head, free } = this.#props
+    const headInfo = [], freeInfo = [] 
+    let node = head
+    while (node) {
+      headInfo.push(`#${node.id}(${node.score})`)
+      node = node.next
+    }
+    node = free
+    while (node) {
+      freeInfo.push(`#${node.id}(${node.score})`)
+      node = node.next
+    }
+    return `${this.toString()} { ${headInfo.join(', ')} ::: ${freeInfo.join(', ')} }`
   }
 }
 
