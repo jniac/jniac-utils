@@ -25,11 +25,67 @@ class HighScoreMap<T> {
     map: Map<number, T>
   }
 
+  get size() {
+    return this.#props.list.size
+  }
+
+  get freeSize() {
+    return this.#props.list.freeSize
+  }
+
+  get currentSize() {
+    return this.#props.list.currentSize
+  }
+
   constructor(size: number) {
     this.#props = {
       list: new HighScoreList(size),
       map: new Map(),
     }
+  }
+
+  copy(other: HighScoreMap<T>): this {
+    const { list, map } = this.#props
+    const { list: otherList, map: otherMap } = other.#props
+    list.copy(otherList)
+    map.clear()
+    const nodeIdIterator = list.nodeIds()
+    const otherNodeIdIterator = otherList.nodeIds()
+    while (true) {
+      const { value: nodeId, done } = nodeIdIterator.next().value
+      const { value: otherNodeId } = otherNodeIdIterator.next()
+      if (done) {
+        break
+      }
+      map.set(nodeId, otherMap.get(otherNodeId)!)
+    }
+    return this
+  }
+
+  clone(): HighScoreMap<T> {
+    return new HighScoreMap<T>(this.size).copy(this)
+  }
+
+  drop(): [score: number, value: T] {
+    const { list, map } = this.#props
+    const [nodeId, score] = list.drop()
+    const value = map.get(nodeId)!
+    map.delete(nodeId)
+    return [score, value]
+  }
+
+  extend(): void {
+    const { list } = this.#props
+    list.extend()
+  }
+
+  resize(newSize: number): this {
+    const { list, map } = this.#props
+    const nodeIds = list.resize(newSize)
+    for (const nodeId of nodeIds) {
+      map.delete(nodeId)
+    }
+    return this
   }
 
   put(score: number, value: T) {

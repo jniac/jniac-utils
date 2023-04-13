@@ -138,9 +138,9 @@ class HighScoreList {
   }
 
   /**
-   * Drops one node from the chain and returns its id.
+   * Drops one node from the chain and returns it a tuple id.
    */
-  drop(): number {
+  drop(): [nodeId: number, score: number] {
     const props = this.#props
     const {
       size,
@@ -155,11 +155,11 @@ class HighScoreList {
     if (free) {
       props.free = free.next
       props.freeSize = freeSize - 1
-      return free.id
+      return [free.id, free.score]
     }
     if (head) {
       props.head = head.next
-      return head.id
+      return [head.id, head.score]
     }
     throw new Error('Your computer is broken.')
   }
@@ -194,7 +194,8 @@ class HighScoreList {
     }
     const droppedNodeIds: number[] = []
     while (this.size > newSize) {
-      droppedNodeIds.push(this.drop())
+      const [nodeId] = this.drop()
+      droppedNodeIds.push(nodeId)
     }
     while (this.size < newSize) {
       this.extend()
