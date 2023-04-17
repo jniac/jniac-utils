@@ -12,7 +12,7 @@ export const testHighScoreList = () => {
   list.put(100)
   list.put(103)
   list.put(102)
-  
+
   test(`Basic: Ascending order.`,
     areEquivalent(list, [100, 101, 102, 103]))
 
@@ -49,7 +49,7 @@ export const testHighScoreList = () => {
     anotherList.put(4)
     anotherList.clear()
 
-    test(`Basic: Clear() will free all nodes.`, 
+    test(`Basic: Clear() will free all nodes.`,
       areEquivalent(anotherList, []),
       areEquivalent(anotherList.freeSize, 10))
   }
@@ -126,6 +126,27 @@ export const testHighScoreList = () => {
       areEquivalent(clone, [400, 500, 1000]),
       areEquivalent(clone.size, 4),
       areEquivalent(clone.freeSize, 1))
+  }
+
+  {
+    const low = new HighScoreList(3, { order: 'DESCENDING' })
+    low.put(10)
+    low.put(40)
+    low.put(30)
+    low.put(20)
+
+    test(`Advanced: Order is "DESCENDING": the scores that are kept are the lower ones`,
+      areEquivalent(low, [30, 20, 10]))
+
+    low.put(1)
+
+    test(`Advanced: Order is "DESCENDING": ...still the lowest`,
+    areEquivalent(low, [20, 10, 1]))
+    
+    low.put(-1)
+    
+    test(`Advanced: Order is "DESCENDING": ...still the lowest`,
+      areEquivalent(low, [10, 1, -1]))
   }
 
   testDone()

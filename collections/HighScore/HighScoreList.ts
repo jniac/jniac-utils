@@ -12,6 +12,13 @@ class Node {
   }
 }
 
+type Order = 'ASCENDING' | 'DESCENDING'
+
+const defaultOptions = {
+  /** The order use internally to store the scores. Defaults to "ASCENDING" (the higher scores remain). */
+  order: 'ASCENDING' as Order,
+}
+
 /**
  * `HighScoreList` has a very narrow purpose: handle a limited list of scores.
  * 
@@ -51,6 +58,7 @@ class Node {
 class HighScoreList {
   readonly #props: {
     size: number
+    sign: number
     freeSize: number
     free: Node | null
     head: Node | null
@@ -78,14 +86,21 @@ class HighScoreList {
     return size - freeSize
   }
 
-  constructor(size: number) {
+  get order(): Order {
+    return this.#props.sign === 1 ? 'ASCENDING' : 'DESCENDING'
+  }
+
+  constructor(size: number, options: Partial<typeof defaultOptions> = {}) {
     if (size < 1) {
       throw new Error(`Invalid Size!`)
     }
 
+    const { order } = { ...defaultOptions, ...options }
+
     const free = new Node(-1)
     this.#props = {
       size,
+      sign: order === 'ASCENDING' ? 1 : -1,
       freeSize: size,
       free,
       head: null
@@ -258,7 +273,8 @@ class HighScoreList {
    */
   put(score: number): number {
     const props = this.#props
-    const { head } = props
+    const { sign, head } = props
+    const signScore = sign * score
     const free = this.#freeNode()
 
     if (head === null) {
@@ -267,7 +283,7 @@ class HighScoreList {
       return free!.id
     }
 
-    if (free === null && score < head.score) {
+    if (free === null && signScore < sign * head.score) {
       // The list is full, and the new score is lower than the lowest value, skip.
       return -1
     }
@@ -281,13 +297,13 @@ class HighScoreList {
       return newNode.id
     }
     
-    if (score <= node.score) {
+    if (signScore <= sign * node.score) {
       props.head = newNode
       newNode.next = node
       return newNode.id
     }   
 
-    while (node.next && score > node.next.score) {
+    while (node.next && signScore > sign * node.next.score) {
       node = node.next
     }
     newNode.next = node.next

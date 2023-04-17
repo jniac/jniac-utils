@@ -1,5 +1,12 @@
 import { HighScoreList } from './HighScoreList'
 
+type Order = 'ASCENDING' | 'DESCENDING'
+
+const defaultOptions = {
+  /** The order use internally to store the scores. Defaults to "ASCENDING" (the higher scores remain). */
+  order: 'ASCENDING' as Order,
+}
+
 /**
  * `HighScoreMap` is based on `HighScoreList` but, because it uses a Map internally,
  * is also able to associate any kind of value with a score.
@@ -37,9 +44,9 @@ class HighScoreMap<T> {
     return this.#props.list.currentSize
   }
 
-  constructor(size: number) {
+  constructor(size: number, options: Partial<typeof defaultOptions> = {}) {
     this.#props = {
-      list: new HighScoreList(size),
+      list: new HighScoreList(size, options),
       map: new Map(),
     }
   }
