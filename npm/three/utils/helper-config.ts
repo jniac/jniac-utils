@@ -13,4 +13,6 @@ export const helperConfig = {
   'axis-radius': .01,
 }
 
-export const getColor = (colorArg: ColorArg) => new Color(helperConfig.color[colorArg as ColorKey] ?? colorArg)
+export const getColor = (colorArg: ColorArg) => new Color(
+  (helperConfig.color[colorArg as ColorKey] ?? colorArg) as ColorRepresentation
+)
