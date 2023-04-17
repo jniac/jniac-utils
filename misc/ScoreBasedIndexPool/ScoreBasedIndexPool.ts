@@ -7,6 +7,8 @@ class ScoreBasedIndexPool {
     computeScore: (index: number) => number
     onActivate?: (index: number) => void
     onDeactivate?: (index: number) => void
+    onBeforeUpdate?: () => void
+    onAfterUpdate?: () => void
     useIndexes1: boolean
     indexes1: HighScoreMap<number>
     indexes2: HighScoreMap<number>
@@ -31,6 +33,8 @@ class ScoreBasedIndexPool {
       computeScore: (index: number) => number
       onActivate?: (index: number) => void
       onDeactivate?: (index: number) => void
+      onBeforeUpdate?: () => void
+      onAfterUpdate?: () => void
     },
   ) {
     this.#props = {
@@ -67,12 +71,18 @@ class ScoreBasedIndexPool {
       computeScore,
       onActivate,
       onDeactivate,
+      onBeforeUpdate,
+      onAfterUpdate,
     } = this.#props
 
     const [indexes, oldIndexes] = this.#getBothIndexes()
     this.#flipIndexes()
 
     indexes.clear()
+
+    // Callback:
+    onBeforeUpdate?.()
+
     for (let index = 0; index < watchSize; index++) {
       const score = computeScore(index)
       if (score > 0) {
@@ -101,6 +111,9 @@ class ScoreBasedIndexPool {
         onActivate(index)
       }
     }
+
+    // Callback:
+    onAfterUpdate?.()
   }
 }
 
