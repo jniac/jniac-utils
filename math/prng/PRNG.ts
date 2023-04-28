@@ -1,9 +1,16 @@
-import { algorithms } from './algorithms/simple-state'
+import { 
+  SimpleStateAlgorithm,
+  SimpleStateAlgorithmName, 
+  simpleStateAlgorithms,
+} from './algorithms/simple-state'
 
-const { init, next, map } = algorithms['parkmiller-v1']
+const {
+  init: staticInit,
+  next: staticNext,
+  map: staticMap,
+} = simpleStateAlgorithms['parkmiller-v1']
 
-const stringToSeed = (str: string) => {
-  let seed = init(PRNG.seedDefault)
+const stringToSeed = (seed: number, str: string) => {
   for (let i = 0, max = str.length; i < max; i++) {
     seed = (seed * str.charCodeAt(i)) % 2147483647
   }
@@ -20,23 +27,38 @@ export class PRNG {
   static seedDefault = 123456
   static #staticSeed: number = PRNG.seedDefault
 
+  static iso = new PRNG('parkmiller-c-iso')
+
   static get seed() { return this.#staticSeed }
 
   #initialSeed: number
   #seed: number
+  #algorithm: SimpleStateAlgorithm
 
-  constructor(seed = PRNG.seedDefault) {
+  constructor()
+  constructor(seed: number)
+  constructor(algorithm: SimpleStateAlgorithmName)
+  constructor(arg?: any) {
+    arg ??= 'parkmiller-v1'
+    const algorithm = simpleStateAlgorithms[
+      (typeof arg === 'string' && arg in simpleStateAlgorithms)
+      ? arg as SimpleStateAlgorithmName
+      : 'parkmiller-v1'
+    ]
+    const seed = typeof arg === 'number' ? arg : PRNG.seedDefault
+    this.#algorithm = algorithm
     this.#initialSeed = seed
-    this.#seed = init(seed)
+    this.#seed = algorithm.init(seed)
   }
 
   static resetByInt(seed = PRNG.seedDefault) {
-    PRNG.#staticSeed = init(seed)
+    PRNG.#staticSeed = staticInit(seed)
     return PRNG
   }
 
   resetByInt(seed = this.#initialSeed) {
     this.#initialSeed = seed
+    const { init } = this.#algorithm
     this.#seed = init(seed)
     return this
   }
@@ -50,11 +72,12 @@ export class PRNG {
   }
 
   static resetByString(str: string) {
-    return PRNG.resetByInt(stringToSeed(str))
+    return PRNG.resetByInt(stringToSeed(staticInit(PRNG.seedDefault), str))
   }
 
   resetByString(str: string) {
-    return this.resetByInt(stringToSeed(str))
+    const { init } = this.#algorithm
+    return this.resetByInt(stringToSeed(init(PRNG.seedDefault), str))
   }
 
   /**
@@ -118,11 +141,12 @@ export class PRNG {
   }
 
   static float() {
-    PRNG.#staticSeed = next(PRNG.#staticSeed)
-    return map(PRNG.#staticSeed)
+    PRNG.#staticSeed = staticNext(PRNG.#staticSeed)
+    return staticMap(PRNG.#staticSeed)
   }
 
   float() {
+    const { next, map } = this.#algorithm
     this.#seed = next(this.#seed)
     return map(this.#seed)
   }

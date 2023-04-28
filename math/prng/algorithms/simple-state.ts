@@ -1,5 +1,5 @@
 
-type SimpleStatePRNGAlgorithm = {
+type Algorithm = {
   /** Init the algorithm with a seed (optional). */
   init: (seed?: number) => number
   /** Get the next pseudo random number (unclamped). */
@@ -8,7 +8,7 @@ type SimpleStatePRNGAlgorithm = {
   map: (state: number) => number
 }
 
-export const algorithms = {
+const algorithms = {
 
   /**
    * Used here, from the beginning, taken somewhere from [David Bau](https://github.com/davidbau/seedrandom).
@@ -22,7 +22,34 @@ export const algorithms = {
       return next(seed)
     }
     const map = (n: number) => (n - 1) / 0x7ffffffe
-    return { next, init, map } as SimpleStatePRNGAlgorithm
+    return { next, init, map } as Algorithm
+  })(),
+
+  /**
+   * Park-Miller version iso compatible with the C equivalent:
+   * ```c
+   * uint32_t lcg_parkmiller(uint32_t *state) {
+   *   return *state = (*state * 48271) & 0x7fffffff;
+   * }
+   * ```
+   * This is possible because it uses `Math.imul` internally.
+   * 
+   * Tested over 1e9 first values.
+   */
+  'parkmiller-c-iso': (() => {
+    const next = (state: number) => {
+      state = Math.imul(state, 48271)
+      state &= 0x7fffffff
+      return state
+    }
+    const init = (seed: number = 123456) => {
+      if (seed > 1 && seed < 0x7fffffff) {
+        return seed & 0x7fffffff;
+      }
+      return 123456
+    }
+    const map = (n: number) => (n - 1) / 0x7ffffffe
+    return { next, init, map } as Algorithm
   })(),
 
   /**
@@ -32,7 +59,7 @@ export const algorithms = {
    */
   'parkmiller-v2': (() => {
     // const next = (n: number) => {
-    //   // https://en.wikipedia.org/wiki/Lehmer_random_number_generator
+    //   // https://en.wikipedia.org/wiki/Lehme r_random_number_generator
     //   // No division, but instead an approximation 50% faster.
     //   n = Math.imul(n, 48271)
     //   n = (n & 0x7fffffff) + (n >> 31)
@@ -48,7 +75,7 @@ export const algorithms = {
     }
     const inv = 1 / 0x7fffffff
     const map = (n: number) => n * inv
-    return { next, init, map } as SimpleStatePRNGAlgorithm
+    return { next, init, map } as Algorithm
   })(),
 
   /**
@@ -67,12 +94,16 @@ export const algorithms = {
       }
     }
     const map = (n: number) => n / 0x100000000
-    return { next, init, map } as SimpleStatePRNGAlgorithm
+    return { next, init, map } as Algorithm
   })(),
 
 }
 
-export type AlgorithmName = keyof typeof algorithms
+export type SimpleStateAlgorithmName = keyof typeof algorithms
+
+export type SimpleStateAlgorithm = Algorithm
+
+export const simpleStateAlgorithms: Record<SimpleStateAlgorithmName, SimpleStateAlgorithm> = algorithms
 
 // import('./simple-state-test')
 

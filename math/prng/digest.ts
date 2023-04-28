@@ -29,7 +29,7 @@ const init = () => {
  * ```
  */
 const next = (x: number, scalar = 1e14) => {
-  state += x * scalar
+  state += (x * scalar) & 0x7fffffff
   state = Math.imul(state, 48271)
   state = (state & 0x7fffffff) + (state >> 31)
   return digest

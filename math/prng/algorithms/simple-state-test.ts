@@ -1,6 +1,6 @@
 import { waitNextFrame } from '../../../misc'
 import { createBooleanStore } from '../test/test-utils'
-import { AlgorithmName, algorithms } from './simple-state'
+import { SimpleStateAlgorithmName, simpleStateAlgorithms } from './simple-state'
 
 class TestCheck {
   AVERAGE_STEP = 1e6;
@@ -36,13 +36,13 @@ class TestCheck {
 
 /**
  * no collision over 2_147_000_000! 419ms (907.3s)
- * algorithms.ts:88 collision @2147483646: 1664377282
+ * simpleStateAlgorithms.ts:88 collision @2147483646: 1664377282
  */
-const test = async (name: AlgorithmName, maxInt = 2 ** 32) => {
+const test = async (name: SimpleStateAlgorithmName, maxInt = 2 ** 32) => {
 
   const store = createBooleanStore(maxInt)
 
-  const { next, map } = algorithms[name]
+  const { next, map } = simpleStateAlgorithms[name]
   let n = 123456
   let i = BigInt(0)
   const step = BigInt(1e6)
