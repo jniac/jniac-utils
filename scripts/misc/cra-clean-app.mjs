@@ -35,6 +35,12 @@ export const App = () => {
 }
 `
 
+const appCss = `
+.App {
+  text-align: center;
+}
+`
+
 const craCleanApp = async () => {
   
   const packageJson = JSON.parse(await fs.readFile('package.json'))
@@ -79,6 +85,7 @@ const craCleanApp = async () => {
 
   await fs.writeFile('src/index.tsx', indexTsx)
   await fs.writeFile('src/App.tsx', appTsx)
+  await fs.writeFile('src/App.css', appCss)
   
   console.log('App cleaned!')
 }
@@ -90,4 +97,3 @@ const isMainModule = import.meta.url.endsWith(process.argv[1])
 if (isMainModule) {
   craCleanApp()
 }
-
