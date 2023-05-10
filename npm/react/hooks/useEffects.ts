@@ -9,7 +9,7 @@ type CallbackMoment = 'effect' | 'layout-effect' | 'memo'
 type UseEffectOptions = Partial<{
   moment: CallbackMoment
   skipIfNullable: any
-} >
+}>
 
 type PublicState<T> = {
   readonly mounted: boolean
@@ -104,7 +104,10 @@ export function useEffects<T = undefined>(
 
     // Helping to fix careless mistakes?
     if (effect.length === 1 && state.ref.current === null) {
-      console.log(`Hey, "useEffects" here.\nRef current value is null.\nYou probably forgot to link the state.ref.`)
+      console.log(`Hey, "useEffects" here.`
+        + `\n  "ref" current value is null.`
+        + `\n  You probably forgot to link the state.ref.`
+        + `\n    <whatever ref={ref} />`)
       console.log(effect)
     }
 
