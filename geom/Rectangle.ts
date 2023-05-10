@@ -140,7 +140,7 @@ const set = (rectangle: IRectangle, params: RectangleParams, mode: DegenerateMod
   return setDimensions(rectangle, x, y, width, height, mode)
 }
 
-const ensure = (x: RectangleParams, mode = DegenerateMode.Collapse) => x instanceof Rectangle ? x : set(new Rectangle(), x, mode)
+const ensure = (x: RectangleParams, mode = DegenerateMode.Collapse) => x instanceof Rectangle ? x : set(new Rectangle(), x, mode) as Rectangle
 
 const union = (a: IRectangle, b: IRectangle, receiver: IRectangle) => {
   const xMin = Math.min(a.x, b.x)
