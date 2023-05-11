@@ -231,6 +231,12 @@ const signedDistance = (a: IRectangle, b: IRectangle, receiver: IPoint) => {
   return receiver
 }
 
+const signedDistanceToPoint = (r: IRectangle, point: IPoint, receiver: IPoint) => {
+  receiver.x = signedDistanceToValue(r.x, r.x + r.width, point.x)
+  receiver.y = signedDistanceToValue(r.y, r.y + r.height, point.y)
+  return receiver
+}
+
 const signedDistanceToValue = (min: number, max: number, x: number) => {
   return (
     x < min ? x - min :
@@ -484,6 +490,18 @@ export class Rectangle {
     return signedDistance(this, ensure(other), receiver) as T
   }
 
+  signedDistanceToPoint(x: number, y: number): Point 
+  signedDistanceToPoint<T extends IPoint = Point>(point: IPoint, receiverArg: { receiver?: T }): T 
+  signedDistanceToPoint(...args: any[]) {
+    if (typeof args[0] === 'number') {
+      const [x, y, { receiver = new Point() } = {}] = args
+      return signedDistanceToPoint(this, { x, y }, receiver)
+    } else {
+      const [point, { receiver = new Point() } = {}] = args
+      return signedDistanceToPoint(this, point, receiver)
+    }
+  }
+
   signedGreatestDistance<T extends IPoint = Point>(other: RectangleParams, {
     receiver = new Point(),
   } = {} as {
@@ -497,6 +515,21 @@ export class Rectangle {
     receiver.y = this.y
     return receiver as T
   }
+
+  setTopLeft(x: number, y: number): this
+  setTopLeft(point: IPoint): this
+  setTopLeft(...args: any[]): this {
+    if (args.length === 2) {
+      const [x, y] = args
+      this.x = x
+      this.y = y
+    } else {
+      const [{ x, y }] = args
+      this.x = x
+      this.y = y
+    }
+    return this
+  } 
 
   topRight<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }): T {
     receiver.x = this.x + this.width
