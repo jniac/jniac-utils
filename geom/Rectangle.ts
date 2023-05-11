@@ -295,6 +295,14 @@ const containsPoint = (r: IRectangle, p: IPoint) => {
     p.y <= r.y + r.height)
 }
 
+const scale = (r: IRectangle, scaleX: number, scaleY: number) => {
+  r.x *= scaleX
+  r.y *= scaleY
+  r.width *= scaleX
+  r.height *= scaleY
+  return r
+}
+
 const inflate = (r: IRectangle, left: number, right: number, top: number, bottom: number) => {
   r.x += -left
   r.y += -top
@@ -376,33 +384,33 @@ export class Rectangle {
   get area() { return this.width * this.height }
   get aspect() { return this.width / this.height }
 
-  equals(other: IRectangle) {
+  equals(other: IRectangle): boolean {
     return equals(this, other)
   }
 
-  setDegenerate() {
+  setDegenerate(): this {
     return setDegenerate(this)
   }
 
-  isDegenerate() {
+  isDegenerate(): boolean {
     return isDegenerate(this)
   }
 
-  copy(other: IRectangle) {
+  copy(other: IRectangle): this {
     return copy(this, other)
   }
 
-  clone() {
+  clone(): Rectangle {
     return new Rectangle().copy(this)
   }
 
   setDimensions(x: number, y: number, width: number, height: number, {
     mode = DegenerateMode.Collapse,
-  } = {} as { mode?: DegenerateMode }) {
+  } = {} as { mode?: DegenerateMode }): this {
     return setDimensions(this, x, y, width, height, mode)
   }
 
-  setXMin(value: number) {
+  setXMin(value: number): this {
     const delta = value - this.x
     if (delta < this.width) {
       this.width += -delta
@@ -414,7 +422,7 @@ export class Rectangle {
     return this
   }
 
-  setXMax(value: number) {
+  setXMax(value: number): this {
     const delta = this.xMax - value
     if (delta < this.width) {
       this.width += -delta
@@ -426,7 +434,7 @@ export class Rectangle {
     return this
   }
 
-  setYMin(value: number) {
+  setYMin(value: number): this {
     const delta = value - this.y
     if (delta < this.height) {
       this.height += -delta
@@ -438,7 +446,7 @@ export class Rectangle {
     return this
   }
 
-  setYMax(value: number) {
+  setYMax(value: number): this {
     const delta = this.yMax - value
     if (delta < this.height) {
       this.height += -delta
@@ -454,7 +462,7 @@ export class Rectangle {
     receiver = new Rectangle(), 
   } = {} as { 
     receiver?: T
-  }) {
+  }): T {
     return union(this, ensure(other), receiver) as T
   }
 
@@ -464,7 +472,7 @@ export class Rectangle {
   } = {} as { 
     receiver?: T
     mode?: IntersectionMode
-  }) {
+  }): T {
     return intersection(this, ensure(other), receiver, mode) as T
   }
 
@@ -472,7 +480,7 @@ export class Rectangle {
     receiver = new Point(),
   } = {} as {
     receiver?: T
-  }) {
+  }): T {
     return signedDistance(this, ensure(other), receiver) as T
   }
 
@@ -480,73 +488,91 @@ export class Rectangle {
     receiver = new Point(),
   } = {} as {
     receiver?: T
-  }) {
-    return signedGreatestDistance(this, ensure(other), receiver)
+  }): T {
+    return signedGreatestDistance(this, ensure(other), receiver) as T
   }
 
-  topLeft<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }) {
+  topLeft<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }): T {
     receiver.x = this.x
     receiver.y = this.y
-    return receiver
+    return receiver as T
   }
 
-  topRight<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }) {
+  topRight<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }): T {
     receiver.x = this.x + this.width
     receiver.y = this.y
-    return receiver
+    return receiver as T
   }
 
-  bottomLeft<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }) {
+  bottomLeft<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }): T {
     receiver.x = this.x
     receiver.y = this.y + this.height
-    return receiver
+    return receiver as T
   }
 
-  bottomRight<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }) {
+  bottomRight<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }): T {
     receiver.x = this.x + this.width
     receiver.y = this.y + this.height
-    return receiver
+    return receiver as T
   }
 
-  center<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }) {
+  center<T extends IPoint = Point>({ receiver = new Point() } = {} as { receiver?: T }): T {
     receiver.x = this.centerX
     receiver.y = this.centerY
-    return receiver
+    return receiver as T
   }
 
   relativePoint<T extends IPoint = Point>({ x, y }: IPoint, { 
     receiver = new Point(),
-  } = {} as { receiver?: T }) {
+  } = {} as { receiver?: T }): T {
     receiver.x = this.x + this.width * x
     receiver.y = this.y + this.height * y
-    return receiver
+    return receiver as T
   }
 
   closestPoint<T extends IPoint = Point>(point: IPoint, { 
     receiver = new Point(),
-  } = {} as { receiver?: T }) {
-    return closestPoint(this, point, receiver)
+  } = {} as { receiver?: T }): T {
+    return closestPoint(this, point, receiver) as T
   }
   
-  contains(other: RectangleParams) {
+  contains(other: RectangleParams): boolean {
     return contains(this, ensure(other))
   }
   
-  containsPoint(point: IPoint) {
+  containsPoint(point: IPoint): boolean {
     return containsPoint(this, point)
   }
 
-  inflate(padding: number | { left: number, right: number, top: number, bottom: number }) {
-    if (typeof padding === 'number') {
-      return inflate(this, padding, padding, padding, padding)
-    }
-    else {
-      const { left, right, top, bottom } = padding
-      return inflate(this, left, right, top, bottom)
+  /**
+   * Scales everything by the given parameter which may be a scalar (number) or 
+   * a vector ({ x, y }). 
+   * 
+   * eg: 
+   * ```
+   * const r = new Rectangle(1, 2, 3, 4)
+   * r.scale(10) // Rectangle{ x: 10, y: 20, width: 30, height: 40 }
+   * ```
+   */
+  scale(param: number | IPoint): this {
+    if (typeof param === 'number') {
+      return scale(this, param, param) as this
+    } else {
+      return scale(this, param.x, param.y) as this
     }
   }
 
-  toString() {
-    return `Rectangle{ x: ${this.x}, y: ${this.y}, width: ${this.width}, height:${this.height} }`
+  inflate(padding: number | { left: number, right: number, top: number, bottom: number }): this {
+    if (typeof padding === 'number') {
+      return inflate(this, padding, padding, padding, padding) as this
+    }
+    else {
+      const { left, right, top, bottom } = padding
+      return inflate(this, left, right, top, bottom) as this
+    }
+  }
+
+  toString(): string {
+    return `Rectangle{ x: ${this.x}, y: ${this.y}, width: ${this.width}, height: ${this.height} }`
   }
 }
