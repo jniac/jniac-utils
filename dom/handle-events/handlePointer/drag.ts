@@ -1,6 +1,12 @@
 import { Point } from '../../../geom'
 import { Destroyable } from './types'
 
+/**
+ * Because Safari, on "desktop", doesn't know TouchEvent...
+ */
+const isTouchEvent = (value: any): value is TouchEvent => {
+  return value instanceof Event && !!(value as TouchEvent).touches
+}
 
 export type DragDirection = 'horizontal' | 'vertical'
 
@@ -48,10 +54,10 @@ export const isDragListening = (options: DragOptions) => {
 }
 
 const getDragInfo = (
-  downEvent: PointerEvent, 
-  moveEvent: PointerEvent | TouchEvent, 
-  movePoint: Point, 
-  previousMovePoint: Point, 
+  downEvent: PointerEvent,
+  moveEvent: PointerEvent | TouchEvent,
+  movePoint: Point,
+  previousMovePoint: Point,
   direction: DragDirection,
 ): DragInfo => {
   return {
@@ -134,7 +140,7 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions):
 
   const onMoveDown = (event: TouchEvent | PointerEvent) => {
     moveEvent = event
-    if (event instanceof TouchEvent) {
+    if (isTouchEvent(event)) {
       const [touch] = event.touches
       movePoint.set(touch.clientX, touch.clientY)
     } else {
@@ -145,9 +151,9 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions):
   const onDownFrame = () => {
     if (isDown) {
       onDownFrameId = window.requestAnimationFrame(onDownFrame)
-      
+
       // Do not trigger "end" on multi touch if some touch still exists.
-      if (moveEvent instanceof TouchEvent) {
+      if (isTouchEvent(moveEvent)) {
         const previousTouchCount = touchCount
         touchCount = moveEvent.touches.length
 
@@ -190,7 +196,7 @@ export const handleDrag = (element: HTMLElement | Window, options: DragOptions):
       if ((event as TouchEvent).touches.length > 0) {
         const [touch] = (moveEvent as TouchEvent).touches
         movePoint.set(touch.clientX, touch.clientY)
-      return
+        return
       }
       window.removeEventListener('touchmove', onMoveDown, { capture })
       window.removeEventListener('touchend', onMoveDownEnd, { capture })
