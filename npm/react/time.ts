@@ -215,7 +215,6 @@ const AnimationFrame = ({
     } else {
       instance.depCount++
     }
-    console.log('mount:', instance?.depCount ?? 1)
     return () => {
       // On destroy, check the depCount, if equal to zero destroy the instance.
       const instance = animationFrameMap.get(key)
@@ -227,7 +226,6 @@ const AnimationFrame = ({
         instance.destroy()
         animationFrameMap.delete(key)
       }
-      console.log('unmount:', instance?.depCount ?? 1)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, ...Object.values(props)])
