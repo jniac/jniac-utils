@@ -103,93 +103,134 @@ class TimerHandler {
 const appTimer = new TimerHandler()
 const timer = new TimerHandler()
 
-type AnimationFrameProps = {
-  timeBeforeFade?: number
-  fadeDuration?: number
-  maxDeltaTime?: number
+const defaultAnimationFrameProps = {
+  timeBeforeFade: 30,
+  fadeDuration: 1,
+  maxDeltaTime: 1 / 10,
 }
 
-const AnimationFrame = ({
-  timeBeforeFade = 30,
-  fadeDuration = 1,
-  maxDeltaTime = 1 / 10,
-}: AnimationFrameProps) => {
+type AnimationFrameProps = Partial<typeof defaultAnimationFrameProps>
 
-  useEffect(() => {
+const createAnimationFrame = (props: AnimationFrameProps) => {
+  const {
+    timeBeforeFade,
+    fadeDuration,
+    maxDeltaTime,
+  } = { ...defaultAnimationFrameProps, ...props }
 
-    let lastRenderRequestTime = 0
-    const innerContinuousRequestSet = new Set<string>()
+  let lastRenderRequestTime = 0
+  const innerContinuousRequestSet = new Set<string>()
 
-    let animationFrameId = -1, msOld = -1
-    const animationFrame = (ms: number) => {
-      animationFrameId = window.requestAnimationFrame(animationFrame)
-      const deltaTime = Math.min((ms - msOld) / 1e3, maxDeltaTime)
-      msOld = ms
-      appTimer.update(deltaTime, 1)
+  let animationFrameId = -1, msOld = -1
+  const animationFrame = (ms: number) => {
+    animationFrameId = window.requestAnimationFrame(animationFrame)
+    const deltaTime = Math.min((ms - msOld) / 1e3, maxDeltaTime)
+    msOld = ms
+    appTimer.update(deltaTime, 1)
 
-      // Prevent auto pause if any continuous request
-      if (requestContinuousAnimationSet.size > 0 || innerContinuousRequestSet.size > 0) {
-        lastRenderRequestTime = appTimer.time
-      }
-
-      const elapsed = appTimer.time - lastRenderRequestTime
-      const timeScale = inout3(1 - inverseLerp(timeBeforeFade, timeBeforeFade + fadeDuration, elapsed))
-
-      timer.update(deltaTime, timeScale)
+    // Prevent auto pause if any continuous request
+    if (requestContinuousAnimationSet.size > 0 || innerContinuousRequestSet.size > 0) {
+      lastRenderRequestTime = appTimer.time
     }
 
-    const firstFrame = (ms: number) => {
-      animationFrameId = window.requestAnimationFrame(animationFrame)
-      const deltaTime = 1 / 60
-      msOld = ms - deltaTime
-      appTimer.update(deltaTime, 1)
-      timer.update(deltaTime, 1)
-    }
-    animationFrameId = window.requestAnimationFrame(firstFrame)
+    const elapsed = appTimer.time - lastRenderRequestTime
+    const timeScale = inout3(1 - inverseLerp(timeBeforeFade, timeBeforeFade + fadeDuration, elapsed))
 
-    const onInteraction = () => lastRenderRequestTime = appTimer.time
+    timer.update(deltaTime, timeScale)
+  }
 
-    window.addEventListener('pointermove', onInteraction, { capture: true })
-    window.addEventListener('touchstart', onInteraction, { capture: true })
-    window.addEventListener('touchmove', onInteraction, { capture: true })
-    window.addEventListener('touchend', onInteraction, { capture: true })
-    window.addEventListener('pointerdown', onInteraction, { capture: true })
-    window.addEventListener('pointerup', onInteraction, { capture: true })
-    window.addEventListener('popstate', onInteraction, { capture: true })
-    window.addEventListener('wheel', onInteraction, { capture: true })
-    window.addEventListener('keydown', onInteraction, { capture: true })
+  const firstFrame = (ms: number) => {
+    animationFrameId = window.requestAnimationFrame(animationFrame)
+    const deltaTime = 1 / 60
+    msOld = ms - deltaTime
+    appTimer.update(deltaTime, 1)
+    timer.update(deltaTime, 1)
+  }
+  animationFrameId = window.requestAnimationFrame(firstFrame)
+
+  const onInteraction = () => lastRenderRequestTime = appTimer.time
+
+  window.addEventListener('pointermove', onInteraction, { capture: true })
+  window.addEventListener('touchstart', onInteraction, { capture: true })
+  window.addEventListener('touchmove', onInteraction, { capture: true })
+  window.addEventListener('touchend', onInteraction, { capture: true })
+  window.addEventListener('pointerdown', onInteraction, { capture: true })
+  window.addEventListener('pointerup', onInteraction, { capture: true })
+  window.addEventListener('popstate', onInteraction, { capture: true })
+  window.addEventListener('wheel', onInteraction, { capture: true })
+  window.addEventListener('keydown', onInteraction, { capture: true })
+
+  // continuous request / release
+  const onKeyDown = (event: KeyboardEvent) => innerContinuousRequestSet.add(event.code)
+  const onKeyUp = (event: KeyboardEvent) => innerContinuousRequestSet.delete(event.code)
+  const onPointerDown = (event: PointerEvent) => innerContinuousRequestSet.add(`${event.pointerType}-${event.pointerId}`)
+  const onPointerUp = (event: PointerEvent) => innerContinuousRequestSet.delete(`${event.pointerType}-${event.pointerId}`)
+  window.addEventListener('keydown', onKeyDown, { capture: true })
+  window.addEventListener('keyup', onKeyUp, { capture: true })
+  window.addEventListener('pointerdown', onPointerDown, { capture: true })
+  window.addEventListener('pointerup', onPointerUp, { capture: true })
+
+  return () => {
+    window.cancelAnimationFrame(animationFrameId)
+    window.removeEventListener('pointermove', onInteraction, { capture: true })
+    window.removeEventListener('touchstart', onInteraction, { capture: true })
+    window.removeEventListener('touchmove', onInteraction, { capture: true })
+    window.removeEventListener('touchend', onInteraction, { capture: true })
+    window.removeEventListener('pointerdown', onInteraction, { capture: true })
+    window.removeEventListener('pointerup', onInteraction, { capture: true })
+    window.removeEventListener('popstate', onInteraction, { capture: true })
+    window.removeEventListener('wheel', onInteraction, { capture: true })
+    window.removeEventListener('keydown', onInteraction, { capture: true })
 
     // continuous request / release
-    const onKeyDown = (event: KeyboardEvent) => innerContinuousRequestSet.add(event.code)
-    const onKeyUp = (event: KeyboardEvent) => innerContinuousRequestSet.delete(event.code)
-    const onPointerDown = (event: PointerEvent) => innerContinuousRequestSet.add(`${event.pointerType}-${event.pointerId}`)
-    const onPointerUp = (event: PointerEvent) => innerContinuousRequestSet.delete(`${event.pointerType}-${event.pointerId}`)
-    window.addEventListener('keydown', onKeyDown, { capture: true })
-    window.addEventListener('keyup', onKeyUp, { capture: true })
-    window.addEventListener('pointerdown', onPointerDown, { capture: true })
-    window.addEventListener('pointerup', onPointerUp, { capture: true })
+    window.removeEventListener('keypress', onKeyDown, { capture: true })
+    window.removeEventListener('keyup', onKeyUp, { capture: true })
+    window.removeEventListener('pointerdown', onPointerDown, { capture: true })
+    window.removeEventListener('pointerup', onPointerUp, { capture: true })
+  }
+}
 
-    return () => {
-      window.cancelAnimationFrame(animationFrameId)
-      window.removeEventListener('pointermove', onInteraction, { capture: true })
-      window.removeEventListener('touchstart', onInteraction, { capture: true })
-      window.removeEventListener('touchmove', onInteraction, { capture: true })
-      window.removeEventListener('touchend', onInteraction, { capture: true })
-      window.removeEventListener('pointerdown', onInteraction, { capture: true })
-      window.removeEventListener('pointerup', onInteraction, { capture: true })
-      window.removeEventListener('popstate', onInteraction, { capture: true })
-      window.removeEventListener('wheel', onInteraction, { capture: true })
-      window.removeEventListener('keydown', onInteraction, { capture: true })
+type AnimationFrameInstance = {
+  depCount: number
+  destroy: () => void
+}
 
-      // continuous request / release
-      window.removeEventListener('keypress', onKeyDown, { capture: true })
-      window.removeEventListener('keyup', onKeyUp, { capture: true })
-      window.removeEventListener('pointerdown', onPointerDown, { capture: true })
-      window.removeEventListener('pointerup', onPointerUp, { capture: true })
+const animationFrameMap = new Map<any, AnimationFrameInstance>()
+
+const AnimationFrame = ({
+  key = window,
+  ...props
+}: {
+  key?: any,
+} & AnimationFrameProps) => {
+  useEffect(() => {
+    const instance = animationFrameMap.get(key)
+    if (!instance) {
+      const destroy = createAnimationFrame(props)
+      const instance: AnimationFrameInstance = {
+        depCount: 1,
+        destroy,
+      }
+      animationFrameMap.set(key, instance)
+    } else {
+      instance.depCount++
     }
-
+    console.log('mount:', instance?.depCount ?? 1)
+    return () => {
+      // On destroy, check the depCount, if equal to zero destroy the instance.
+      const instance = animationFrameMap.get(key)
+      if (!instance) {
+        throw new Error('This is not supposed to happen.')
+      }
+      instance.depCount--
+      if (instance.depCount === 0) {
+        instance.destroy()
+        animationFrameMap.delete(key)
+      }
+      console.log('unmount:', instance?.depCount ?? 1)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [timeBeforeFade, fadeDuration])
+  }, [key, ...Object.values(props)])
 
   return null
 }
