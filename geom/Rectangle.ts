@@ -265,6 +265,18 @@ const signedGreatestDistance = (a: IRectangle, b: IRectangle, receiver: IPoint) 
   return receiver
 }
 
+const fromRelativePoint = (r: IRectangle, x: number, y: number, receiver: IPoint) => {
+  receiver.x = r.x + r.width * x
+  receiver.y = r.y + r.height * y
+  return receiver
+}
+
+const toRelativePoint = (r: IRectangle, x: number, y: number, receiver: IPoint) => {
+  receiver.x = (x - r.x) / r.width
+  receiver.y = (y - r.y) / r.height
+  return receiver
+}
+
 const closestPoint = (r: IRectangle, p: IPoint, receiver: IPoint) => {
   const xMin = r.x
   const yMin = r.y
@@ -324,6 +336,8 @@ const transposePoint = <T extends IPoint>(point: IPoint, from: IRectangle, to: I
   receiver.y = to.y + y * to.height
   return receiver
 }
+
+type ReceiverParams<T> = { receiver?: T }
 
 export class Rectangle {
   
@@ -555,12 +569,55 @@ export class Rectangle {
     return receiver as T
   }
 
-  relativePoint<T extends IPoint = Point>({ x, y }: IPoint, { 
+  /**
+   * Transform a "relative" point to a "absolute" one (or "local to global").
+   * 
+   * Eg:
+   * ```
+   * new Rectangle(10, 20, 4, 6)
+   *   .fromRelativePoint({ x: .5, y: .5 }) // Point {x: 12, y: 23}
+   * ```
+   */
+  fromRelativePoint<T extends IPoint = Point>(x: number, y: number, params?: ReceiverParams<T>): T 
+  fromRelativePoint<T extends IPoint = Point>(point: IPoint, params?: ReceiverParams<T>): T 
+  fromRelativePoint(...args: any[]) {
+    if (typeof args[0] === 'number') {
+      const [x, y, { receiver = new Point() } = {}]  = args
+      return fromRelativePoint(this, x, y, receiver)
+    } else {      
+      const [{ x, y }, { receiver = new Point() } = {}]  = args     
+      return fromRelativePoint(this, x, y, receiver)
+    }
+  }
+
+  /**
+   * Transform a "absolute" point to a "relative" one (or "global to local").
+   * 
+   * Eg:
+   * ```
+   * new Rectangle(10, 20, 4, 6)
+   *   .toRelativePoint({ x: 12, y: 23 }) // Point {x: 0.5, y: 0.5}
+   * ```
+   */
+  toRelativePoint<T extends IPoint = Point>(x: number, y: number, params?: ReceiverParams<T>): T 
+  toRelativePoint<T extends IPoint = Point>(point: IPoint, params?: ReceiverParams<T>): T 
+  toRelativePoint(...args: any[]) {
+    if (typeof args[0] === 'number') {
+      const [x, y, { receiver = new Point() } = {}]  = args
+      return toRelativePoint(this, x, y, receiver)
+    } else {      
+      const [{ x, y }, { receiver = new Point() } = {}]  = args     
+      return toRelativePoint(this, x, y, receiver)
+    }
+  }
+  
+  /**
+   * @deprecated Weak semantic, prefer {@link fromRelativePoint} to transform a relative point to an absolute one.
+   */
+  relativePoint<T extends IPoint = Point>(point: IPoint, { 
     receiver = new Point(),
   } = {} as { receiver?: T }): T {
-    receiver.x = this.x + this.width * x
-    receiver.y = this.y + this.height * y
-    return receiver as T
+    return this.fromRelativePoint(point, { receiver }) as T
   }
 
   closestPoint<T extends IPoint = Point>(point: IPoint, { 
