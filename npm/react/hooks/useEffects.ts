@@ -12,9 +12,12 @@ type UseEffectOptions = Partial<{
 }>
 
 type PublicState<T> = {
-  readonly mounted: boolean
-  ref: RefObject<T>
+  isMounted: () => boolean
+  /** @sugar returns `!isMounted()` */
+  isDestroyed: () => boolean
   setDirty: () => void
+  ref: RefObject<T>
+  readonly mounted: boolean
 }
 
 const computeSkipIfNullable = (skipIfNullable: any[] | undefined): boolean => {
@@ -85,6 +88,8 @@ export function useEffects<T = undefined>(
     const publicState: PublicState<T> = {
       ref,
       setDirty: () => forceUpdateRef.current(),
+      isMounted: () => state.mounted,
+      isDestroyed: () => !state.mounted,
       get mounted() { return state.mounted },
     }
     return [state, publicState]
