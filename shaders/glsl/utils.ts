@@ -2,8 +2,29 @@ import { generics } from './tools/generics'
 
 export const glsl_utils = /* glsl */`
 
+  float clamp01(float x) {
+    return x < 0.0 ? 0.0 : x > 1.0 ? 1.0 : x;
+  }
+
+  float sin01(float x) {
+    return 0.5 + 0.5 * sin(x * 6.283185307179586);
+  }
+
   vec2 scaleAround(vec2 p, vec2 c, float s) {
     return c + (p - c) / s;
+  }
+
+  float inverseLerpUnclamped(float a, float b, float x) {
+    return (x - a) / (b - a);
+  }
+
+  float inverseLerp(float a, float b, float x) {
+    return clamp01((x - a) / (b - a));
+  }
+
+  // Same as "inverseLerp", but here for backward compatibility.
+  float inverseLerpClamped(float a, float b, float x) {
+    return clamp01((x - a) / (b - a));
   }
 
   vec2 rotate(vec2 p, float a) {
@@ -21,28 +42,7 @@ export const glsl_utils = /* glsl */`
   vec2 rotateScaleAround(vec2 p, float a, float s, vec2 c) {
     return c + rotate((p - c) / s, a);
   }
-
-  float clamp01(float x) {
-    return x < 0.0 ? 0.0 : x > 1.0 ? 1.0 : x;
-  }
   
-  float inverseLerpUnclamped(float a, float b, float x) {
-    return (x - a) / (b - a);
-  }
-
-  float inverseLerp(float a, float b, float x) {
-    return clamp01((x - a) / (b - a));
-  }
-
-  // Same as "inverseLerp", but here for backward compatibility.
-  float inverseLerpClamped(float a, float b, float x) {
-    return clamp01((x - a) / (b - a));
-  }
-
-  float sin01(float x) {
-    return 0.5 + 0.5 * sin(x * 6.283185307179586);
-  }
-
   float positiveModulo(float x) {
     x = mod(x, 1.0);
     return x < 0.0 ? x + 1.0 : x;
