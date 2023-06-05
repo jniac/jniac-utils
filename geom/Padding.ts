@@ -8,9 +8,9 @@ export type PaddingParams = {
   right?: number
   left?: number
 } 
-  | [number, number, number, number]
+  | [top: number, right: number, bottom: number, left: number]
   | [number, number, number]
-  | [number, number]
+  | [vertical: number, horizontal: number]
   | [number]
   | number
 
