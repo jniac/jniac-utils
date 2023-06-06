@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useMemo } from 'react'
 import { getPathname, setUrl } from '../../../router'
+import { digest } from '../../../math/prng/digest'
 
 let downPointerEvent: PointerEvent | null = null
 window.addEventListener('pointerdown', event => downPointerEvent = event, { capture: true })
@@ -9,21 +10,21 @@ export const RouterContext = React.createContext({
    * The current base url. 
    */
   baseUrl: '' as string | RegExp,
-  
+
   /** 
    * Can't remember the usage of this... But should be useful nuh? 
    */
   pathnameTransform: null as null | ((pathname: string) => string),
-  
+
   /** 
    * Get... the pathname. 
    */
   getPathname: () => '' as string,
-  
+
   /** 
    * Change the current url, according to the "base url". 
    */
-  go: (to: string) => {},
+  go: (to: string) => { },
 
   /** 
    * Kind of alias of "go()": return the binded "go" function:
@@ -33,7 +34,7 @@ export const RouterContext = React.createContext({
    * const myLink = () => go('/foo')
    * ```
    */
-  link: (to: string) => () => {},
+  link: (to: string) => () => { },
 })
 
 const cleanPathname = (value: string) => {
@@ -45,14 +46,15 @@ type Props = {
   baseUrl?: string | RegExp
   pathnameTransform?: null | ((pathname: string) => string),
   children?: React.ReactNode
+  redirections?: Record<string, string | string[]>
 }
 
 export const Router = ({
   baseUrl = '',
   pathnameTransform = null,
   children,
+  redirections = {},
 }: Props) => {
-
   // Ensure baseUrl starts with "/"
   if (typeof baseUrl === 'string') {
     if (baseUrl.length > 0) {
@@ -71,16 +73,64 @@ export const Router = ({
     }
   }
 
-  const routerGetPathname = () => {
-    const pathname = cleanPathname(getPathname().replace(baseUrl, ''))
-    return pathnameTransform ? cleanPathname(pathnameTransform(pathname)) || '/' : pathname
-  }
-  const go = (to: string, { reload = false, newTab = downPointerEvent?.metaKey || downPointerEvent?.ctrlKey } = {}) => {
-    if (baseUrl && to.startsWith('/')) {
-      // "baseUrl" injection.
-      to = solveBaseUrl() + to
+  const applyRedirection: (pathname: string) => [pathname: string, redirected: boolean] = useMemo(() => {
+    return pathname => {
+      let redirected = false
+      for (const [finalRoute, value] of Object.entries(redirections)) {
+        const routes = Array.isArray(value) ? value : [value]
+        for (const route of routes) {
+          if (pathname === route) {
+            redirected = true
+            pathname = finalRoute
+          }
+        }
+      }
+      return [pathname, redirected]
     }
-    const url = new URL(to, window.location.href).href
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseUrl, digest(redirections)])
+
+  const routerGetPathname = ({ useRedirection = true } = {}) => {
+    let pathname = cleanPathname(getPathname().replace(baseUrl, ''))
+    pathname = pathnameTransform ? cleanPathname(pathnameTransform(pathname)) || '/' : pathname
+    if (useRedirection) {
+      [pathname] = applyRedirection(pathname)
+    }
+    return pathname
+  }
+
+  const computeUrl = (pathname: string, {
+    keepHash = false,
+    keepSearch = false,
+    keepAll = false,
+  } = {}) => {
+    if (baseUrl && pathname.startsWith('/')) {
+      // "baseUrl" injection.
+      pathname = solveBaseUrl() + pathname
+    }
+    const url = new URL(pathname, window.location.href)
+    if (keepSearch || keepAll) {
+      url.search = window.location.search
+    }
+    if (keepHash || keepAll) {
+      url.hash = window.location.hash
+    }
+    return url.href
+  }
+
+  // Redirection: Rewrite the location.
+  useMemo(() => {
+    const rawPathname = routerGetPathname({ useRedirection: false })
+    const redirectPathname = routerGetPathname({ useRedirection: true })
+    if (rawPathname !== redirectPathname) {
+      const url = computeUrl(redirectPathname, { keepAll: true })
+      window.history.pushState(null, '', url)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [baseUrl, digest(redirections)])
+
+  const go = (to: string, { reload = false, newTab = downPointerEvent?.metaKey || downPointerEvent?.ctrlKey } = {}) => {
+    const url = computeUrl(to)
     if (reload) {
       window.open(url, '_self')
     } else {
