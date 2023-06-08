@@ -78,7 +78,7 @@ document.documentElement.addEventListener('keydown', event => {
   const info = { event, capture }
   const letter = code.startsWith('Key') ? `Letter${key.toUpperCase()}` : ''
   const callbacks: { callback: ListenerCallback, priority: number }[] = []
-
+  
   for (const { element, listeners } of downGlobalListeners) {
     if (element.contains(event.target as Node) === false) {
       continue
@@ -142,11 +142,15 @@ export const handleKeyboard = ({
   const destroy = () => {
     if (down) {
       const index = downGlobalListeners.indexOf(down)
-      downGlobalListeners.splice(index, 1)
+      if (index !== -1) {
+        downGlobalListeners.splice(index, 1)
+      }
     }
     if (up) {
       const index = upGlobalListeners.indexOf(up)
-      upGlobalListeners.splice(index, 1)
+      if (index !== -1) {
+        upGlobalListeners.splice(index, 1)
+      }
     }
   }
 
