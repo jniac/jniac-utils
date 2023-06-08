@@ -495,6 +495,15 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     this.setDistance(value)
   }
 
+
+  // Some other sugar?
+  get focusPositionX() { return this.focusPosition.x }
+  set focusPositionX(value) { this.focusPosition.x = value }
+  get focusPositionY() { return this.focusPosition.y }
+  set focusPositionY(value) { this.focusPosition.y = value }
+  get focusPositionZ() { return this.focusPosition.z }
+  set focusPositionZ(value) { this.focusPosition.z = value }
+
   /** The "right" vector coming directly from the matrix. */
   get mRight() {
     const me = this.matrix.elements
