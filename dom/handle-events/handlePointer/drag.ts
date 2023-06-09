@@ -11,6 +11,8 @@ const isTouchEvent = (value: any): value is TouchEvent => {
 export type DragDirection = 'horizontal' | 'vertical'
 
 export type DragInfo = {
+  downPoint: Point
+  movePoint: Point
   total: Point
   delta: Point
   moveEvent: PointerEvent | TouchEvent
@@ -60,9 +62,12 @@ const getDragInfo = (
   previousMovePoint: Point,
   direction: DragDirection,
 ): DragInfo => {
+  const downPoint = moveEventToPoint(downEvent)
   return {
+    movePoint,
+    downPoint,
     delta: new Point().copy(movePoint).subtract(previousMovePoint),
-    total: new Point().copy(movePoint).subtract(moveEventToPoint(downEvent)),
+    total: new Point().copy(movePoint).subtract(downPoint),
     moveEvent,
     downEvent,
     direction,
