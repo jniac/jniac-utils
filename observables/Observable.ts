@@ -170,7 +170,10 @@ export class Observable<T> {
    * callbacks (that should be called only when the value has changed), this should
    * be used very carefully.
    */
-  triggerChangeCallbacks({ force = false } = {}) {
+  triggerChangeCallbacks({ force = false, owner = null as any } = {}) {
+    if (this.#owner !== owner) {
+      throw new Error(`Callbacks cannot be called with an invalid "owner" value.`)
+    }
     if (this.#hasChanged || force) {
       const value = this.#value
       for (const callback of this.#onChange) {
