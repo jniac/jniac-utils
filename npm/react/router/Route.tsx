@@ -1,7 +1,7 @@
 import React from 'react'
 import { Animation } from '../../../Animation'
 import { Observable, ObservableBoolean, ObservableNumber } from '../../../observables'
-import { compareString, location, StringMask } from '../../../router'
+import { compareString, StringMask } from '../../../router'
 import { useEffects, useForceUpdate } from '..'
 import { RouterContext } from './Router'
 
@@ -53,7 +53,7 @@ export const Route = ({
   debug = false,
 }: RouteProps) => {
 
-  const { getPathname } = React.useContext(RouterContext)
+  const { location, getPathname } = React.useContext(RouterContext)
 
   const innerState = React.useMemo(() => ({
     visibleObs: new ObservableBoolean(false),

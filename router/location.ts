@@ -3,7 +3,6 @@ import { Observable } from '../observables'
 export let homepage = '' as string
 
 const processPathname = (str: string) => {
-
   // First (and absolutely first), remove double slashes.
   str = str.replace(/[/]{2,}/g, '/')
 
@@ -25,11 +24,13 @@ const processPathname = (str: string) => {
   return str
 }
 
-const safeParseUrl = (str: string) => {
-
+const safeParseUrl = (str: string, useWindowHref: boolean) => {
   let {
-    pathname, search, hash, origin,
-  } = new window.URL(str, window.location.href)
+    pathname,
+    search,
+    hash,
+    origin,
+  } = new window.URL(str, useWindowHref ? window.location.href : window.location.origin)
 
   pathname = processPathname(pathname)
   search = search.substring(1)
@@ -47,55 +48,89 @@ const safeParseUrl = (str: string) => {
   }
 }
 
-export const location = (() => {
+export class Location {
+  /**
+   * #props hide the private parts of location. The reference is also used as 
+   * owner of the observables.
+   */
+  #props: {
+    name: string
+    useWindowHref: boolean
+  }
+  
+  get name() { return this.#props.name }
 
-  const {
-    href, pathname, search, hash,
-  } = safeParseUrl(window.location.href)
+  href: Observable<string>
+  pathname: Observable<string>
+  search: Observable<string>
+  hash: Observable<string>
 
-  const location = {
-    href: new Observable(href),
-    pathname: new Observable(pathname),
-    search: new Observable(search),
-    hash: new Observable(hash),
-    isHome: () => location.pathname.value === '/',
+  isHome: () => boolean
+
+  constructor(name: string, initialUrl = '/', {
+    useWindowHref = false
+  } = {}) {
+    const {
+      href,
+      pathname,
+      search,
+      hash,
+    } = safeParseUrl(initialUrl, useWindowHref)
+
+    this.#props = { name, useWindowHref }
+
+    this.href = new Observable(href)
+    this.pathname = new Observable(pathname)
+    this.search = new Observable(search)
+    this.hash = new Observable(hash)
+
+    this.isHome = () => this.pathname.value === '/'
+
+    this.href.own(this.#props)
+    this.pathname.own(this.#props)
+    this.search.own(this.#props)
+    this.hash.own(this.#props)
   }
 
-  return location
-})()
+  update(url: string) {
+    const props = this.#props
 
+    const {
+      href,
+      pathname,
+      search,
+      hash,
+    } = safeParseUrl(url, props.useWindowHref)
 
-export type Location = typeof location
-export const internalUpdate = (url: string) => {
+    // NOTE: important here to change EVERY parts BEFORE calling the callbacks
+    // (since any callbacks should retrieve any parts with new value)
+    const hasChanged = this.href.setValue(href, { owner: props, ignoreCallbacks: true })
+    const pathnameHasChanged = this.pathname.setValue(pathname, { owner: props, ignoreCallbacks: true })
+    const searchHasChanged = this.search.setValue(search, { owner: props, ignoreCallbacks: true })
+    const hashHasChanged = this.hash.setValue(hash, { owner: props, ignoreCallbacks: true })
 
-  const {
-    href, pathname, search, hash,
-  } = safeParseUrl(url)
+    // NOTE: Why "force" here? In a very strange case, the inner "hasChanged" was 
+    // reset to false, preventing the callbacks to be called. Fixed by the "force"
+    // option. But it is not cool :( 
+    if (hashHasChanged) this.hash.triggerChangeCallbacks({ owner: props, force: true })
+    if (searchHasChanged) this.search.triggerChangeCallbacks({ owner: props, force: true })
+    if (pathnameHasChanged) this.pathname.triggerChangeCallbacks({ owner: props, force: true })
+    if (hasChanged) this.href.triggerChangeCallbacks({ owner: props, force: true })
 
-  const hrefHasChanged = location.href.setValue(href, { ignoreCallbacks: true })
-  const pathnameHasChanged = location.pathname.setValue(pathname, { ignoreCallbacks: true })
-  const searchHasChanged = location.search.setValue(search, { ignoreCallbacks: true })
-  const hashHasChanged = location.hash.setValue(hash, { ignoreCallbacks: true })
-
-  // NOTE: important here to change EVERY parts BEFORE calling the callbacks
-  // (since any callbacks should retrieve any parts with new value)
-  if (hashHasChanged) location.hash.triggerChangeCallbacks()
-  if (searchHasChanged) location.search.triggerChangeCallbacks()
-  if (pathnameHasChanged) location.pathname.triggerChangeCallbacks()
-  if (hrefHasChanged) location.href.triggerChangeCallbacks()
-
-  return {
-    href,
-    pathname,
-    search,
-    hash,
-    hasChanged: hrefHasChanged,
+    return {
+      href,
+      pathname,
+      search,
+      hash,
+      hasChanged,
+    }
   }
 }
 
-export const setUrl = (url: string, { replace = false } = {}) => {
+export const location = new Location('window', window.location.href, { useWindowHref: true })
 
-  const { href, hasChanged } = internalUpdate(url)
+export const setUrl = (url: string, { replace = false } = {}) => {
+  const { href, hasChanged } = location.update(url)
 
   if (hasChanged) {
     if (replace) {
@@ -126,11 +161,11 @@ export const setHash = (hash: string, { replace = false } = {}) => setLocation({
 export const clearHash = ({ replace = false } = {}) => setLocation({ hash: '', replace })
 
 window.addEventListener('popstate', () => {
-  internalUpdate(window.location.href)
+  location.update(window.location.href)
 })
 
 window.addEventListener('hashchange', () => {
-  internalUpdate(window.location.href)
+  location.update(window.location.href)
 }, false)
 
 
@@ -150,10 +185,7 @@ export const setHomepage = (value: string) => {
   }
   if (homepage !== value) {
     homepage = value
-    location.href.setValue('')
-    location.pathname.setValue('')
-    location.search.setValue('')
-    location.hash.setValue('')
+    location.update('')
     setUrl(window.location.href)
   }
 }

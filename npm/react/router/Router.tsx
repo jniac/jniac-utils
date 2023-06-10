@@ -1,30 +1,35 @@
 import React, { useMemo } from 'react'
-import { getPathname, setUrl } from '../../../router'
+import { location as windowLocation } from '../../../router'
 import { digest } from '../../../math/prng/digest'
+import { Location } from '../../../router'
 
 let downPointerEvent: PointerEvent | null = null
 window.addEventListener('pointerdown', event => downPointerEvent = event, { capture: true })
 
-export const RouterContext = React.createContext({
-  /** 
-   * The current base url. 
+type RouterContextType = {
+  /**
+   * The baseURL. A RegExp may allow here to handle url with locales eg (domain.com/en/my-route, domain.com/fr/my-route)=,
    */
-  baseUrl: '' as string | RegExp,
+  baseUrl: string | RegExp
+  /**
+   * The location object
+   */
+  location: Location
 
   /** 
    * Can't remember the usage of this... But should be useful nuh? 
    */
-  pathnameTransform: null as null | ((pathname: string) => string),
+  pathnameTransform: null | ((pathname: string) => string),
 
   /** 
    * Get... the pathname. 
    */
-  getPathname: () => '' as string,
+  getPathname: () => string,
 
   /** 
    * Change the current url, according to the "base url". 
    */
-  go: (to: string) => { },
+  go: (to: string) => void,
 
   /** 
    * Kind of alias of "go()": return the binded "go" function:
@@ -34,39 +39,55 @@ export const RouterContext = React.createContext({
    * const myLink = () => go('/foo')
    * ```
    */
-  link: (to: string) => () => { },
-})
+  link: (to: string) => (() => void),  
+}
+
+export const RouterContext = React.createContext<RouterContextType>(null!)
 
 const cleanPathname = (value: string) => {
   return value.replace(/\/{2,}/g, '/').replace(/\/$/, '') || '/'
 }
 
-type Props = {
-  // NOTE: Why RegExp here???
-  baseUrl?: string | RegExp
-  pathnameTransform?: null | ((pathname: string) => string),
-  children?: React.ReactNode
-  redirections?: Record<string, string | string[]>
+/**
+ * Ensure baseUrl starts with "/" (only if the string's length > 0)
+ */
+const ensureHeadingSlash = (value: string) => {
+  if (value.length > 0) {
+    if (value.startsWith('/') === false) {
+      return `/${value}`
+    } else {
+      return value
+    }
+  } else {
+    return ''
+  }
 }
 
-export const Router = ({
-  baseUrl = '',
-  pathnameTransform = null,
-  children,
-  redirections = {},
-}: Props) => {
-  // Ensure baseUrl starts with "/"
-  if (typeof baseUrl === 'string') {
-    if (baseUrl.length > 0) {
-      if (baseUrl.startsWith('/') === false) {
-        baseUrl = '/' + baseUrl
-      }
-    }
-  }
+type Props = Partial<{
+  /**
+   * RegExp is here to handle locales in url (cf RouterContextType)
+   */
+  baseUrl: string | RegExp
+  pathnameTransform: null | ((pathname: string) => string),
+  children: React.ReactNode
+  redirections: Record<string, string | string[]>
+  location: Location
+}>
+
+export const Router = (props: Props) => {
+  const {
+    baseUrl: baseUrlProp = '',
+    pathnameTransform = null,
+    children,
+    redirections = {},
+    location = windowLocation,
+  } = props
+
+  const baseUrl = typeof baseUrlProp === 'string' ? ensureHeadingSlash(baseUrlProp) : baseUrlProp
 
   const solveBaseUrl = () => {
     if (baseUrl instanceof RegExp) {
-      const [realBaseUrl] = getPathname().match(baseUrl)!
+      const [realBaseUrl] = location.pathname.value.match(baseUrl)!
       return realBaseUrl
     } else {
       return baseUrl
@@ -91,7 +112,7 @@ export const Router = ({
   }, [baseUrl, digest(redirections)])
 
   const routerGetPathname = ({ useRedirection = true } = {}) => {
-    let pathname = cleanPathname(getPathname().replace(baseUrl, ''))
+    let pathname = cleanPathname(location.pathname.value.replace(baseUrl, ''))
     pathname = pathnameTransform ? cleanPathname(pathnameTransform(pathname)) || '/' : pathname
     if (useRedirection) {
       [pathname] = applyRedirection(pathname)
@@ -108,7 +129,7 @@ export const Router = ({
       // "baseUrl" injection.
       pathname = solveBaseUrl() + pathname
     }
-    const url = new URL(pathname, window.location.href)
+    const url = new URL(pathname, window.location.origin)
     if (keepSearch || keepAll) {
       url.search = window.location.search
     }
@@ -137,13 +158,14 @@ export const Router = ({
       if (newTab) {
         window.open(url, '_blank')
       } else {
-        setUrl(to)
+        location.update(to)
       }
     }
   }
   const link = (to: string, { reload = false } = {}) => () => go(to, { reload })
-  const context = {
+  const context: RouterContextType = {
     get baseUrl() { return solveBaseUrl() },
+    location,
     pathnameTransform,
     getPathname: routerGetPathname,
     go,
