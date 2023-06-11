@@ -2,6 +2,7 @@ import { Point } from '../../../geom'
 import { Destroyable } from './types'
 import { DragOptions, handleDrag, isDragListening } from './drag'
 import { handlePinch, isPinchListening, PinchOptions } from './pinch'
+import { PressOptions, handlePress, isPressListening } from './press'
 import { handlePointerWheel, isWheelListening, WheelOptions } from './wheel'
 
 type TapInfo = {
@@ -95,7 +96,7 @@ const solveTarget = (element: Element | Window | string) => {
   throw new Error(`Invalid selector: "${element}". No node in the document for that selector.`)
 }
 
-type HandlePointerOptions = Options & DragOptions & PinchOptions & WheelOptions
+type HandlePointerOptions = Options & PressOptions & DragOptions & PinchOptions & WheelOptions
 
 export const handlePointer = (
   target: Element | Window | string, 
@@ -274,6 +275,7 @@ export const handlePointer = (
   _target.addEventListener('pointermove', _onPointerMove, { capture, passive })
   _target.addEventListener('contextmenu', _onContextMenu, { capture, passive })
 
+  const pressListener = isPressListening(options) ? handlePress(_target, options) : null
   const dragListener = isDragListening(options) ? handleDrag(_target, options) : null
   const pinchListener = isPinchListening(options) ? handlePinch(_target, options) : null
   const wheelListener = isWheelListening(options) ? handlePointerWheel(_target, options) : null
@@ -295,6 +297,7 @@ export const handlePointer = (
     window.removeEventListener('pointerup', _onPointerUp, { capture })
     window.clearTimeout(_tapState.timeoutId)
 
+    pressListener?.destroy()
     dragListener?.destroy()
     pinchListener?.destroy()
     wheelListener?.destroy()
