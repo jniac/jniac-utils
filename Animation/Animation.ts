@@ -372,6 +372,17 @@ class AnimationInstance {
     return this
   }
 
+  onThrough(params: { time: number }, cb: AnimationCallback): this
+  onThrough(params: { progress: number }, cb: AnimationCallback): this
+  onThrough(params: any, cb: AnimationCallback): this {
+    const threshold = params.progress ?? (params.time / this.duration)
+    return this.onProgress(({ progress, progressOld }) => {
+      if (progress >= threshold && progressOld < threshold) {
+        cb(this)
+      }
+    })
+  }
+
   onDestroy(cb?: AnimationCallback) {
     if (this.destroyed === false && cb) {
       destroyCallbacks.add(this, cb)
