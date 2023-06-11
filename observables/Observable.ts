@@ -99,6 +99,10 @@ export class Observable<T> {
     }
   }
 
+  equals(value: T): boolean {
+    return this.value === value
+  }
+
   /**
    * For inner / protected usage only.
    */
