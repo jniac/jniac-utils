@@ -1,5 +1,6 @@
 export * from './isObject'
 export * from './clone'
+export * from './deepAssign'
 export * from './deepIterate'
 export * from './equivalent'
 export * from './mapValues'
