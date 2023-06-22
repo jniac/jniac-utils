@@ -524,4 +524,46 @@ export class VertigoCamera extends PerspectiveCamera implements Base, Options {
     const x = me[8], y = me[9], z = me[10]
     return new Vector3(x, y, z)
   }
+
+  // Serialization: 
+  serialize(): string {
+    const { perspective, height } = this
+    const { x: fx, y: fy, z: fz } = this.focusPosition
+    const { x: rx, y: ry, z: rz } = this.rotation
+    const json = { perspective, fx, fy, fz, rx, ry, rz, height }
+    return JSON.stringify(json)
+  }
+
+  hydrate(data: string): this {
+    const {
+      perspective = 1,
+      fx = 0,
+      fy = 0,
+      fz = 0,
+      rx = 0,
+      ry = 0,
+      rz = 0,
+      height = 10,
+    } = JSON.parse(data)
+    this.focusPosition.set(fx, fy, fz)
+    this.rotation.set(rx, ry, rz)
+    this.perspective = perspective
+    this.height = height
+    this.updateVertigoCamera()
+    return this
+  }
+
+  serializeToClipboard(): this {
+    const str = this.serialize()
+    if (typeof window === 'undefined') {
+      return this
+    }
+    if (typeof (window as any).copy !== 'undefined') {
+      // Chromium console:
+      (window as any).copy(str)
+    } else {
+      window.navigator.clipboard.writeText(str).then(() => console.log('camera copied to the clipboard'))
+    }
+    return this
+  }
 }
