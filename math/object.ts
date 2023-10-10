@@ -12,7 +12,7 @@
  * ```
  */
 export const deepLerpUnclamped = (from: any, to: any, out: any, alpha: number): any => {
-  for (const key in from) {
+  for (const key of Object.keys(from)) {
     // NOTE: Lerp only if the key is present on both objects.
     if (key in to) {
       const fromValue = from[key]
