@@ -258,8 +258,8 @@ class AnimationInstance {
   frame = 0
 
   get normalizedTime() { return clamp(this.time, 0, this.duration) }
-  get progress() { return clamp(this.time / this.duration, 0, 1) }
-  get progressOld() { return clamp(this.timeOld / this.duration, 0, 1) }
+  get progress() { return (this.duration > 0) === false ? 1 : clamp(this.time / this.duration, 0, 1) }
+  get progressOld() { return (this.duration > 0) === false ? 1 : clamp(this.timeOld / this.duration, 0, 1) }
   get global() { return info }
   get complete() { return this.time >= this.duration }
   get completeOld() { return this.timeOld >= this.duration }
