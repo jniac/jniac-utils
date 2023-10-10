@@ -119,10 +119,10 @@ export class Padding {
     
     const baseKey = padding ? 'padding' : 'margin'
     const props = [] as [string, string][]
-    if (top) props.push([baseKey + 'Top', `${this.top}px`])
-    if (right) props.push([baseKey + 'Right', `${this.right}px`])
-    if (bottom) props.push([baseKey + 'Bottom', `${this.bottom}px`])
-    if (left) props.push([baseKey + 'Left', `${this.left}px`])
+    if (top) props.push([baseKey + 'Top', `${this.top * scalar}px`])
+    if (right) props.push([baseKey + 'Right', `${this.right * scalar}px`])
+    if (bottom) props.push([baseKey + 'Bottom', `${this.bottom * scalar}px`])
+    if (left) props.push([baseKey + 'Left', `${this.left * scalar}px`])
 
     return Object.fromEntries(props) as ({
       paddingTop: string
