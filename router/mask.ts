@@ -5,6 +5,21 @@ export type StringMask =
   | ((path: string) => boolean)
   | StringMask[]
 
+/**
+ * ```
+ * strStartsWith('foo', 'foo') // true
+ * strStartsWith('foo/bar', 'foo') // true
+ * strStartsWith('fooz', 'foo') // false
+ * ```
+ */
+const strStartsWith = (str: string, mask: string): boolean => {
+  if (str.startsWith(mask) === false) {
+    return false
+  }
+  const char = str.charAt(mask.length)
+  return char === '' || char === '/'
+}
+ 
 export const compareString: (str: string, mask: StringMask, exact?: boolean) => boolean = (
   str, mask, exact = true,
 ) => {
@@ -27,6 +42,6 @@ export const compareString: (str: string, mask: StringMask, exact?: boolean) => 
   
   return (exact
     ? str === mask
-    : str.startsWith(mask)
+    : strStartsWith(str, mask)
   )
 }
