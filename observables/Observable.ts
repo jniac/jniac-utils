@@ -329,7 +329,25 @@ export class Observable<T> {
     execute?: boolean
     once?: boolean
   }) {
-    let entered = false
+    const { value } = this
+    let entered = verify(value)
+
+    // First execution (?):
+    if (execute) {
+      if (entered) {
+        onEnter?.(value, this)
+      } else {
+        onLeave?.(value, this)
+      }
+
+      if (entered) {
+        onInnerChange?.(value, this)
+      } else {
+        onOuterChange?.(value, this)
+      }
+    }
+
+    // "On Change" execution:
     return this.onChange((value) => {
       const enteredOld = entered
       entered = verify(value)
@@ -337,20 +355,17 @@ export class Observable<T> {
       if (enteredOld !== entered) {
         if (entered) {
           onEnter?.(value, this)
-        }
-        if (entered === false) {
+        } else {
           onLeave?.(value, this)
         }
       }
 
       if (entered) {
         onInnerChange?.(value, this)
-      }
-      if (entered === false) {
+      } else {
         onOuterChange?.(value, this)
       }
-
-    }, { execute, once })
+    }, { once })
   }
 
   child<U>(predicate: (v: Observable<T>) => U) {
