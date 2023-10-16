@@ -31,16 +31,21 @@ class TimerHandler {
   #callbacks = new OrderSet<(time: TimerHandler) => void>()
   #timeScale = 1
   #broken = false
+  #freezed = false
   uTime = { value: 0 } // Shorthand for shaders.
   get frame() { return this.#frame }
   get time() { return this.#time }
   get timeOld() { return this.#timeOld }
   get deltaTime() { return this.#deltaTime }
   get timeScale() { return this.#timeScale }
+  isFreezed() {
+    return this.#freezed
+  }
   update(deltaTime: number, timeScale: number) {
     if (this.#broken === false) {
       deltaTime *= timeScale
       const freezed = deltaTime === 0 && this.#time === this.#timeOld
+      this.#freezed = freezed
       if (freezed === false) {
         this.#timeScale = timeScale
         this.#deltaTime = deltaTime
