@@ -41,6 +41,16 @@ export class FloatVariable implements Variable<number> {
     return value
   }
 
+  getValue(reverseIndex: number) {
+    const array = this.#array
+    const size = array.length
+    let index = (this.#index - reverseIndex) % size
+    if (index < 0) {
+      index += size
+    }
+    return array[index]
+  }
+
   *values() {
     const array = this.#array
     const index = this.#index
