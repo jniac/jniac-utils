@@ -1,8 +1,14 @@
 import { toSvgDocumentString, toSvgString } from './FloatVariable-svg'
 import { Variable } from './types'
 
+type ComputeAverageParams = Partial<{ 
+  cut: number
+  cutHigh: number
+  cutLow: number
+}>
+
 export class FloatVariable implements Variable<number> {
-  
+
   #derivative: FloatVariable | null = null
 
   #array: Float32Array | Float64Array
@@ -122,18 +128,40 @@ export class FloatVariable implements Variable<number> {
     return this.setValue(value, true)
   }
 
+  /**
+   * Compute the average with the possibility to ignore n-lower-or-higher values.
+   * Useful to ignore noisy accidents.
+   */
+  computeAverage(params: ComputeAverageParams): number {
+    const {
+      cut = 0,
+      cutLow = cut,
+      cutHigh = cut,
+    } = params
+    const copy = this.floatSize === 32
+      ? new Float32Array(this.#array)
+      : new Float64Array(this.#array)
+    copy.sort()
+    const max = copy.length - cutHigh
+    let sum = 0
+    for (let i = cutLow; i < max; i++) {
+      sum += copy[i]
+    }
+    return sum / (max - cutLow)
+  }
+
   toString({ precision = 2, floatMaxCount = 16 } = {}) {
     const array = this.#array
     const index = this.#index
     const size = array.length
     const data = Array.from({ length: size })
-    .map((_, i) => array[(index - i + size * 2) % size])
-    .map(x => x.toFixed(precision))
-    .join(', ')
+      .map((_, i) => array[(index - i + size * 2) % size])
+      .map(x => x.toFixed(precision))
+      .join(', ')
     const tab = '  '
     const trunc = floatMaxCount < size ? ', ...' : ''
     return (
-      `FloatVariable<${size}, f${this.floatSize}, d:${this.derivativeCount}>` + 
+      `FloatVariable<${size}, f${this.floatSize}, d:${this.derivativeCount}>` +
       `\n${tab}sum: ${this.sum.toFixed(precision)}, average: ${this.average.toFixed(precision + 2)}` +
       `\n${tab}[${data}${trunc}]`
     )
