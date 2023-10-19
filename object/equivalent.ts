@@ -57,7 +57,7 @@ const _objectsAreEquivalent = (a: object, b: object) => {
   if (bKeys.length !== aKeys.length) {
     return false
   }
-  for (const key in bKeys) {
+  for (const key of bKeys) {
     if (key in a === false) {
       return false
     }
