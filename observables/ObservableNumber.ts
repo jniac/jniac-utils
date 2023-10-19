@@ -71,6 +71,13 @@ export class ObservableNumber extends Observable<number> {
     return this.setValue(this.value + delta, { ignoreCallbacks, owner })
   }
 
+  lerp(value: number, alpha: number, {
+    ignoreCallbacks = false,
+    owner = null as any,
+  } = {}): boolean {
+    return this.setValue(this.value + (value - this.value) * alpha, { ignoreCallbacks, owner })
+  }
+
   get delta() { return this.value - this.valueOld }
 
   passedAbove(threshold: number) {
