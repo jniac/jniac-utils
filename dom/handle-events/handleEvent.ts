@@ -1,7 +1,7 @@
 
 type Key = keyof HTMLElementEventMap
 
-type Options = Partial<{ 
+type Options = Partial<{
   [key in Key]: (event: Event) => void
 } & {
   passive: boolean
@@ -16,14 +16,15 @@ export const handleEvent = (target: HTMLElement | Window, options: Options) => {
   const {
     capture = false,
     passive = true,
+    ...rest
   } = options
 
-  for (const key in options) {
+  for (const key in rest) {
     target.addEventListener(key, (options as any)[key], { capture, passive })
   }
 
   const destroy = () => {
-    for (const key in options) {
+    for (const key in rest) {
       target.removeEventListener(key, (options as any)[key], { capture })
     }
   }
