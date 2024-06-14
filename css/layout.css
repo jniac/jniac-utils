@@ -398,3 +398,7 @@
   height: 4em;
   align-self: stretch;
 }
+
+.flex-1 {
+  flex: 1;
+}
