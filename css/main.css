@@ -100,3 +100,9 @@ body {
   /* opacity: .5; */
 }
 
+
+
+/* Text options */
+.uppercase {
+  text-transform: uppercase;
+}
