@@ -22,6 +22,10 @@
   height: 100vh;
 }
 
+.overflow-hidden {
+  overflow: hidden;
+}
+
 /* remove first and last margins over a text (that should be wrapped by any element) */
 .fit-line-height > *:first-child {
   margin-top: -.25em;
