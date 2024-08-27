@@ -1,8 +1,8 @@
 import { Point } from '../../../geom'
-import { Destroyable } from './types'
 import { DragOptions, handleDrag, isDragListening } from './drag'
 import { handlePinch, isPinchListening, PinchOptions } from './pinch'
-import { PressOptions, handlePress, isPressListening } from './press'
+import { handlePress, isPressListening, PressOptions } from './press'
+import { Destroyable } from './types'
 import { handlePointerWheel, isWheelListening, WheelOptions } from './wheel'
 
 type TapInfo = {
@@ -75,6 +75,7 @@ const isTap = (downEvent: PointerEvent, upEvent: PointerEvent, maxDuration: numb
   const x = upEvent.x - downEvent.x
   const y = upEvent.y - downEvent.y
   return (
+    downEvent.target === upEvent.target &&
     (x * x) + (y * y) < maxDistance * maxDistance &&
     upEvent.timeStamp - downEvent.timeStamp < maxDuration * 1e3
   )
@@ -99,7 +100,7 @@ const solveTarget = (element: Element | Window | string) => {
 type HandlePointerOptions = Options & PressOptions & DragOptions & PinchOptions & WheelOptions
 
 export const handlePointer = (
-  target: Element | Window | string, 
+  target: Element | Window | string,
   options: HandlePointerOptions,
 ): Destroyable => {
 
